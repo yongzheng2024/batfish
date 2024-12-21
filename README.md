@@ -30,7 +30,7 @@ bazel test //...
 
 #### Configure PyBatfish on Ubuntu (non-Docker)
 
-> [PyBatfish usage document](https://pybatfish.readthedocs.io/en/latest/getting_started.html)
+> [PyBatfish usage document](https://pybatfish.readthedocs.io/en/latest/getting_started.html) <br>
 > [PyBatfish interact with the Batfish service](https://pybatfish.readthedocs.io/en/latest/notebooks/interacting.html#)
 
 ```sh
@@ -68,7 +68,7 @@ bf = Session(host="localhost")
 bf.set_network(NETWORK_NAME)
 
 # when firstly execute this script, uncomment this line
-bf.init_snapshot(SNAPSHOT_DIR, name=SNAPSHOT_NAME, overwrite=True)
+bf.init_snapshot(SNAPSHOT_PATH, name=SNAPSHOT_NAME, overwrite=True)
 # other scenarios, uncomment this line
 # bf.set_snapshot(SNAPSHOT_NAME)
 
@@ -122,6 +122,27 @@ $ tools/bazel_run.sh
 # open another terminal to execute batfish query via pybatfish
 $ cd /PATH-TO/batfish/tests/test
 $ python3 test_batfish_0001.py
+nodes = bf.q.nodeProperties().answer().frame()
+          Node AS_Path_Access_Lists  ...         VRFs Zones
+0   as2border2                   []  ...  ['default']    []
+1   as1border1                   []  ...  ['default']    []
+2   as3border2                   []  ...  ['default']    []
+3   as1border2                   []  ...  ['default']    []
+4     as2dept1                   []  ...  ['default']    []
+5     as2dist2                   []  ...  ['default']    []
+6     as3core1                   []  ...  ['default']    []
+7     as2core1                   []  ...  ['default']    []
+8     as1core1                   []  ...  ['default']    []
+9        host1                   []  ...  ['default']    []
+10       host2                   []  ...  ['default']    []
+11  as3border1                   []  ...  ['default']    []
+12    as2core2                   []  ...  ['default']    []
+13    as2dist1                   []  ...  ['default']    []
+14  as2border1                   []  ...  ['default']    []
+
+[15 rows x 37 columns]
+
+omitting ...
 
 # you can check network and snapshot via URL
 # http://localhost:9996/v2/networks
@@ -228,6 +249,10 @@ $ tools/bazel_run.sh
 # open another terminal to execute batfish query via pybatfish
 $ cd /PATH-TO/batfish/tests/test
 $ python3 test_routing_policies_0001.py
+      Node  ...                                         Trace
+0  border2  ...  - Matched route-map from_customer clause 400
+
+[1 rows x 7 columns]
 
 # you can refer the bdd encode output in the last `./bdds/routing_policies_xxx.txt`
 ```

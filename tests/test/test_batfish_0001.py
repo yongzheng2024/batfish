@@ -15,7 +15,7 @@ bf = Session(host="localhost")
 bf.set_network(NETWORK_NAME)
 
 # when firstly execute this script, uncomment this line
-bf.init_snapshot(SNAPSHOT_DIR, name=SNAPSHOT_NAME, overwrite=True)
+bf.init_snapshot(SNAPSHOT_PATH, name=SNAPSHOT_NAME, overwrite=True)
 # other scenarios, uncomment this line
 # bf.set_snapshot(SNAPSHOT_NAME)
 
