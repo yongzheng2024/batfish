@@ -1,4 +1,4 @@
-### <b>>Configure Batfish and Pybatfish</b>
+### <b>Configure Batfish and Pybatfish</b>
 
 #### Configure Batfish on Ubuntu (non-Docker)
 
