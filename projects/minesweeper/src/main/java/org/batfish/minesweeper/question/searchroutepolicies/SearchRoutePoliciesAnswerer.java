@@ -21,6 +21,9 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.io.File;
+import java.io.PrintWriter;
+import java.io.IOException;
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 import net.sf.javabdd.BDD;
@@ -88,6 +91,10 @@ public final class SearchRoutePoliciesAnswerer extends Answerer {
   private final @Nonnull Set<RegexConstraint> _communityRegexes;
   private final @Nonnull Set<RegexConstraint> _asPathRegexes;
 
+  private static final String BDD_OUTPUT_FILE = "bdds/routing_policies";
+  private static final String BDD_FILE_EXTENSION = ".txt";
+  private /*final*/ /*@Nonnull*/ PrintWriter _bddWriter;
+
   /**
    * Some route-map statements, notably setting the next hop to the address of the BGP peer, can
    * only be simulated by Batfish if a {@link BgpSessionProperties} object exists in the {@link
@@ -142,6 +149,31 @@ public final class SearchRoutePoliciesAnswerer extends Answerer {
             // properly handle AS-path prepending
             .addAll(_inputConstraints.getAsPath().getRegexConstraints())
             .build();
+
+    String firstFileName = String.format("%s_000%s", BDD_OUTPUT_FILE, BDD_FILE_EXTENSION);
+    File bddOutputFile = new File(firstFileName);
+
+    int counter = 0;
+    int limit = 999;
+
+    while (bddOutputFile.exists() && counter <= limit) {
+      String otherFileName = String.format("%s_%03d%s", BDD_OUTPUT_FILE, counter, BDD_FILE_EXTENSION);
+      bddOutputFile = new File(otherFileName);
+      ++counter;
+    }
+
+    if (limit < counter) {
+      System.err.println("Error: All filenames (from 000 to 999) are taken.");
+      System.exit(1);  // Exit with an error code
+    }    
+
+    // create bdd print writer for write bdd encode
+    try {
+      _bddWriter = new PrintWriter(bddOutputFile);
+    } catch (IOException e) {
+      // Handle any file I/O exceptions
+      System.err.println("Error: Writing to file: " + e.getMessage());
+    }
   }
 
   /**
@@ -519,6 +551,16 @@ public final class SearchRoutePoliciesAnswerer extends Answerer {
               + policy.getOwner().getHostname(),
           e);
     }
+
+    // added by yongzheng in 20241221 for output bdd encode information
+    // print BDD encode information to specific file `bdds/routing_policies_xxx.txt`
+    for (int i = 0; i < paths.size(); ++i) {
+       _bddWriter.println(paths.get(i).debug());
+    }
+    _bddWriter.println("------------------------------------------------------------");
+
+    // print successfully written message to terminal
+    // System.out.println("Information successfully written to BDD output file.");
 
     Map<Boolean, List<TransferReturn>> pathMap =
         paths.stream()

@@ -1,125 +1,233 @@
+### <b>>Configure Batfish and Pybatfish</b>
 
-**Got questions, feedback, or feature requests? Join our community on [Slack!](https://join.slack.com/t/batfish-org/shared_invite/enQtMzA0Nzg2OTAzNzQ1LTcyYzY3M2Q0NWUyYTRhYjdlM2IzYzRhZGU1NWFlNGU2MzlhNDY3OTJmMDIyMjQzYmRlNjhkMTRjNWIwNTUwNTQ)**
+#### Configure Batfish on Ubuntu (non-Docker)
 
-[![codecov](https://codecov.io/gh/batfish/batfish/branch/master/graph/badge.svg)](https://codecov.io/gh/batfish/batfish)
+> [configure batfish on other platform that can refer building and running Batfish document](https://github.com/batfish/batfish/tree/master/docs/building_and_running)
 
-## What is Batfish?
+```sh
+# install dependencies (java11, bazel)
+$ sudo apt install openjdk-11-jdk openjdk-11-dbg
+$ sudo apt install wget
+$ wget -O- https://github.com/bazelbuild/bazelisk/releases/download/v1.12.2/bazelisk-linux-amd64 | sudo tee /usr/local/bin/bazelisk > /dev/null
+$ sudo chmod +x /usr/local/bin/bazelisk
+$ sudo ln -s bazelisk /usr/local/bin/bazel
 
-Batfish is a network validation tool that provides correctness guarantees for security, reliability, and compliance by analyzing the configuration of network devices. It builds complete models of network behavior from device configurations and finds violations of network policies (built-in, user-defined, and best-practices).
+# git clone batfish/batfish with tags (v2024.07.10)
+# git clone --branch v2024.07.10 https://github.com/batfish/batfish.git
 
-A primary use case for Batfish is to validate configuration changes *before* deployment (though it can be used to validate deployed configurations as well). Pre-deployment validation is a critical gap in existing network automation workflows. By including Batfish in automation workflows, network engineers can close this gap and ensure that only correct changes are deployed.
+# git clone yongzheng2024/batfish with branch feature-v2024
+$ git clone --branch feature-v2024 https://github.com/yongzheng2024/batfish.git
 
-**Batfish does NOT require direct access to network devices.** The core analysis requires only the configuration of network devices. This analysis may be enhanced using additional information from the network such as:
-* BGP routes received from external peers
-* Topology information represented by LLDP/CDP
+# build and run batfish
+$ cd /PATH-TO/batfish
+$ ./tool/bazel_run.sh
 
-See [www.batfish.org](http://www.batfish.org) for technical information on how it works.
+# batfish server running ...
 
-## What kinds of correctness checks does Batfish support?
+# run test (optional)
+bazel test //...
+```
 
-[<img src=batfish_video.png width=370>](https://www.youtube.com/channel/UCA-OUW_3IOt9U_s60KvmJYA/videos)
-[<img src=batfish_notebook.png width=470>](https://github.com/batfish/pybatfish/tree/master/jupyter_notebooks)
+#### Configure PyBatfish on Ubuntu (non-Docker)
 
-The [Batfish YouTube channel](https://www.youtube.com/channel/UCA-OUW_3IOt9U_s60KvmJYA/videos) (subscribe!) and [Python notebooks](https://github.com/batfish/pybatfish/tree/master/jupyter_notebooks) illustrate many checks. Batfish checks span a range of network behaviors.
-#### Configuration Compliance
-* Flag undefined-but-referenced or defined-but-unreferenced structures (e.g., ACLs, route maps)
-* Configuration settings for MTUs, AAA, NTP, logging, etc. match templates
-* Devices can only be accessed using SSHv2 and password is not null
-#### Reliability
-* End-to-end reachability is not impacted for any flow after any single-link or single-device failure
-* Certain services (e.g., DNS) are globally reachable
-#### Security
-* Sensitive services can be reached only from specific subnets or devices
-* Paths between endpoints are as expected (e.g., traverse a firewall, have at least 2 way ECMP, etc...)
-#### Change Analysis
-* End-to-end reachability is identical across the current and a planned configuration
-* Planned ACL or firewall changes are provably correct and causes no collateral damage for other traffic
-* Two configurations, potentially from different vendors, are functionally equivalent
+> [PyBatfish usage document](https://pybatfish.readthedocs.io/en/latest/getting_started.html)
+> [PyBatfish interact with the Batfish service](https://pybatfish.readthedocs.io/en/latest/notebooks/interacting.html#)
 
+```sh
+# install pybatfish
+$ python3 -m pip install --upgrade pybatfish
 
+# interact with the batfish service
+# make sure the batfish service running
 
-## How do I get started?
+# create test cases directory
+$ cd /PATH-TO/batfish
+$ cd tests
+$ mkdir test  # you can modify the directory name
 
-#### 1. Run the Batfish service
-Getting started with Batfish is easy. Just pull and run the latest `allinone` Docker container that includes Batfish as well as example Jupyter notebooks. 
+# create test case script
+$ cd test
+$ touch test_batfish_0001.py
 
-    docker pull batfish/allinone
-   
-    docker run --name batfish -v batfish-data:/data -p 8888:8888 -p 9997:9997 -p 9996:9996 batfish/allinone
+# you can interact with the running batfish service
+$ cat test_batfish_0001.py
+import pandas as pd
+from pybatfish.client.session import Session
+from pybatfish.datamodel import *
+from pybatfish.datamodel.answer import *
+from pybatfish.datamodel.flow import *
 
-The second command starts the Batfish service and maps the necessary TCP ports.
+# the directory of network topology and router configuration
+SNAPSHOT_PATH = '../../networks/example/live'
 
-##### Advanced Docker configuration:
-The amount of memory available to Batfish is determined by the Docker configuration. You may wish to supply the [`--memory` command-line argument](https://docs.docker.com/config/containers/resource_constraints/#limit-a-containers-access-to-memory) to explicitly set this value.
+# Initialize a network and snapshot
+NETWORK_NAME = 'network-test-batfish-0001'
+SNAPSHOT_NAME = 'snapshot-test-batfish-0001'
 
-On Linux systems that run the OOM Killer, you may also wish to supply the `--oom-kill-disable` argument, which runs in conjunction with the `--memory` argument to prevent Linux from killing Batfish when there is memory pressure on the system.
+bf = Session(host="localhost")
+bf.set_network(NETWORK_NAME)
 
-#### 2. Browse example notebooks (optional)
+# when firstly execute this script, uncomment this line
+bf.init_snapshot(SNAPSHOT_DIR, name=SNAPSHOT_NAME, overwrite=True)
+# other scenarios, uncomment this line
+# bf.set_snapshot(SNAPSHOT_NAME)
 
-If you are new to Batfish, consider walking through our notebooks which highlight different capabilities and use cases of Batfish. Point your browser to [http://localhost:8888](http://localhost:8888), and in the `Password or token:` prompt, enter the token that Jupyter showed when you ran the container (e.g. **token=abcdef123456...**). 
+nodes = bf.q.nodeProperties().answer().frame()
+print("nodes = bf.q.nodeProperties().answer().frame()")
+print(nodes)
+print()
+print(nodes.iloc[0])
+print()
 
-Jupyter will show you the list of available notebooks. "Getting Started with Batfish" is a good one to start with. This [README](https://github.com/batfish/pybatfish/tree/master/jupyter_notebooks) explains what each notebook does. 
+interface = bf.q.interfaceProperties().answer().frame()
+print("interface = bf.q.interfaceProperties().answer().frame()")
+print(interface)
+print()
+print(interface.iloc[0])
+print()
+```
 
+#### Use Batfish and PyBatfish on Ubuntu (non-Docker)
 
-#### 3. Install Pybatfish
+> [IntelliJ IDEA configuration document](https://github.com/batfish/batfish/tree/master/docs/intellij_setup)
 
-To analyze your network configurations, you also need [Pybatfish](https://www.github.com/batfish/pybatfish), a Python 3 SDK to interact with the Batfish service. Though not strictly necessary, we recommend that you install Pybatfish in a [virtual environment](https://docs.python.org/3/library/venv.html). 
+```sh
+# configure the IntelliJ IDEA process as follows:
+# firstly, install plugins `Bazel For IntelliJ` and `Bazel (EAP)`
+# then edit Configurations and add bazel command
+#
+# * Target expression (Java_binary handled by Java Handler)
+#   + //projects/allinone:allinone_main
+# * Bazel command
+#   + run
+# * Bazel flags
+#   + --jvmopt=-Xmx12g
+#   + --jvmopt=-Dlog4j2.configurationFile=tools/log4j2.yaml
+#   + --java_runtime_version=11
+#   + --run_under="cd /PATH-TO/batfish &&"
+# * Executable flags
+#   + -runclient
+#   + false
+#   + -coordinatorargs
+#   + "-templatedirs ./questions"
+# note: please remove "#" and "+" char
+#       and modify `/PATH-TO/batfish` to your batfish directory
 
-To install Pybatfish run the following commands (in a virtual environment if applicable):
+# open a terminal to build and run batfish service
+$ cd /PATH-TO/batfish
+$ tools/bazel_run.sh
+# or open batfish in IntelliJ IDEA
+# run //projects/allinone:allinone_main
 
-    python3 -m pip install --upgrade pybatfish
+# open another terminal to execute batfish query via pybatfish
+$ cd /PATH-TO/batfish/tests/test
+$ python3 test_batfish_0001.py
 
-#### 4. Develop your analysis 
+# you can check network and snapshot via URL
+# http://localhost:9996/v2/networks
+```
 
-After installing Pybatfish, use your Python environment of choice (e.g., PyCharm, interactive Python shell, Jupyter, ..) to interact with Batfish. The [notebooks](https://github.com/batfish/pybatfish/tree/master/jupyter_notebooks) provide examples of such scripts. 
+### Directory Structure
 
-See complete documentation of Pybatfish on [readthedocs](https://pybatfish.readthedocs.io/en/latest/).
+#### Partial Directory Structure via Tree Command
 
+```txt
+Batfish
+├── bdds                 ### bdd encode output (order from 000 to 999)
+│   ├── routing_policies_000.txt
+│   └── routing_policies_001.txt
+├── docs                 ### documents
+│   ├── building_and_running
+│   ├── contributing
+│   ├── conversion
+│   ├── data_plane
+│   ├── example_code
+│   ├── extraction
+│   ├── flow_dispositions
+│   ├── forwarding_analysis
+│   ├── intellij_setup
+│   ├── lab_notes
+│   ├── parsing
+│   ├── post_processing
+│   ├── proposals
+│   ├── question_development
+│   ├── README.md
+│   ├── symbolic_engine
+│   └── topology
+├── networks             ### network topology and router configuration
+│   ├── BUILD.bazel
+│   ├── example
+│   │   ├── candidate
+│   │   ├── example_layer1_topology.json
+│   │   ├── example-network.png
+│   │   ├── live   -------------------------------------------+
+│   │   ├── live-with-bgp-announcements                       |
+│   │   ├── live-with-interface-outage                        |
+│   │   ├── live-with-isp                                     |
+│   │   ├── README.md                                         |
+│   │   └── route-analysis   ------------------------------+  |
+│   ├── hybrid-cloud-aws                                   |  |
+│   └── iptables-firewall                                  |  |
+├── projects             ### Batfish source code           |  |
+│   ├── allinone                                           |  |
+│   ├── batfish                                            |  |
+│   ├── batfish-client                                     |  |
+│   ├── batfish-common-protocol                            |  |
+│   ├── bdd                                                |  |
+│   ├── BUILD.bazel                                        |  |
+│   ├── checkstyle.xml                                     |  |
+│   ├── client                                             |  |
+│   ├── coordinator                                        |  |
+│   ├── minesweeper                                        |  |
+│   ├── question                                           |  |
+│   ├── symbolic                                           |  |
+│   └── VERSION                                            |  |
+├── README.md            ### README by yongzheng           |  |
+├── README_original.md   ### original README by Batfish    |  |
+├── tests                                                  |  |
+│   ├── aws                                                |  |
+│   ├── basic                                              |  |
+│   ├── logging                                            |  |
+│   ├── parsing-errors-tests                               |  |
+│   ├── parsing-tests                                      |  |
+│   ├── questions                                          |  |
+│   ├── roles                                              |  |
+│   └── test             ### test cases via pybatfish      |  |
+│       ├── test_batfish_0001.py   <-----------------------|--+
+│       └── test_routing_policies_0001.py   <--------------+
+└── tools                ### tools involves some script
+    ├── bazel_run.sh
+    ├── bdd
+    ├── benchmarks
+    ├── BUILD.bazel
+    ├── fix_java_format.sh
+    ├── generate_pan_apps.py
+    ├── jol
+    ├── log4j2.yaml
+    ├── README.md
+    ├── run_checkstyle.sh
+    ├── stress_tests
+    ├── update_aws_addresses.sh
+    ├── update_javadoc.sh
+    └── update_refs.sh
+```
 
-## System Requirements for running Batfish
+### <b>Testing</b>
 
-Batfish can be run on any operating system that supports Docker. The containers are actively tested on Mac OS X and Ubuntu 16.04 LTS.
+#### Execute Routing Policies Test Case
 
-To get started with the example Jupyter notebooks, all you need is a reasonably capable laptop:
+```sh
+# open a terminal to build and run batfish service
+$ cd /PATH-TO/batfish
+$ tools/bazel_run.sh
+# or open batfish in IntelliJ IDEA
+# run //projects/allinone:allinone_main
 
-* Dual core CPU
-* 8 GB RAM
-* 256 GB hard-drive
+# you can modify the input configuration in `./networks/example/routing-analysis`
 
-When you transition to running Batfish on your own network, we recommend a server that at least has:
+# open another terminal to execute batfish query via pybatfish
+$ cd /PATH-TO/batfish/tests/test
+$ python3 test_routing_policies_0001.py
 
-* Quad-core CPU with 2 threads per CPU
-* 32 GB RAM
-* 256 GB hard-drive
-
-
-## Supported Network Device and Operating System List
-
-Batfish supports configurations for a large and growing set of (physical and virtual) devices, including:
-
-* A10 Networks
-* Arista
-* AWS (VPCs, Network ACLs, VPN GW, NAT GW, Internet GW, Security Groups, etc…)
-* Cisco (All Cisco NX-OS, IOS, IOS-XE, IOS-XR and ASA devices)
-* Check Point 
-* [Cumulus](https://github.com/batfish/batfish/wiki/Packaging-snapshots-for-analysis#format-for-cumulus-configuration-files)
-* [F5 BIG-IP](https://github.com/batfish/batfish/wiki/Packaging-snapshots-for-analysis#format-for-f5-big-ip-configuration-files)
-* Fortinet
-* Free-Range Routing (FRR)
-* [iptables (on hosts)](https://github.com/batfish/batfish/wiki/Packaging-snapshots-for-analysis#format-for-host-json-files)
-* Juniper (All JunOS platforms: MX, EX, QFX, SRX, T-series, PTX)
-* Palo Alto Networks
-* SONiC
-
-Batfish has limited support for the following platforms:
-
-* Aruba
-* Dell Force10
-* Foundry
-
-If you'd like support for additional vendors or currently-unsupported configuration features, let us know via [Slack](https://join.slack.com/t/batfish-org/shared_invite/enQtMzA0Nzg2OTAzNzQ1LTcyYzY3M2Q0NWUyYTRhYjdlM2IzYzRhZGU1NWFlNGU2MzlhNDY3OTJmMDIyMjQzYmRlNjhkMTRjNWIwNTUwNTQ) or [GitHub](https://github.com/batfish/batfish/issues/new). We'll try to add support. Or, you can &mdash; we welcome pull requests! :)
-
-## License and Dependencies
-
-Batfish is released under The Apache Software License, Version 2.0. All
-third-party dependencies are compatible with this licensing.
+# you can refer the bdd encode output in the last `./bdds/routing_policies_xxx.txt`
+```
