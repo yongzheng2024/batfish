@@ -94,7 +94,8 @@ print()
 ```sh
 # configure the IntelliJ IDEA process as follows:
 # firstly, install plugins `Bazel For IntelliJ` and `Bazel (EAP)`
-# then edit Configurations and add bazel command
+# secondly, file - import bazel project - create from scratch
+# finally, edit Run/Debug Configurations - add bazel command
 #
 # * Target expression (Java_binary handled by Java Handler)
 #   + //projects/allinone:allinone_main
