@@ -502,6 +502,10 @@ public final class BDDRoute implements IDeepCopy<BDDRoute> {
     return sb.toString();
   }
 
+  public String dotWrapper(BDD bdd) {
+    return dot(bdd);
+  }
+
   /*
    * Creates a unique id for a bdd node when generating
    * a DOT file for graphviz

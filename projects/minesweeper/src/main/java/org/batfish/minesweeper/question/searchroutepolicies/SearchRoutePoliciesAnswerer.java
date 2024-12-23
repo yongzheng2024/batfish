@@ -22,6 +22,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.io.IOException;
 import javax.annotation.Nonnull;
@@ -169,7 +170,7 @@ public final class SearchRoutePoliciesAnswerer extends Answerer {
 
     // create bdd print writer for write bdd encode
     try {
-      _bddWriter = new PrintWriter(bddOutputFile);
+      _bddWriter = new PrintWriter(new FileWriter(bddOutputFile), true);
     } catch (IOException e) {
       // Handle any file I/O exceptions
       System.err.println("Error: Writing to file: " + e.getMessage());
@@ -554,10 +555,10 @@ public final class SearchRoutePoliciesAnswerer extends Answerer {
 
     // added by yongzheng in 20241221 for output bdd encode information
     // print BDD encode information to specific file `bdds/routing_policies_xxx.txt`
-    for (int i = 0; i < paths.size(); ++i) {
-       _bddWriter.println(paths.get(i).debug());
-    }
-    _bddWriter.println("------------------------------------------------------------");
+    // for (int i = 0; i < paths.size(); ++i) {
+    //    _bddWriter.println(paths.get(i).debug());
+    // }
+    // _bddWriter.println("------------------------------------------------------------");
 
     // print successfully written message to terminal
     // System.out.println("Information successfully written to BDD output file.");
@@ -598,6 +599,12 @@ public final class SearchRoutePoliciesAnswerer extends Answerer {
 
       Optional<RowAndRoute> result =
           constraintsToResult(intersection, policy, outConfigAPs, outputRoute);
+
+      // added by yongzheng in 20241223 for output bdd encode information
+      // print BDD encode information to specific file `bdds/routing_policies_xxx.txt`
+      _bddWriter.println(outputRoute.dotWrapper(intersection));
+      _bddWriter.println("------------------------------------------------------------");
+
       if (result.isPresent()) {
         builder.add(result.get()._row);
         if (_pathOption == PathOption.SINGLE) {
