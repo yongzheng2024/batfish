@@ -519,17 +519,26 @@ public class TransferBDD {
       BDD mcPredicate =
           mc.getCommunitySetMatchExpr()
               .accept(new CommunitySetMatchExprToBDD(), new Arg(this, routeForMatching(p)));
+      // TODO construct related router configuration to trigger this branch
+      // added by yongzheng for print BDD dot graph in 20250105
+      // mcPredicate.printDot();
       finalResults.add(result.setReturnValueBDD(mcPredicate).setReturnValueAccepted(true));
 
     } else if (expr instanceof MatchTag) {
       MatchTag mt = (MatchTag) expr;
       BDD mtBDD = matchLongComparison(mt.getCmp(), mt.getTag(), routeForMatching(p).getTag());
+      // TODO construct related router configuration to trigger this branch
+      // added by yongzheng for print BDD dot graph in 20250105
+      // mtBDD.printDot();
       finalResults.add(result.setReturnValueBDD(mtBDD).setReturnValueAccepted(true));
 
     } else if (expr instanceof MatchMetric) {
       MatchMetric mm = (MatchMetric) expr;
       BDD mmBDD =
           matchLongComparison(mm.getComparator(), mm.getMetric(), routeForMatching(p).getMed());
+      // TODO construct related router configuration to trigger this branch
+      // added by yongzheng for print BDD dot graph in 20250105
+      // mmBDD.printDot();
       finalResults.add(result.setReturnValueBDD(mmBDD).setReturnValueAccepted(true));
 
     } else if (expr instanceof MatchClusterListLength) {
@@ -591,6 +600,10 @@ public class TransferBDD {
                   .accept(new AsPathMatchExprToRegexes(), new Arg(this, currRoute)),
               _asPathRegexAtomicPredicates,
               currRoute);
+      // TODO construct related router configuration to trigger this branch
+      // added by yongzheng for print BDD dot graph in 20250105
+      // asPathPredicate.printDot();
+      // System.out.println(currRoute.dotWrapper(asPathPredicate));
       finalResults.add(result.setReturnValueBDD(asPathPredicate).setReturnValueAccepted(true));
 
     } else if (expr instanceof MatchSourceVrf) {
@@ -605,6 +618,9 @@ public class TransferBDD {
       BDD trackPred =
           itemToBDD(
               ts.getTrackName(), _configAtomicPredicates.getTracks(), p.getData().getTracks());
+      // TODO construct related router configuration to trigger this branch
+      // added by yongzheng for print BDD dot graph in 20250105
+      // trackPred.printDot();
       finalResults.add(result.setReturnValueBDD(trackPred).setReturnValueAccepted(true));
 
     } else if (expr instanceof MatchInterface) {
@@ -624,6 +640,9 @@ public class TransferBDD {
                     return p.getData().getNextHopInterfaces().value(index);
                   })
               .reduce(_factory.zero(), BDD::or);
+      // TODO construct related router configuration to trigger this branch
+      // added by yongzheng for print BDD dot graph in 20250105
+      // miPred.printDot();
       finalResults.add(result.setReturnValueBDD(miPred).setReturnValueAccepted(true));
 
     } else {
@@ -1115,6 +1134,10 @@ public class TransferBDD {
       SymbolicAsPathRegex regex = new SymbolicAsPathRegex(line.getRegex());
       BDD regexAPBdd =
           asPathRegexesToBDD(ImmutableSet.of(regex), _asPathRegexAtomicPredicates, other);
+      // added by yongzheng for print BDD dot graph in 20250105
+      // regexAPBdd.printDot();
+      System.out.println("LegacyMatchAsPath");
+      System.out.println(other.dotWrapper(regexAPBdd));
       acc = ite(regexAPBdd, mkBDD(action), acc);
     }
     return acc;
@@ -1142,6 +1165,10 @@ public class TransferBDD {
       p.debug("Prefix Range: %s", range);
       p.debug("Action: %s", line.getAction());
       BDD matches = symbolicMatcher.apply(other, range);
+      // added by yongzheng for print BDD dot graph in 20250105
+      // matches.printDot();
+      System.out.println("MatchPrefix");
+      System.out.println(other.dotWrapper(matches));
       BDD action = mkBDD(line.getAction() == LineAction.PERMIT);
       acc = ite(matches, action, acc);
     }
