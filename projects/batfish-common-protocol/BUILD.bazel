@@ -111,6 +111,7 @@ java_library(
         ":common_lib",
         ":parser_common",
         "//projects/bdd",
+        "//projects/lib/z3",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",
         "@maven//:com_fasterxml_jackson_core_jackson_databind",
         "@maven//:com_google_code_findbugs_jsr305",
@@ -158,6 +159,7 @@ java_library(
     deps = [
         ":parser_common",
         "//projects/bdd",
+        "//projects/lib/z3",
         "@maven//:com_carrotsearch_hppc",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",
         "@maven//:com_fasterxml_jackson_core_jackson_core",

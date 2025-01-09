@@ -18,7 +18,7 @@ import org.batfish.datamodel.Ip;
 import org.batfish.datamodel.IpWildcard;
 import org.batfish.datamodel.Prefix;
 
-public final class MutableBDDInteger extends BDDInteger {
+public /*final*/ class MutableBDDInteger extends BDDInteger {
   // Temporary ArrayLists used to optimize some internal computations.
   private transient List<BDD> _trues;
   private transient List<BDD> _falses;
@@ -126,6 +126,7 @@ public final class MutableBDDInteger extends BDDInteger {
     long startBDDCount = _factory.numOutstandingBDDs();
     checkState(_trues.isEmpty(), "Unexpected array state");
     checkState(_falses.isEmpty(), "Unexpected array state");
+    // 192.168.0.0/16 -> 192.168.0.0 >> 16 -> 192.168
     long val = value >> (_bitvec.length - length);
     for (int i = length - 1; i >= 0; i--) {
       boolean bitValue = (val & 1) == 1;
@@ -136,12 +137,41 @@ public final class MutableBDDInteger extends BDDInteger {
       }
       val >>= 1;
     }
+    // BDDFactory addAll: Returns the logical 'and' of zero or more BDDs.
+    // BDDFactory orAll: Returns the logical 'or' or zero or more BDDs.
+    // BDD diffWith: Makes this BDD to the logical 'difference' of two BDDs, 
+    //               equivalent to BDD this.and(that.not())
+    // scenario 1: _bitvec is 1100,1101, _trues is 1,1111, _falses is 000,
+    //             so result is (1&1&1&1&1) & !(0|0|0).
     BDD result = _factory.andAll(_trues).diffWith(_factory.orAll(_falses));
     _trues.clear();
     _falses.clear();
     assertNoLeaks(startBDDCount, 1);
     return result;
   }
+
+  /** Check if the first length bits match the given value (similar to the BDD example). */
+  // public BoolExpr firstBitsEqual(long value, int length) throws Z3Exception {
+  //   // Create a bit-vector representing the value with the specified length
+  //   BitVecExpr valExpr = ctx.mkBV(value, length);
+
+  //   // Create an array to hold the individual bits from the bit-vector
+  //   BoolExpr[] bitConditions = new BoolExpr[length];
+
+  //   // Iterate over each bit in the value and compare it with the corresponding bit in the bit-vector
+  //   for (int i = 0; i < length; i++) {
+  //     // Get the i-th bit from the value bit-vector
+  //     BitVecExpr bit = ctx.mkExtract(i, i, valExpr);
+
+  //     // Check if the bit is 1 (true) or 0 (false) and add the corresponding condition
+  //     bitConditions[i] = ctx.mkEq(bit, ctx.mkBV(1, 1)); // Bit is 1
+  //   }
+
+  //   // Combine all the bit conditions using AND (similar to 'andAll' in BDD)
+  //   BoolExpr result = ctx.mkAnd(bitConditions);
+
+  //   return result;
+  // }
 
   @Override
   public BDD toBDD(IpWildcard ipWildcard) {

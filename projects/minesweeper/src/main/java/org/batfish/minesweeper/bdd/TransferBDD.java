@@ -111,6 +111,11 @@ import org.batfish.minesweeper.SymbolicRegex;
 import org.batfish.minesweeper.bdd.BDDTunnelEncapsulationAttribute.Value;
 import org.batfish.minesweeper.bdd.CommunitySetMatchExprToBDD.Arg;
 
+// import org.batfish.common.bddsmt.MutableBDDSMTInteger;
+
+import com.microsoft.z3.Context;
+import com.microsoft.z3.BoolExpr;
+
 /**
  * @author Ryan Beckett
  */
@@ -1066,6 +1071,26 @@ public class TransferBDD {
 
     BDD prefixMatch = record.getPrefix().toBDD(range.getPrefix());
     BDD lenMatch = record.getPrefixLength().range(lower, upper);
+    // added by yongzheng for print BDD encoding in 20240107
+    // System.out.println("------------------------------------------------------------");
+    // System.out.println(range.toString());
+    // System.out.println("------------------------------------------------------------");
+    // prefixMatch.printDot();
+    // lenMatch.printDot();
+    // System.out.println("============================================================");
+
+    // added by yongzheng for test bddsmt MutableBDDSMTInteger
+    // synthesis smt logical expression
+    Context context = new Context();
+    BoolExpr prefixIpMatchSmt = record.getPrefix().toSMT(range.getPrefix(), context, 
+                                                         "prefixIp_match_0001");
+    BoolExpr lengthMatchSmt = record.getPrefixLength().rangeEqual(lower, upper, context,
+                                                                  "prefixLength_match_0001");
+    BoolExpr prefixMatchSmt = context.mkAnd(prefixIpMatchSmt, lengthMatchSmt);
+    // System.out.println("------------------------------------------------------------");
+    // System.out.println(prefixMatchSmt);
+    // System.out.println("------------------------------------------------------------");
+
     return prefixMatch.and(lenMatch);
   }
 
@@ -1136,8 +1161,8 @@ public class TransferBDD {
           asPathRegexesToBDD(ImmutableSet.of(regex), _asPathRegexAtomicPredicates, other);
       // added by yongzheng for print BDD dot graph in 20250105
       // regexAPBdd.printDot();
-      System.out.println("LegacyMatchAsPath");
-      System.out.println(other.dotWrapper(regexAPBdd));
+      // System.out.println("LegacyMatchAsPath");
+      // System.out.println(other.dotWrapper(regexAPBdd));
       acc = ite(regexAPBdd, mkBDD(action), acc);
     }
     return acc;
@@ -1167,8 +1192,9 @@ public class TransferBDD {
       BDD matches = symbolicMatcher.apply(other, range);
       // added by yongzheng for print BDD dot graph in 20250105
       // matches.printDot();
-      System.out.println("MatchPrefix");
-      System.out.println(other.dotWrapper(matches));
+      // System.out.println("MatchPrefix");
+      // System.out.println(range.toString());
+      // System.out.println(other.dotWrapper(matches));
       BDD action = mkBDD(line.getAction() == LineAction.PERMIT);
       acc = ite(matches, action, acc);
     }
@@ -1208,6 +1234,9 @@ public class TransferBDD {
       for (PrefixRange range : ranges) {
         p.debug("Prefix Range: %s", range);
         acc = acc.or(symbolicMatcher.apply(other, range));
+        // added by yongzheng for print isRelevantForDestination or isRelevantForNextHop
+        // System.out.println(range.toString());
+        // System.out.println(other.dotWrapper(acc));
       }
       return acc;
 

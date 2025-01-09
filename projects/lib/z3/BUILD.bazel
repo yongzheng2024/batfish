@@ -1,0 +1,10 @@
+load("@rules_java//java:defs.bzl", "java_import")
+
+package(default_visibility = ["//visibility:public"])
+
+licenses(["notice"])  # MIT
+
+java_import(
+    name = "z3",
+    jars = ["com.microsoft.z3.jar"],
+)

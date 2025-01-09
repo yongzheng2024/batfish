@@ -76,6 +76,9 @@ import org.batfish.specifier.RoutingPolicySpecifier;
 import org.batfish.specifier.SpecifierContext;
 import org.batfish.specifier.SpecifierFactories;
 
+// added by yongzheng for print routing policy in 20250107
+// import org.batfish.datamodel.routing_policy.statement.Statement;
+
 /** An answerer for {@link SearchRoutePoliciesQuestion}. */
 @ParametersAreNonnullByDefault
 public final class SearchRoutePoliciesAnswerer extends Answerer {
@@ -166,7 +169,7 @@ public final class SearchRoutePoliciesAnswerer extends Answerer {
     if (limit < counter) {
       System.err.println("Error: All filenames (from 000 to 999) are taken.");
       System.exit(1);  // Exit with an error code
-    }    
+    }
 
     // create bdd print writer for write bdd encode
     try {
@@ -543,6 +546,7 @@ public final class SearchRoutePoliciesAnswerer extends Answerer {
     TransferBDD tbdd;
     try {
       tbdd = new TransferBDD(configAPs, policy);
+      // TODO understand computePaths by yongzheng in 20250105
       paths = tbdd.computePaths();
     } catch (Exception e) {
       throw new BatfishException(
@@ -553,15 +557,12 @@ public final class SearchRoutePoliciesAnswerer extends Answerer {
           e);
     }
 
-    // added by yongzheng in 20241221 for output bdd encode information
-    // print BDD encode information to specific file `bdds/routing_policies_xxx.txt`
+    // added by yongzheng in 20241221 for output bdd encoding information
+    // print BDD encoding information to specific file `bdds/routing_policies_xxx.txt`
     // for (int i = 0; i < paths.size(); ++i) {
     //    _bddWriter.println(paths.get(i).debug());
     // }
     // _bddWriter.println("------------------------------------------------------------");
-
-    // print successfully written message to terminal
-    // System.out.println("Information successfully written to BDD output file.");
 
     Map<Boolean, List<TransferReturn>> pathMap =
         paths.stream()
@@ -629,6 +630,15 @@ public final class SearchRoutePoliciesAnswerer extends Answerer {
    * @return all results from analyzing those route policies
    */
   private Stream<Row> searchPoliciesForNode(Configuration config, Set<RoutingPolicy> policies) {
+    // added by yongzheng for print configuration and routing policy in 20250107
+    // System.out.println(config.toString());
+    // for (RoutingPolicy policy : policies) {
+    //   System.out.println(policy.toString());
+    //   List<Statement> statements = policy.getStatements();
+    //   for (Statement statement : statements) {
+    //     System.out.println(statement.toString());
+    //   }
+    // }
     ConfigAtomicPredicates configAPs =
         new ConfigAtomicPredicates(
             ImmutableList.of(new SimpleImmutableEntry<>(config, policies)),
