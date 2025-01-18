@@ -111,11 +111,6 @@ import org.batfish.minesweeper.SymbolicRegex;
 import org.batfish.minesweeper.bdd.BDDTunnelEncapsulationAttribute.Value;
 import org.batfish.minesweeper.bdd.CommunitySetMatchExprToBDD.Arg;
 
-// import org.batfish.common.bddsmt.MutableBDDSMTInteger;
-
-import com.microsoft.z3.Context;
-import com.microsoft.z3.BoolExpr;
-
 /**
  * @author Ryan Beckett
  */
@@ -238,8 +233,6 @@ public class TransferBDD {
                 .collect(Collectors.toList()));
   }
 
-  //
-
   /**
    * Produces a set consisting of all atomic predicates associated with any of the given symbolic
    * regexes.
@@ -261,11 +254,13 @@ public class TransferBDD {
    * expressions, for example matching on a prefix or community, this analysis will yield exactly
    * two paths, respectively representing the case when the expression evaluates to true and false.
    * Some expressions, such as CallExpr, Conjunction, and Disjunction, implicitly or explicitly
-   * contain branches and so can yield more than two paths. TODO: Any updates to the TransferParam
-   * in expr are lost currently
+   * contain branches and so can yield more than two paths.
+   * TODO: Any updates to the TransferParam in expr are lost currently.
    */
   private List<TransferResult> compute(BooleanExpr expr, TransferBDDState state)
       throws UnsupportedOperationException {
+    // NOTE: added by yongzheng to print expression
+    // System.out.println(expr);
 
     TransferParam p = state.getTransferParam();
     TransferResult result = state.getTransferResult();
@@ -524,26 +519,17 @@ public class TransferBDD {
       BDD mcPredicate =
           mc.getCommunitySetMatchExpr()
               .accept(new CommunitySetMatchExprToBDD(), new Arg(this, routeForMatching(p)));
-      // TODO construct related router configuration to trigger this branch
-      // added by yongzheng for print BDD dot graph in 20250105
-      // mcPredicate.printDot();
       finalResults.add(result.setReturnValueBDD(mcPredicate).setReturnValueAccepted(true));
 
     } else if (expr instanceof MatchTag) {
       MatchTag mt = (MatchTag) expr;
       BDD mtBDD = matchLongComparison(mt.getCmp(), mt.getTag(), routeForMatching(p).getTag());
-      // TODO construct related router configuration to trigger this branch
-      // added by yongzheng for print BDD dot graph in 20250105
-      // mtBDD.printDot();
       finalResults.add(result.setReturnValueBDD(mtBDD).setReturnValueAccepted(true));
 
     } else if (expr instanceof MatchMetric) {
       MatchMetric mm = (MatchMetric) expr;
       BDD mmBDD =
           matchLongComparison(mm.getComparator(), mm.getMetric(), routeForMatching(p).getMed());
-      // TODO construct related router configuration to trigger this branch
-      // added by yongzheng for print BDD dot graph in 20250105
-      // mmBDD.printDot();
       finalResults.add(result.setReturnValueBDD(mmBDD).setReturnValueAccepted(true));
 
     } else if (expr instanceof MatchClusterListLength) {
@@ -605,10 +591,6 @@ public class TransferBDD {
                   .accept(new AsPathMatchExprToRegexes(), new Arg(this, currRoute)),
               _asPathRegexAtomicPredicates,
               currRoute);
-      // TODO construct related router configuration to trigger this branch
-      // added by yongzheng for print BDD dot graph in 20250105
-      // asPathPredicate.printDot();
-      // System.out.println(currRoute.dotWrapper(asPathPredicate));
       finalResults.add(result.setReturnValueBDD(asPathPredicate).setReturnValueAccepted(true));
 
     } else if (expr instanceof MatchSourceVrf) {
@@ -623,9 +605,6 @@ public class TransferBDD {
       BDD trackPred =
           itemToBDD(
               ts.getTrackName(), _configAtomicPredicates.getTracks(), p.getData().getTracks());
-      // TODO construct related router configuration to trigger this branch
-      // added by yongzheng for print BDD dot graph in 20250105
-      // trackPred.printDot();
       finalResults.add(result.setReturnValueBDD(trackPred).setReturnValueAccepted(true));
 
     } else if (expr instanceof MatchInterface) {
@@ -645,9 +624,6 @@ public class TransferBDD {
                     return p.getData().getNextHopInterfaces().value(index);
                   })
               .reduce(_factory.zero(), BDD::or);
-      // TODO construct related router configuration to trigger this branch
-      // added by yongzheng for print BDD dot graph in 20250105
-      // miPred.printDot();
       finalResults.add(result.setReturnValueBDD(miPred).setReturnValueAccepted(true));
 
     } else {
@@ -1071,26 +1047,6 @@ public class TransferBDD {
 
     BDD prefixMatch = record.getPrefix().toBDD(range.getPrefix());
     BDD lenMatch = record.getPrefixLength().range(lower, upper);
-    // added by yongzheng for print BDD encoding in 20240107
-    // System.out.println("------------------------------------------------------------");
-    // System.out.println(range.toString());
-    // System.out.println("------------------------------------------------------------");
-    // prefixMatch.printDot();
-    // lenMatch.printDot();
-    // System.out.println("============================================================");
-
-    // added by yongzheng for test bddsmt MutableBDDSMTInteger
-    // synthesis smt logical expression
-    Context context = new Context();
-    BoolExpr prefixIpMatchSmt = record.getPrefix().toSMT(range.getPrefix(), context, 
-                                                         "prefixIp_match_0001");
-    BoolExpr lengthMatchSmt = record.getPrefixLength().rangeEqual(lower, upper, context,
-                                                                  "prefixLength_match_0001");
-    BoolExpr prefixMatchSmt = context.mkAnd(prefixIpMatchSmt, lengthMatchSmt);
-    // System.out.println("------------------------------------------------------------");
-    // System.out.println(prefixMatchSmt);
-    // System.out.println("------------------------------------------------------------");
-
     return prefixMatch.and(lenMatch);
   }
 
@@ -1159,10 +1115,6 @@ public class TransferBDD {
       SymbolicAsPathRegex regex = new SymbolicAsPathRegex(line.getRegex());
       BDD regexAPBdd =
           asPathRegexesToBDD(ImmutableSet.of(regex), _asPathRegexAtomicPredicates, other);
-      // added by yongzheng for print BDD dot graph in 20250105
-      // regexAPBdd.printDot();
-      // System.out.println("LegacyMatchAsPath");
-      // System.out.println(other.dotWrapper(regexAPBdd));
       acc = ite(regexAPBdd, mkBDD(action), acc);
     }
     return acc;
@@ -1190,11 +1142,6 @@ public class TransferBDD {
       p.debug("Prefix Range: %s", range);
       p.debug("Action: %s", line.getAction());
       BDD matches = symbolicMatcher.apply(other, range);
-      // added by yongzheng for print BDD dot graph in 20250105
-      // matches.printDot();
-      // System.out.println("MatchPrefix");
-      // System.out.println(range.toString());
-      // System.out.println(other.dotWrapper(matches));
       BDD action = mkBDD(line.getAction() == LineAction.PERMIT);
       acc = ite(matches, action, acc);
     }
@@ -1234,9 +1181,6 @@ public class TransferBDD {
       for (PrefixRange range : ranges) {
         p.debug("Prefix Range: %s", range);
         acc = acc.or(symbolicMatcher.apply(other, range));
-        // added by yongzheng for print isRelevantForDestination or isRelevantForNextHop
-        // System.out.println(range.toString());
-        // System.out.println(other.dotWrapper(acc));
       }
       return acc;
 
@@ -1422,7 +1366,9 @@ public class TransferBDD {
    */
   public List<TransferReturn> computePaths() {
     BDDRoute o = new BDDRoute(_factory, _configAtomicPredicates);
+    // NOTE: modified by yongzheng to enable debug information in TransferParam
     TransferParam p = new TransferParam(o, false);
+    // TransferParam p = new TransferParam(o, true);
     return computePaths(_statements, p).stream()
         .map(TransferResult::getReturnValue)
         .collect(ImmutableList.toImmutableList());

@@ -31,8 +31,6 @@ import org.batfish.minesweeper.ConfigAtomicPredicates;
 import org.batfish.minesweeper.IDeepCopy;
 import org.batfish.minesweeper.OspfType;
 
-import org.batfish.common.bddsmt.MutableBDDSMTInteger;
-
 /**
  * A collection of attributes describing a route advertisement, used for symbolic route analysis.
  *
@@ -48,8 +46,6 @@ public final class BDDRoute implements IDeepCopy<BDDRoute> {
    * BDDs represent all possible output announcements from that route policy and the conditions
    * under which they occur, in terms of the vi variables (which still represent the bits of the
    * original input announcement).
-   * 
-   * TODO not understand the above comment by yongzheng in 20250107
    *
    * Since most fields of the route announcement are integers, for example local preference,
    * there is a {@link BDDInteger} helper class that uses this encoding to represent a
@@ -121,11 +117,9 @@ public final class BDDRoute implements IDeepCopy<BDDRoute> {
   // intra area (O), inter area (OIA), external type 1 (E1), or external type 2 (E2)
   private BDDDomain<OspfType> _ospfMetric;
 
-  // private final MutableBDDInteger _prefix;
-  private final MutableBDDSMTInteger _prefix;
+  private final MutableBDDInteger _prefix;
 
-  // private final MutableBDDInteger _prefixLength;
-  private final MutableBDDSMTInteger _prefixLength;
+  private final MutableBDDInteger _prefixLength;
 
   /**
    * A sequence of AS numbers that is prepended to the original AS-path. The use of a fully concrete
@@ -280,12 +274,10 @@ public final class BDDRoute implements IDeepCopy<BDDRoute> {
     addBitNames("clusterListLength", 32, idx, false);
     idx += 32;
     // need 6 bits for prefix length because there are 33 possible values, 0 - 32
-    // _prefixLength = MutableBDDInteger.makeFromIndex(factory, 6, idx, true);
-    _prefixLength = MutableBDDSMTInteger.makeFromIndex(factory, 6, idx, true);
+    _prefixLength = MutableBDDInteger.makeFromIndex(factory, 6, idx, true);
     addBitNames("pfxLen", 6, idx, true);
     idx += 6;
-    // _prefix = MutableBDDInteger.makeFromIndex(factory, 32, idx, true);
-    _prefix = MutableBDDSMTInteger.makeFromIndex(factory, 32, idx, true);
+    _prefix = MutableBDDInteger.makeFromIndex(factory, 32, idx, true);
     addBitNames("pfx", 32, idx, true);
     idx += 32;
 
@@ -356,10 +348,8 @@ public final class BDDRoute implements IDeepCopy<BDDRoute> {
     _asPathRegexAtomicPredicates = new BDDDomain<>(other._asPathRegexAtomicPredicates);
     _clusterListLength = new MutableBDDInteger(other._clusterListLength);
     _communityAtomicPredicates = other._communityAtomicPredicates.clone();
-    // _prefixLength = new MutableBDDInteger(other._prefixLength);
-    _prefixLength = new MutableBDDSMTInteger(other._prefixLength);
-    // _prefix = new MutableBDDInteger(other._prefix);
-    _prefix = new MutableBDDSMTInteger(other._prefix);
+    _prefixLength = new MutableBDDInteger(other._prefixLength);
+    _prefix = new MutableBDDInteger(other._prefix);
     _nextHop = new MutableBDDInteger(other._nextHop);
     _nextHopSet = other._nextHopSet;
     _nextHopType = other._nextHopType;
@@ -400,10 +390,8 @@ public final class BDDRoute implements IDeepCopy<BDDRoute> {
     _asPathRegexAtomicPredicates = new BDDDomain<>(pred, route._asPathRegexAtomicPredicates);
     _clusterListLength = route.getClusterListLength().and(pred);
     _communityAtomicPredicates = communityAtomicPredicates;
-    // _prefixLength = route.getPrefixLength().and(pred);
-    _prefixLength = (MutableBDDSMTInteger) route.getPrefixLength().and(pred);
-    // _prefix = route.getPrefix().and(pred);
-    _prefix = (MutableBDDSMTInteger) route.getPrefix().and(pred);
+    _prefixLength = route.getPrefixLength().and(pred);
+    _prefix = route.getPrefix().and(pred);
     _nextHop = route.getNextHop().and(pred);
     _adminDist = route.getAdminDist().and(pred);
     _med = route.getMed().and(pred);
@@ -646,11 +634,11 @@ public final class BDDRoute implements IDeepCopy<BDDRoute> {
     _ospfMetric = ospfMetric;
   }
 
-  public MutableBDDSMTInteger getPrefix() {
+  public MutableBDDInteger getPrefix() {
     return _prefix;
   }
 
-  public MutableBDDSMTInteger getPrefixLength() {
+  public MutableBDDInteger getPrefixLength() {
     return _prefixLength;
   }
 
