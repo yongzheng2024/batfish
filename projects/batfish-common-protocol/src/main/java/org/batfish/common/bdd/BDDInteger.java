@@ -100,6 +100,18 @@ public abstract class BDDInteger implements Serializable {
 
   // Helper function to compute leq on the last N bits of the input value.
   private BDD leqN(long val, int n) {
+    // aBDD.invimpEq(bBDD): return aBDD | (!bBDD)
+    // aBDD.diffEq(bBDD):   return aBDD & (!bBDD)
+    // scenario 1: _bitvec is 1100, val is 1110, n is 4  (_bitvec < val)
+    //             acc = ((((initAcc & (!0)) | (!0)) | (!1)) | (!1)) 
+    //                 = ((((1&1)|1)|0)|0) = 1
+    // scenario 2: _bitvec is 1100, val is 1100, n is 4  (_bitvec = val)
+    //             acc = ((((initAcc & (!0)) & (!0)) | (!1)) | (!1)) 
+    //                 = ((((1&1)&1)|0)|0) = 1
+    // scenario 3: _bitvec is 1100, val is 1000, n is 4  (_bitvec > val)
+    //             acc = ((((initAcc & (!0)) & (!0)) & (!1)) | (!1)) 
+    //                 = ((((1&1)&1)&0)|0) = 0
+    // note: initial acc (initAcc) is 1
     assert n <= _bitvec.length;
     long currentVal = val;
     BDD acc = _factory.one(); // whether the suffix of BDD is leq suffix of val.
@@ -128,6 +140,15 @@ public abstract class BDDInteger implements Serializable {
 
   // Helper function to compute geq on the last N bits of the input value.
   private BDD geqN(long val, int n) {
+    // aBDD.andEq(bBDD): return aBDD & bBDD
+    // aBDD.orEq(bBDD):  return aBDD | bBDD
+    // scenario 1: _bitvec is 1100, val is 1110, n is 4  (_bitvec < val)
+    //             acc = ((((initAcc | 0) & 0) & 1) & 1) = ((((1|0)&0)&1)&1) = 0
+    // scenario 2: _bitvec is 1100, val is 1100, n is 4  (_bitvec = val)
+    //             acc = ((((initAcc | 0) | 0) & 1) & 1) = ((((1|0)|0)&1)&1) = 1
+    // scenario 3: _bitvec is 1100, val is 1000, n is 4  (_bitvec > val)
+    //             acc = ((((initAcc | 0) | 0) | 1) & 1) = ((((1|0)|0)|0)&1) = 1
+    // note: initial acc (initAcc) is 1
     assert n <= _bitvec.length;
     long currentVal = val;
     BDD acc = _factory.one(); // whether the suffix of BDD is geq suffix of val.

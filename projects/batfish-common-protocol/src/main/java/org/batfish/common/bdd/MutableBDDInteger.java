@@ -138,11 +138,11 @@ public /*final*/ class MutableBDDInteger extends BDDInteger {
       val >>= 1;
     }
     // BDDFactory addAll: Returns the logical 'and' of zero or more BDDs.
-    // BDDFactory orAll: Returns the logical 'or' or zero or more BDDs.
+    // BDDFactory orAll:  Returns the logical  'or' or zero or more BDDs.
     // BDD diffWith: Makes this BDD to the logical 'difference' of two BDDs, 
-    //               equivalent to BDD this.and(that.not())
+    //               which equivalent to BDD this.and(that.not()).
     // scenario 1: _bitvec is 1100,1101, _trues is 1,1111, _falses is 000,
-    //             so result is (1&1&1&1&1) & !(0|0|0).
+    //             so result is (1&1&1&1&1) & !(0|0|0)
     BDD result = _factory.andAll(_trues).diffWith(_factory.orAll(_falses));
     _trues.clear();
     _falses.clear();
@@ -175,6 +175,18 @@ public /*final*/ class MutableBDDInteger extends BDDInteger {
 
   @Override
   public BDD toBDD(IpWildcard ipWildcard) {
+    // network prefix    192.168.0.0/16
+    // network wildcard  192.168.0.0/255.255.0.0
+    // '1' in wildcard means the corresponding bit in the ip address is fixed
+    // '0' in wildcard means the corresponding bit in the ip address is variable
+
+    // _factory.andAll(aBDD, bBDD, ...): return aBDD & bBDD & ...
+    // _factory.orAll(aBDD, bBDD, ...):  return aBDD | bBDD | ...
+    // aBDD.diffWith(bBDD):              return aBDD & (!bBDD)
+    // scenario 1: 192.168.0.0/255.255.0.0
+    //             i.e. 1100_0000.1010_1000.0000_0000.0000_0000/
+    //                  1111_1111.1111_1111.0000_0000.0000_0000
+    // exact match result = (1&1&1&1) & !(0|0|0|0|0|0|0|0|0|0|0|0)
     checkArgument(_bitvec.length >= Prefix.MAX_PREFIX_LENGTH);
     long startBDDCount = _factory.numOutstandingBDDs();
     long ip = ipWildcard.getIp().asLong();
