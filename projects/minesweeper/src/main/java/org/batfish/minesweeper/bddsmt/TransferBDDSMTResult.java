@@ -4,6 +4,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 import net.sf.javabdd.BDD;
 
+import org.batfish.common.bddsmt.BDDSMT;
+
 import com.microsoft.z3.BoolExpr;
 
 /**
@@ -22,7 +24,7 @@ public class TransferBDDSMTResult {
    * taken; and a boolean indicating whether the path ultimately accepts or rejects the announcement
    */
   // private final @Nonnull TransferReturn _returnValue;
-  private final @Nonnull TransferBDDSMTReturn _returnBddSmtValue;
+  private final @Nonnull TransferBDDSMTReturn _returnBddsmtValue;
 
   /**
    * Whether the routes that go down this path should be suppressed (i.e., not announced). Route
@@ -63,12 +65,12 @@ public class TransferBDDSMTResult {
   }
 
   public TransferBDDSMTResult(
-      TransferBDDSMTReturn returnBddSmtValue,
+      TransferBDDSMTReturn returnBddsmtValue,
       boolean suppressedValue,
       boolean exitAssignedValue,
       boolean fallThroughValue,
       boolean returnAssignedValue) {
-    _returnBddSmtValue = returnBddSmtValue;
+    _returnBddsmtValue = returnBddsmtValue;
     _suppressedValue = suppressedValue;
     _exitAssignedValue = exitAssignedValue;
     _fallthroughValue = fallThroughValue;
@@ -76,7 +78,7 @@ public class TransferBDDSMTResult {
   }
 
   public @Nonnull TransferBDDSMTReturn getReturnValue() {
-    return _returnBddSmtValue;
+    return _returnBddsmtValue;
   }
 
   public boolean getSuppressedValue() {
@@ -101,50 +103,66 @@ public class TransferBDDSMTResult {
   }
 
   public @Nonnull TransferBDDSMTResult setReturnValueAccepted(boolean newAccepted) {
-    return setReturnValue(_returnBddSmtValue.setAccepted(newAccepted));
+    return setReturnValue(_returnBddsmtValue.setAccepted(newAccepted));
   }
 
   public @Nonnull TransferBDDSMTResult setReturnValueBDD(BDD newBdd) {
     return setReturnValue(
-        new TransferBDDSMTReturn(_returnBddSmtValue.getOutputRoute(),
+        new TransferBDDSMTReturn(_returnBddsmtValue.getOutputRoute(),
                                  newBdd,
-                                 _returnBddSmtValue.getInputSmtConstraints(), 
-                                 _returnBddSmtValue.getAccepted()));
+                                 _returnBddsmtValue.getInputSmtConstraints(), 
+                                 _returnBddsmtValue.getAccepted()));
   }
 
   public @Nonnull TransferBDDSMTResult setReturnValueSMT(BoolExpr newSmt) {
     return setReturnValue(
-        new TransferBDDSMTReturn(_returnBddSmtValue.getOutputRoute(), 
-                                 _returnBddSmtValue.getInputConstraints(), 
+        new TransferBDDSMTReturn(_returnBddsmtValue.getOutputRoute(), 
+                                 _returnBddsmtValue.getInputConstraints(), 
                                  newSmt, 
-                                 _returnBddSmtValue.getAccepted()));
+                                 _returnBddsmtValue.getAccepted()));
   }
 
-  public @Nonnull TransferBDDSMTResult setReturnValueBDDRoute(BDDSMTRoute newBddSmtRoute) {
+  public @Nonnull TransferBDDSMTResult setReturnValueBDDSMT(BDD newBdd, BoolExpr newSmt) {
     return setReturnValue(
-        new TransferBDDSMTReturn(newBddSmtRoute, 
-                                 _returnBddSmtValue.getInputConstraints(), 
-                                 _returnBddSmtValue.getInputSmtConstraints(), 
-                                 _returnBddSmtValue.getAccepted()));
+        new TransferBDDSMTReturn(_returnBddsmtValue.getOutputRoute(), 
+                                 newBdd,
+                                 newSmt, 
+                                 _returnBddsmtValue.getAccepted()));
+  }
+
+  public @Nonnull TransferBDDSMTResult setReturnValueBDDSMT(BDDSMT newBddsmt) {
+    return setReturnValue(
+        new TransferBDDSMTReturn(_returnBddsmtValue.getOutputRoute(),
+                                 newBddsmt.getBddVariable(),
+                                 newBddsmt.getSmtVariable(),
+                                 _returnBddsmtValue.getAccepted()));
+  }
+
+  public @Nonnull TransferBDDSMTResult setReturnValueBDDRoute(BDDSMTRoute newBddsmtRoute) {
+    return setReturnValue(
+        new TransferBDDSMTReturn(newBddsmtRoute, 
+                                 _returnBddsmtValue.getInputConstraints(), 
+                                 _returnBddsmtValue.getInputSmtConstraints(), 
+                                 _returnBddsmtValue.getAccepted()));
   }
 
   public @Nonnull TransferBDDSMTResult setSuppressedValue(boolean suppressedValue) {
-    return new TransferBDDSMTResult(_returnBddSmtValue, suppressedValue, 
+    return new TransferBDDSMTResult(_returnBddsmtValue, suppressedValue, 
                                     _exitAssignedValue, _fallthroughValue, _returnAssignedValue);
   }
 
   public @Nonnull TransferBDDSMTResult setExitAssignedValue(boolean exitAssignedValue) {
-    return new TransferBDDSMTResult(_returnBddSmtValue, _suppressedValue, 
+    return new TransferBDDSMTResult(_returnBddsmtValue, _suppressedValue, 
                                     exitAssignedValue, _fallthroughValue, _returnAssignedValue);
   }
 
   public @Nonnull TransferBDDSMTResult setFallthroughValue(boolean fallthroughValue) {
-    return new TransferBDDSMTResult(_returnBddSmtValue, _suppressedValue, 
+    return new TransferBDDSMTResult(_returnBddsmtValue, _suppressedValue, 
                                     _exitAssignedValue, fallthroughValue, _returnAssignedValue);
   }
 
   public @Nonnull TransferBDDSMTResult setReturnAssignedValue(boolean returnAssignedValue) {
-    return new TransferBDDSMTResult(_returnBddSmtValue, _suppressedValue, 
+    return new TransferBDDSMTResult(_returnBddsmtValue, _suppressedValue, 
                                     _exitAssignedValue, _fallthroughValue, returnAssignedValue);
   }
 }
