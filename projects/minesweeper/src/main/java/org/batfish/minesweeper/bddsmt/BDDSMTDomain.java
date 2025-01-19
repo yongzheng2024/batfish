@@ -8,9 +8,11 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import net.sf.javabdd.BDD;
 import net.sf.javabdd.BDDFactory;
+import org.batfish.common.bddsmt.BDDSMT;
 import org.batfish.common.bddsmt.MutableBDDSMTInteger;
 
 import com.microsoft.z3.Context;
+import com.microsoft.z3.BoolExpr;
 
 /**
  * Class that wraps a BDDInteger around a finite collection of values and provides an API for
@@ -75,6 +77,18 @@ public final class BDDSMTDomain<T> {
     int idx = _values.indexOf(value);
     checkArgument(idx != -1, "%s is not in the domain %s", value, _values);
     return _integer.value(idx);
+  }
+
+  public BoolExpr valueSmt(T value, String exprName) {
+    int idx = _values.indexOf(value);
+    checkArgument(idx != -1, "%s is not in the domain %s", value, _values);
+    return _integer.valueSmt(idx, exprName);
+  }
+
+  public BDDSMT valueBddsmt(T value, String exprName) {
+    BDD bdd = value(value);
+    BoolExpr smt = valueSmt(value, exprName);
+    return new BDDSMT(bdd, smt);
   }
 
   public T satAssignmentToValue(BDD satAssignment) {
