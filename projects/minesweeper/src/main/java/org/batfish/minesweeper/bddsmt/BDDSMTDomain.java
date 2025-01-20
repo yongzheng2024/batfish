@@ -80,15 +80,15 @@ public final class BDDSMTDomain<T> {
     return _integer.value(idx);
   }
 
-  public BoolExpr valueSmt(T value, String exprName) {
+  public BoolExpr valueSmt(T value, String configName, String exprName) {
     int idx = _values.indexOf(value);
     checkArgument(idx != -1, "%s is not in the domain %s", value, _values);
-    return _integer.valueSmt(idx, exprName);
+    return _integer.valueSmt(idx, configName, exprName);
   }
 
-  public BDDSMT valueBddsmt(T value, String exprName) {
+  public BDDSMT valueBddsmt(T value, String configName, String exprName) {
     BDD bdd = value(value);
-    BoolExpr smt = valueSmt(value, exprName);
+    BoolExpr smt = valueSmt(value, configName, exprName);
     return new BDDSMT(bdd, smt);
   }
 

@@ -157,9 +157,13 @@ public class TransferBDDSMT {
   // smt expression count
   private long _exprIndex;
 
-  // a summary about smt expression prefix name
-  // actual prefix name needs to be added smt expression count EXPR_INDEX;
-  private static final String ACTION_PERMIT = "action_premit_";
+  // a summary about smt variable name about configuration and expression
+  // actual smt variable name needs to be added smt expression count
+  private static final String PREFIX_IP = "prefix_ip_";
+  private static final String PREFIX_LENGTH = "prefix_length_";
+  private static final String NEXTHOP_IP = "nexthop_ip_";
+  private static final String ASPATH_REGEXES = "aspath_regexes_";
+
   private static final String MATCH_PREFIX_SET = "match_prefix_set_";
   private static final String MATCH_PREFIX_IP = "match_prefix_ip_";
   private static final String MATCH_PREFIX_LENGTH = "match_prefix_length_";
@@ -167,6 +171,8 @@ public class TransferBDDSMT {
   private static final String MATCH_ASPATH_REGEXES = "match_aspath_regexes_";
   private static final String MATCH_ASPATH_ACCESSLIST = "match_aspatch_accesslist_";
   private static final String MATCH_FILTER_LIST = "match_filter_list_"; 
+
+  private static final String ACTION_PERMIT = "action_premit_";
   private static final String UNMATCHED = "unmatched_";
 
   public TransferBDDSMT(ConfigAtomicPredicates aps, RoutingPolicy policy) {
@@ -412,8 +418,7 @@ public class TransferBDDSMT {
             .map(r -> r.getReturnValue().getInputSmtConstraints())
             .toArray(BoolExpr[]::new)
     );
-    // String unmatchedExprName = smtExprName(UNMATCHED, ++_exprIndex);
-    String unmatchedExprName = smtExprName(UNMATCHED);
+    String unmatchedExprName = smtVariableName(UNMATCHED);
     BoolExpr unmatchedSmt = _context.mkBoolConst(unmatchedExprName);
     unmatchedSmt = _context.mkNot(matchedSmt);
 
@@ -674,12 +679,13 @@ public class TransferBDDSMT {
             .collect(Collectors.toList()));
 
     // synthesis a smt expression that represents the disjunction of all as-path regexes APs
-    // String aspathExprName = smtExprName(MATCH_ASPATH_REGEXES, ++_exprIndex);
-    String aspathExprName = smtExprName(MATCH_ASPATH_REGEXES);
+    String aspathConfigName = smtVariableName(ASPATH_REGEXES);
+    String aspathExprName = smtVariableName(MATCH_ASPATH_REGEXES);
     BoolExpr matchAspathSmt = route.getContext().mkOr(
-        asPathAPs.stream()
-            .map(ap -> route.getAsPathRegexAtomicPredicates().valueSmt(ap, aspathExprName))
-            .toArray(BoolExpr[]::new)
+        asPathAPs.stream().map(ap -> route.getAsPathRegexAtomicPredicates().
+            valueSmt(ap, aspathConfigName, aspathExprName)
+        )
+        .toArray(BoolExpr[]::new)
     );
 
     return new BDDSMT(matchAspathBdd, matchAspathSmt);
@@ -722,11 +728,15 @@ public class TransferBDDSMT {
     BDD matchPrefixBdd = matchPrefixIpBdd.and(matchPrefixLengthBdd);
 
     // synthesis match prefix ip/length smt logical expression
-    String matchPrefixIpExprName = smtExprName(MATCH_PREFIX_IP);
-    String matchPrefixLengthExprName = smtExprName(MATCH_PREFIX_LENGTH);
-    BoolExpr matchPrefixIpSmt = record.getPrefix().toSMT(range.getPrefix(), matchPrefixIpExprName);
+    String prefixIpConfigName        = smtVariableName(PREFIX_IP);
+    String prefixLengthConfigName    = smtVariableName(PREFIX_LENGTH);
+    String matchPrefixIpExprName     = smtVariableName(MATCH_PREFIX_IP);
+    String matchPrefixLengthExprName = smtVariableName(MATCH_PREFIX_LENGTH);
+    BoolExpr matchPrefixIpSmt = 
+        record.getPrefix().toSMT(range.getPrefix(), prefixIpConfigName, matchPrefixIpExprName);
     BoolExpr matchPrefixLengthSmt = 
-        record.getPrefixLength().rangeSmt(lower, upper, matchPrefixLengthExprName);
+        record.getPrefixLength().
+            rangeSmt(lower, upper, prefixLengthConfigName, matchPrefixLengthExprName);
     BoolExpr matchPrefixSmt = record.getContext().mkAnd(matchPrefixIpSmt, matchPrefixLengthSmt);
 
     return new BDDSMT(matchPrefixBdd, matchPrefixSmt);
@@ -744,10 +754,14 @@ public class TransferBDDSMT {
     if (lenMatch) {
       // synthesis match nexthop ip bdd logical expression
       BDD matchNexthopBdd = record.getNextHop().toBDD(range.getPrefix());
+
       // synthesis match nexthop ip smt logical expression
-      String matchNexthopExprName = smtExprName(MATCH_NEXTHOP_IP);
-      BoolExpr matchNexthopSmt = record.getNextHop().toSMT(range.getPrefix(), matchNexthopExprName);
+      String nexthopConfigName = smtVariableName(NEXTHOP_IP);
+      String matchNexthopExprName = smtVariableName(MATCH_NEXTHOP_IP);
+      BoolExpr matchNexthopSmt = 
+          record.getNextHop().toSMT(range.getPrefix(), nexthopConfigName, matchNexthopExprName);
       return new BDDSMT(matchNexthopBdd, matchNexthopSmt);
+
     } else {
       return new BDDSMT(record.getFactory().zero(), record.getContext().mkFalse());
     }
@@ -786,8 +800,7 @@ public class TransferBDDSMT {
     // initialize bdd and smt logical expression
     BDD matchAspathAclBdd = _factory.zero();
     // create a named boolean smt variable and then initialize it with false
-    // String aspathAclExprName = smtExprName(MATCH_ASPATH_ACCESSLIST, ++_exprIndex);
-    String aspathAclExprName = smtExprName(MATCH_ASPATH_ACCESSLIST);
+    String aspathAclExprName = smtVariableName(MATCH_ASPATH_ACCESSLIST);
     BoolExpr matchAspathAclSmt = _context.mkBoolConst(aspathAclExprName);
     matchAspathAclSmt = _context.mkFalse();
 
@@ -805,8 +818,7 @@ public class TransferBDDSMT {
       // synthesis match aspath access list bdd logical expression
       matchAspathAclBdd = ite(regexApsBdd, mkBDD(action), matchAspathAclBdd);
       // synthesis match aspath access list smt logical expression
-      // String actionPermitExprName = smtExprName(ACTION_PERMIT, ++_exprIndex);
-      String actionPermitExprName = smtExprName(ACTION_PERMIT);
+      String actionPermitExprName = smtVariableName(ACTION_PERMIT);
       BoolExpr actionSmt = _context.mkBoolConst(actionPermitExprName);
       actionSmt = action ? _context.mkTrue() : _context.mkFalse();
       matchAspathAclSmt = (BoolExpr) _context.mkITE(regexApsSmt, actionSmt, matchAspathAclSmt);
@@ -828,8 +840,7 @@ public class TransferBDDSMT {
     // initialize bdd and smt logical expression
     BDD matchFilterListBdd = _factory.zero();
     // create a named boolean smt variable and then initialize it with false
-    // String filterListExprName = smtExprName(MATCH_FILTER_LIST, ++_exprIndex);
-    String filterListExprName = smtExprName(MATCH_FILTER_LIST);
+    String filterListExprName = smtVariableName(MATCH_FILTER_LIST);
     BoolExpr matchFilterListSmt = _context.mkBoolConst(filterListExprName);
     matchFilterListSmt = _context.mkFalse();
 
@@ -853,8 +864,7 @@ public class TransferBDDSMT {
       // synthesis match filter list bdd logical expression
       matchFilterListBdd = ite(matchesBdd, mkBDD(action), matchFilterListBdd);
       // synthesis match filter list smt logical expression
-      // String actionPermitExprName = smtExprName(ACTION_PERMIT, ++_exprIndex);
-      String actionPermitExprName = smtExprName(ACTION_PERMIT);
+      String actionPermitExprName = smtVariableName(ACTION_PERMIT);
       BoolExpr actionSmt = _context.mkBoolConst(actionPermitExprName);
       matchFilterListSmt = (BoolExpr) _context.mkITE(matchesSmt, actionSmt, matchFilterListSmt);
     }
@@ -898,8 +908,7 @@ public class TransferBDDSMT {
 
       Set<PrefixRange> ranges = x.getPrefixSpace().getPrefixRanges();
       BDD matchPrefixSetBdd = _factory.zero();
-      // String prefixSetExprName = smtExprName(MATCH_PREFIX_SET, ++_exprIndex);
-      String prefixSetExprName = smtExprName(MATCH_PREFIX_SET);
+      String prefixSetExprName = smtVariableName(MATCH_PREFIX_SET);
       BoolExpr matchPrefixSetSmt = _context.mkBoolConst(prefixSetExprName);
       matchPrefixSetSmt = _context.mkFalse();
 
@@ -1087,10 +1096,7 @@ public class TransferBDDSMT {
   }
 
   /** Return a smt expression name accoring to exprName. */
-  // private static String smtExprName(String exprName, long exprIndex) {
-  //   return exprName + exprIndex;
-  // }
-  private /*static*/ String smtExprName(String exprName) {
+  private /*static*/ String smtVariableName(String exprName) {
       ++_exprIndex;
       return exprName + _exprIndex;
   }

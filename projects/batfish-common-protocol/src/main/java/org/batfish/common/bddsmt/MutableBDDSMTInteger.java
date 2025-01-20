@@ -220,7 +220,7 @@ public final class MutableBDDSMTInteger extends MutableBDDInteger {
   }
 
   /** Build a constraint that matches the set of IPs contained by the input {@link Prefix}. */
-  public BoolExpr toSMT(Prefix prefix, String exprName) {
+  public BoolExpr toSMT(Prefix prefix, String configName, String exprName) {
     checkArgument(
         _bitvec.length == Prefix.MAX_PREFIX_LENGTH,
         "toBDD(Prefix) requires %s bits",
@@ -231,94 +231,114 @@ public final class MutableBDDSMTInteger extends MutableBDDInteger {
     int prefixLength = prefix.getPrefixLength();
     long suffixEndIp = (1 << prefixLength) - 1;
     long endIp = startIp | suffixEndIp;
-    return rangeSmt(startIp, endIp, exprName);
+    return rangeSmt(startIp, endIp, configName, exprName);
   }
 
-  public BDDSMT toBDDSMT(Prefix prefix, String exprName) {
+  public BDDSMT toBDDSMT(Prefix prefix, String configName, String exprName) {
     BDD bdd = toBDD(prefix);
-    BoolExpr smt = toSMT(prefix, exprName);
+    BoolExpr smt = toSMT(prefix, configName, exprName);
     return new BDDSMT(bdd, smt);
   }
 
   /** Build a constraint that matches the input {@link Ip}. */
-  public BoolExpr toSMT(Ip ip, String exprName) {
+  public BoolExpr toSMT(Ip ip, String configName, String exprName) {
     checkArgument(
         _bitvec.length == Prefix.MAX_PREFIX_LENGTH,
         "toBDD(Ip) requires %s bits",
         Prefix.MAX_PREFIX_LENGTH);
 
-    return valueSmt(ip.asLong(), exprName);
+    return valueSmt(ip.asLong(), configName, exprName);
   }
 
-  public BDDSMT toBDDSMT(Ip ip, String exprName) {
+  public BDDSMT toBDDSMT(Ip ip, String configName, String exprName) {
     BDD bdd = toBDD(ip);
-    BoolExpr smt = toSMT(ip, exprName);
+    BoolExpr smt = toSMT(ip, configName, exprName);
     return new BDDSMT(bdd, smt);
   }
 
   // FIXME the method name singleEqual -> valueSmt
   /** Create a SMT BoolExpr representing the exact value. */
-  public BoolExpr valueSmt(long val, String exprName) {
+  public BoolExpr valueSmt(long val, String configName, String exprName) {
     checkArgument(val >= 0, "value is negative");
     checkArgument(val <= _maxVal, "value %s is out of range [0, %s]", val, _maxVal);
 
-    IntExpr smtVar = _context.mkIntConst(exprName);
-    BoolExpr smtSingle = _context.mkEq(smtVar, _context.mkInt(val));
+    // configVar == val AND exprVar == configVar
+
+    IntExpr  smtConfigVar = _context.mkIntConst(configName);
+    IntExpr  smtExprVar   = _context.mkIntConst(exprName);
+    BoolExpr smtConfigEq  = _context.mkEq(smtConfigVar, _context.mkInt(val));
+    BoolExpr smtExprEq    = _context.mkEq(smtExprVar, smtConfigVar);
+    BoolExpr smtSingle    = _context.mkAnd(smtConfigEq, smtExprEq);
 
     return smtSingle;
   }
 
-  public BDDSMT valueBddsmt(long val, String exprName) {
+  public BDDSMT valueBddsmt(long val, String configName, String exprName) {
     BDD bdd = value(val);
-    BoolExpr smt = valueSmt(val, exprName);
+    BoolExpr smt = valueSmt(val, configName, exprName);
     return new BDDSMT(bdd, smt);
   }
 
   // FIXME the method name rangeEqual -> rangeSmt
   /** Integers in the given range, inclusive, where {@code a} is less than or equal to {@code b}. */
-  public BoolExpr rangeSmt(long begVal, long endVal, String exprName) {
+  public BoolExpr rangeSmt(long begVal, long endVal, String configName, String exprName) {
     checkArgument(begVal <= endVal, "range is not ordered correctly");
     checkArgument(begVal >= 0, "value is negative");
     checkArgument(endVal <= _maxVal, "value %s is out of range [0, %s]", endVal, _maxVal);
 
     if (begVal == endVal) {
-      return valueSmt(begVal, exprName);
+      return valueSmt(begVal, configName, exprName);
     }
 
-    IntExpr smtVar = _context.mkIntConst(exprName);
-    BoolExpr smtRange = _context.mkAnd(
-        _context.mkGe(smtVar, _context.mkInt(begVal)),
-        _context.mkLe(smtVar, _context.mkInt(endVal))
+    // ( configVar >= begVal AND configVar <= endVal ) AND exprVar == configVar
+
+    IntExpr  smtConfigVar = _context.mkIntConst(configName);
+    IntExpr  smtExprVar   = _context.mkIntConst(exprName);
+    BoolExpr smtConfigRng = _context.mkAnd(
+        _context.mkGe(smtConfigVar, _context.mkInt(begVal)),
+        _context.mkLe(smtConfigVar, _context.mkInt(endVal))
     );
+    BoolExpr smtExprRng   = _context.mkEq(smtExprVar, smtConfigVar);
+    BoolExpr smtRange     = _context.mkAnd(smtConfigRng, smtExprRng);
 
     return smtRange;
   }
 
-  public BDDSMT rangeBddsmt(long begVal, long endVal, String exprName) {
+  public BDDSMT rangeBddsmt(long begVal, long endVal, String configName, String exprName) {
     BDD bdd = range(begVal, endVal);
-    BoolExpr smt = rangeSmt(begVal, endVal, exprName);
+    BoolExpr smt = rangeSmt(begVal, endVal, configName, exprName);
     return new BDDSMT(bdd, smt);
   }
 
   /** Less than or equal to on integers. */
-  public BoolExpr leqSmt(long val, String exprName) {
+  public BoolExpr leqSmt(long val, String configName, String exprName) {
     checkArgument(val >= 0, "value is negative");
     checkArgument(val <= _maxVal, "value %s is out of range [0, %s]", val, _maxVal);
 
-    IntExpr smtVar = _context.mkIntConst(exprName);
-    BoolExpr smtLeq = _context.mkLe(smtVar, _context.mkInt(val));
+    // configVar <= val AND exprVar == configVar
+
+    IntExpr  smtConfigVar = _context.mkIntConst(configName);
+    IntExpr  smtExprVar   = _context.mkIntConst(exprName);
+    BoolExpr smtConfigLeq = _context.mkLe(smtConfigVar, _context.mkInt(val));
+    BoolExpr smtExprLeq   = _context.mkEq(smtExprVar, smtConfigVar);
+    BoolExpr smtLeq       = _context.mkAnd(smtConfigLeq, smtExprLeq);
 
     return smtLeq;
   }
 
   /** Greater than or equal to on integers. */
-  public BoolExpr geqSmt(long val, String exprName) {
+  public BoolExpr geqSmt(long val, String configName, String exprName) {
     checkArgument(val >= 0, "value is negative");
     checkArgument(val <= _maxVal, "value %s is out of range [0, %s]", val, _maxVal);
 
-    IntExpr smtVar = _context.mkIntConst(exprName);
-    BoolExpr smtGeq = _context.mkGe(smtVar, _context.mkInt(val));
-    
+    // configVar >= val AND exprVar == configVar
+
+    IntExpr  smtConfigVar = _context.mkIntConst(configName);
+    IntExpr  smtExprVar   = _context.mkIntConst(exprName);
+    BoolExpr smtConfigGeq = _context.mkGe(smtConfigVar, _context.mkInt(val));
+    BoolExpr smtExprGeq   = _context.mkEq(smtExprVar, smtConfigVar);
+    BoolExpr smtGeq       = _context.mkAnd(smtConfigGeq, smtExprGeq);
+
     return smtGeq;
   }                                                  
 
