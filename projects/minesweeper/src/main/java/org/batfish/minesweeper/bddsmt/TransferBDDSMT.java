@@ -1098,6 +1098,7 @@ public class TransferBDDSMT {
   /** Return a smt expression name accoring to exprName. */
   private /*static*/ String smtVariableName(String exprName) {
       ++_exprIndex;
+      System.out.println("[+] " + exprName + _exprIndex);
       return exprName + _exprIndex;
   }
 
