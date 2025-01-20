@@ -76,8 +76,11 @@ import org.batfish.specifier.RoutingPolicySpecifier;
 import org.batfish.specifier.SpecifierContext;
 import org.batfish.specifier.SpecifierFactories;
 
-// added by yongzheng for print routing policy in 20250107
-// import org.batfish.datamodel.routing_policy.statement.Statement;
+import org.batfish.minesweeper.bddsmt.TransferBDDSMT;
+import org.batfish.minesweeper.bddsmt.TransferBDDSMTReturn;
+
+import com.microsoft.z3.BoolExpr;
+
 
 /** An answerer for {@link SearchRoutePoliciesQuestion}. */
 @ParametersAreNonnullByDefault
@@ -546,7 +549,6 @@ public final class SearchRoutePoliciesAnswerer extends Answerer {
     TransferBDD tbdd;
     try {
       tbdd = new TransferBDD(configAPs, policy);
-      // TODO understand computePaths by yongzheng in 20250105
       paths = tbdd.computePaths();
     } catch (Exception e) {
       throw new BatfishException(
@@ -557,12 +559,24 @@ public final class SearchRoutePoliciesAnswerer extends Answerer {
           e);
     }
 
+    // added by yongzheng for shadow smt encoding according to bdd encoding
+    TransferBDDSMT bddsmtTrans = new TransferBDDSMT(configAPs, policy);
+    List<TransferBDDSMTReturn> bddsmtPaths = bddsmtTrans.computePaths();
+    System.out.println("============================================================");
+
+    for (TransferBDDSMTReturn bddsmtPath : bddsmtPaths) {
+      BoolExpr pathExpr = bddsmtPath.getInputSmtConstraints();
+      System.out.println(pathExpr);
+      System.out.println("------------------------------------------------------------");
+    } 
+
     // added by yongzheng in 20241221 for output bdd encoding information
     // print BDD encoding information to specific file `bdds/routing_policies_xxx.txt`
-    // for (int i = 0; i < paths.size(); ++i) {
-    //    _bddWriter.println(paths.get(i).debug());
-    // }
-    // _bddWriter.println("------------------------------------------------------------");
+    for (int i = 0; i < paths.size(); ++i) {
+       _bddWriter.println(paths.get(i));
+       _bddWriter.println(paths.get(i).debug());
+    }
+    _bddWriter.println("------------------------------------------------------------");
 
     Map<Boolean, List<TransferReturn>> pathMap =
         paths.stream()
@@ -603,8 +617,8 @@ public final class SearchRoutePoliciesAnswerer extends Answerer {
 
       // added by yongzheng in 20241223 for output bdd encode information
       // print BDD encode information to specific file `bdds/routing_policies_xxx.txt`
-      _bddWriter.println(outputRoute.dotWrapper(intersection));
-      _bddWriter.println("------------------------------------------------------------");
+      // _bddWriter.println(outputRoute.dotWrapper(intersection));
+      // _bddWriter.println("------------------------------------------------------------");
 
       if (result.isPresent()) {
         builder.add(result.get()._row);
