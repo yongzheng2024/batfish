@@ -8,6 +8,7 @@ import org.batfish.common.bddsmt.BDDSMT;
 
 import com.microsoft.z3.BoolExpr;
 
+
 /**
  * This class is used to keep track of the state of the BDD-based symbolic control-plane analysis in
  * {@link TransferBDD}. It's effectively the symbolic version of {@link

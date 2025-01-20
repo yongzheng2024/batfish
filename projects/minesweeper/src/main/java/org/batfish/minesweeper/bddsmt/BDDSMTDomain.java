@@ -14,6 +14,7 @@ import org.batfish.common.bddsmt.MutableBDDSMTInteger;
 import com.microsoft.z3.Context;
 import com.microsoft.z3.BoolExpr;
 
+
 /**
  * Class that wraps a BDDInteger around a finite collection of values and provides an API for
  * dealing directly with the values. This class is similar to {@link

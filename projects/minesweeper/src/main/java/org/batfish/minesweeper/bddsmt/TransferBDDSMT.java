@@ -37,8 +37,8 @@ import org.batfish.datamodel.routing_policy.RoutingPolicy;
 // import org.batfish.datamodel.routing_policy.as_path.MatchAsPath;
 // import org.batfish.datamodel.routing_policy.communities.InputCommunities;
 // import org.batfish.datamodel.routing_policy.communities.MatchCommunities;
-// import org.batfish.datamodel.routing_policy.communities.SetCommunities;
-// import org.batfish.datamodel.routing_policy.communities.CommunitySetExpr;
+import org.batfish.datamodel.routing_policy.communities.SetCommunities;
+import org.batfish.datamodel.routing_policy.communities.CommunitySetExpr;
 // import org.batfish.datamodel.routing_policy.expr.AsExpr;
 // import org.batfish.datamodel.routing_policy.expr.AsPathListExpr;
 import org.batfish.datamodel.routing_policy.expr.AsPathSetExpr;
@@ -110,15 +110,14 @@ import org.batfish.minesweeper.SymbolicAsPathRegex;
 import org.batfish.minesweeper.SymbolicRegex;
 // import org.batfish.minesweeper.bdd.BDDTunnelEncapsulationAttribute.Value;
 // import org.batfish.minesweeper.bdd.CommunitySetMatchExprToBDD.Arg;
+import org.batfish.minesweeper.bddsmt.CommunitySetMatchExprToBDD.Arg;
 
 import org.batfish.common.bddsmt.BDDSMT;
 import org.batfish.common.bddsmt.MutableBDDSMTInteger;
 
-import org.batfish.minesweeper.bdd.CommunityAPDispositions;
-// import org.batfish.minesweeper.bdd.SetCommunitiesVisitor;
-
 import com.microsoft.z3.Context;
 import com.microsoft.z3.BoolExpr;
+
 
 /**
  * @author Ryan Beckett
@@ -214,6 +213,8 @@ public class TransferBDDSMT {
    */
   public List<TransferBDDSMTReturn> computePaths() {
     BDDSMTRoute o = new BDDSMTRoute(_factory, _context, _configAtomicPredicates);
+    // NOTE: modified by yongzheng to enable debug information in TransferBDDSMTParam
+    // TransferBDDSMTParam p = new TransferBDDSMTParam(o, false);
     TransferBDDSMTParam p = new TransferBDDSMTParam(o, true);
     return computePaths(_statements, p)
         .stream().map(TransferBDDSMTResult::getReturnValue)
@@ -591,16 +592,16 @@ public class TransferBDDSMT {
       curP.getData().setLocalPref(newValue);
       return ImmutableList.of(toTransferBDDSMTState(curP, result));
 
-    // } else if (stmt instanceof SetCommunities) {
-    //   curP.debug("SetCommunities");
-    //   SetCommunities sc = (SetCommunities) stmt;
-    //   CommunitySetExpr setExpr = sc.getCommunitySetExpr();
-    //   // SetCommunitiesVisitor requires a BDDRoute that maps each community atomic predicate BDD
-    //   // to its corresponding BDD variable, so we use the original route here
-    //   CommunityAPDispositions dispositions =
-    //       setExpr.accept(new SetCommunitiesVisitor(), new Arg(this, _originalRoute));
-    //   updateCommunities(dispositions, curP);
-    //   return ImmutableList.of(toTransferBDDSMTState(curP, result));
+    } else if (stmt instanceof SetCommunities) {
+      curP.debug("SetCommunities");
+      SetCommunities sc = (SetCommunities) stmt;
+      CommunitySetExpr setExpr = sc.getCommunitySetExpr();
+      // SetCommunitiesVisitor requires a BDDRoute that maps each community atomic predicate BDD
+      // to its corresponding BDD variable, so we use the original route here
+      CommunityAPDispositions dispositions =
+          setExpr.accept(new SetCommunitiesVisitor(), new Arg(this, _originalRoute));
+      updateCommunities(dispositions, curP);
+      return ImmutableList.of(toTransferBDDSMTState(curP, result));
 
     } else if (stmt instanceof TraceableStatement) {
       return compute(((TraceableStatement) stmt).getInnerStatements(), ImmutableList.of(state));
@@ -1095,12 +1096,12 @@ public class TransferBDDSMT {
   }
 
   /** Return a BDD from a boolean. */
-  private BDD mkBDD(boolean b) {
+  public BDD mkBDD(boolean b) {
     return b ? _factory.one() : _factory.zero();
   }
 
   /** If-then-else statement. */
-  private BDD ite(BDD b, BDD x, BDD y) {
+  public BDD ite(BDD b, BDD x, BDD y) {
     return b.ite(x, y);
   }
 

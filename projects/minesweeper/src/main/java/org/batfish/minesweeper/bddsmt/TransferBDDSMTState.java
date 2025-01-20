@@ -5,6 +5,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 
+
 /**
  * The state that is tracked during symbolic BDD-based route analysis: a pair of a {@link
  * TransferParam} and a {@link TransferResult}.

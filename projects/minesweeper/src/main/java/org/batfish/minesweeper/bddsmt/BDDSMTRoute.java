@@ -36,6 +36,7 @@ import org.batfish.minesweeper.bdd.BDDTunnelEncapsulationAttribute;
 
 import com.microsoft.z3.Context;
 
+
 /**
  * A collection of attributes describing a route advertisement, used for symbolic route analysis.
  *
