@@ -38,6 +38,7 @@ import org.batfish.datamodel.routing_policy.RoutingPolicy;
 // import org.batfish.datamodel.routing_policy.communities.InputCommunities;
 // import org.batfish.datamodel.routing_policy.communities.MatchCommunities;
 // import org.batfish.datamodel.routing_policy.communities.SetCommunities;
+// import org.batfish.datamodel.routing_policy.communities.CommunitySetExpr;
 // import org.batfish.datamodel.routing_policy.expr.AsExpr;
 // import org.batfish.datamodel.routing_policy.expr.AsPathListExpr;
 import org.batfish.datamodel.routing_policy.expr.AsPathSetExpr;
@@ -173,7 +174,8 @@ public class TransferBDDSMT {
     this(JFactory.init(100000, 10000), new Context(), aps, policy);
   }
 
-  public TransferBDDSMT(BDDFactory factory, Context context, ConfigAtomicPredicates aps, RoutingPolicy policy) {
+  public TransferBDDSMT(
+      BDDFactory factory, Context context, ConfigAtomicPredicates aps, RoutingPolicy policy) {
     _configAtomicPredicates = aps;
     _policy = policy;
     _conf = policy.getOwner();
@@ -340,21 +342,23 @@ public class TransferBDDSMT {
           for (TransferBDDSMTResult curr : currResults) {
             BDD currBdd = curr.getReturnValue().getInputConstraints();
             BoolExpr currSmt = curr.getReturnValue().getInputSmtConstraints();
-            compute(e, toTransferBDDSMTState(p.indent(), curr))
-                .forEach(
-                    res -> {
-                      TransferBDDSMTReturn updatedReturn = res.getReturnValue();
-                      BDD updatedBdd = updatedReturn.getInputConstraints().and(currBdd);
-                      BoolExpr updatedSmt = _context.mkAnd(updatedReturn.getInputSmtConstraints(), currSmt);
-                      TransferBDDSMTResult updatedResult = res.setReturnValueBDDSMT(updatedBdd, updatedSmt);
-                      // if we're on a path where e evaluates to false, then this path is done;
-                      // otherwise we will evaluate the next conjunct in the next iteration
-                      if (!updatedResult.getReturnValue().getAccepted()) {
-                        finalResults.add(updatedResult);
-                      } else {
-                        nextResults.add(updatedResult);
-                      }
-                    });
+            compute(e, toTransferBDDSMTState(p.indent(), curr)).forEach(
+                res -> {
+                    TransferBDDSMTReturn updatedReturn = res.getReturnValue();
+                    BDD updatedBdd = updatedReturn.getInputConstraints().and(currBdd);
+                    BoolExpr updatedSmt = 
+                        _context.mkAnd(updatedReturn.getInputSmtConstraints(), currSmt);
+                    TransferBDDSMTResult updatedResult = 
+                        res.setReturnValueBDDSMT(updatedBdd, updatedSmt);
+                    // if we're on a path where e evaluates to false, then this path is done;
+                    // otherwise we will evaluate the next conjunct in the next iteration
+                    if (!updatedResult.getReturnValue().getAccepted()) {
+                      finalResults.add(updatedResult);
+                    } else {
+                      nextResults.add(updatedResult);
+                    }
+                }
+            );
           }
           currResults = nextResults;
         // BooleanExpr e is not supported; ignore it but record the fact that we encountered it
@@ -407,7 +411,8 @@ public class TransferBDDSMT {
             .map(r -> r.getReturnValue().getInputSmtConstraints())
             .toArray(BoolExpr[]::new)
     );
-    String unmatchedExprName = smtExprName(UNMATCHED, ++_exprIndex);
+    // String unmatchedExprName = smtExprName(UNMATCHED, ++_exprIndex);
+    String unmatchedExprName = smtExprName(UNMATCHED);
     BoolExpr unmatchedSmt = _context.mkBoolConst(unmatchedExprName);
     unmatchedSmt = _context.mkNot(matchedSmt);
 
@@ -507,26 +512,26 @@ public class TransferBDDSMT {
           result = suppressedValue(result, false);
           return ImmutableList.of(toTransferBDDSMTState(curP, result));
 
-          /*
-           * These directives are used by the Batfish route simulation to control the handling of
-           * route updates that implicitly involve both a "read" and a "write". For example, Batfish
-           * models an additive community set of 40:40 as a write of (InputCommunities U 40:40). For
-           * some config formats InputCommunities should refer to the communities of the original
-           * route, but for others it should refer to the current community set that reflects prior
-           * updates. To account for the latter semantics, Batfish inserts directives to read from
-           * and write to the intermediate attributes.
-           *
-           * <p>This code, {@link TransferBDD}, properly handles two common cases: 1) platforms that
-           * never use these directives, so that the original route attributes are always read; and
-           * 2) platforms that use the SetRead... and SetWrite... directives in such a way as to
-           * ensure that they always read from the current set of route attributes, which reflect
-           * all updates made so far by the route map. In principle these directives can allow for a
-           * wider range of semantics to be expressed. For example, it is possible for writing to
-           * intermediate attributes to be turned off at some point, so that later writes are no
-           * longer recorded there (and hence are not seen by later reads). We can handle such
-           * situations by introducing an explicit {@link BDDRoute} to represent the intermediate
-           * BGP attributes.
-           */
+        /*
+         * These directives are used by the Batfish route simulation to control the handling of
+         * route updates that implicitly involve both a "read" and a "write". For example, Batfish
+         * models an additive community set of 40:40 as a write of (InputCommunities U 40:40). For
+         * some config formats InputCommunities should refer to the communities of the original
+         * route, but for others it should refer to the current community set that reflects prior
+         * updates. To account for the latter semantics, Batfish inserts directives to read from
+         * and write to the intermediate attributes.
+         *
+         * <p>This code, {@link TransferBDD}, properly handles two common cases: 1) platforms that
+         * never use these directives, so that the original route attributes are always read; and
+         * 2) platforms that use the SetRead... and SetWrite... directives in such a way as to
+         * ensure that they always read from the current set of route attributes, which reflect
+         * all updates made so far by the route map. In principle these directives can allow for a
+         * wider range of semantics to be expressed. For example, it is possible for writing to
+         * intermediate attributes to be turned off at some point, so that later writes are no
+         * longer recorded there (and hence are not seen by later reads). We can handle such
+         * situations by introducing an explicit {@link BDDRoute} to represent the intermediate
+         * BGP attributes.
+         */
         case SetReadIntermediateBgpAttributes:
           curP = curP.setReadIntermediateBgpAttributes(true);
           return ImmutableList.of(toTransferBDDSMTState(curP, result));
@@ -552,8 +557,8 @@ public class TransferBDDSMT {
       for (TransferBDDSMTResult guardResult : guardResults) {
         BDD pathConditionBdd =
             currPathConditionBdd.and(guardResult.getReturnValue().getInputConstraints());
-        BoolExpr pathConditionSmt = 
-            _context.mkAnd(currPathConditionSmt, guardResult.getReturnValue().getInputSmtConstraints());
+        BoolExpr pathConditionSmt = _context.mkAnd(
+            currPathConditionSmt, guardResult.getReturnValue().getInputSmtConstraints());
 
         // prune infeasible paths
         if (pathConditionBdd.isZero()) {
@@ -568,7 +573,8 @@ public class TransferBDDSMT {
         newStates.addAll(compute(branch, ImmutableList.of(
             new TransferBDDSMTState(pCopy, result.setReturnValue(
                 new TransferBDDSMTReturn(
-                    current, pathConditionBdd, pathConditionSmt, result.getReturnValue().getAccepted()
+                    current, pathConditionBdd, pathConditionSmt, 
+                    result.getReturnValue().getAccepted()
                 )
             ))
         )));
@@ -588,8 +594,7 @@ public class TransferBDDSMT {
     // } else if (stmt instanceof SetCommunities) {
     //   curP.debug("SetCommunities");
     //   SetCommunities sc = (SetCommunities) stmt;
-    //   org.batfish.datamodel.routing_policy.communities.CommunitySetExpr setExpr =
-    //       sc.getCommunitySetExpr();
+    //   CommunitySetExpr setExpr = sc.getCommunitySetExpr();
     //   // SetCommunitiesVisitor requires a BDDRoute that maps each community atomic predicate BDD
     //   // to its corresponding BDD variable, so we use the original route here
     //   CommunityAPDispositions dispositions =
@@ -668,7 +673,8 @@ public class TransferBDDSMT {
             .collect(Collectors.toList()));
 
     // synthesis a smt expression that represents the disjunction of all as-path regexes APs
-    String aspathExprName = smtExprName(MATCH_ASPATH_REGEXES, ++_exprIndex);
+    // String aspathExprName = smtExprName(MATCH_ASPATH_REGEXES, ++_exprIndex);
+    String aspathExprName = smtExprName(MATCH_ASPATH_REGEXES);
     BoolExpr matchAspathSmt = route.getContext().mkOr(
         asPathAPs.stream()
             .map(ap -> route.getAsPathRegexAtomicPredicates().valueSmt(ap, aspathExprName))
@@ -704,7 +710,7 @@ public class TransferBDDSMT {
 
   // Produce a BDD representing conditions under which the route's destination prefix is within a
   // given prefix range.
-  public static BDDSMT isRelevantForDestination(BDDSMTRoute record, PrefixRange range) {
+  public /*static*/ BDDSMT isRelevantForDestination(BDDSMTRoute record, PrefixRange range) {
     SubRange r = range.getLengthRange();
     int lower = r.getStart();
     int upper = r.getEnd();
@@ -715,12 +721,11 @@ public class TransferBDDSMT {
     BDD matchPrefixBdd = matchPrefixIpBdd.and(matchPrefixLengthBdd);
 
     // synthesis match prefix ip/length smt logical expression
-    BoolExpr matchPrefixIpSmt = 
-        // record.getPrefix().toSMT(range.getPrefix(), smtExprName(MATCH_PREFIX_IP, ++_exprIndex));
-        record.getPrefix().toSMT(range.getPrefix(), smtExprName(MATCH_PREFIX_IP, 100));
+    String matchPrefixIpExprName = smtExprName(MATCH_PREFIX_IP);
+    String matchPrefixLengthExprName = smtExprName(MATCH_PREFIX_LENGTH);
+    BoolExpr matchPrefixIpSmt = record.getPrefix().toSMT(range.getPrefix(), matchPrefixIpExprName);
     BoolExpr matchPrefixLengthSmt = 
-        // record.getPrefixLength().rangeSmt(lower, upper, smtExprName(MATCH_PREFIX_LENGTH, ++_exprIndex));
-        record.getPrefixLength().rangeSmt(lower, upper, smtExprName(MATCH_PREFIX_LENGTH, 100));
+        record.getPrefixLength().rangeSmt(lower, upper, matchPrefixLengthExprName);
     BoolExpr matchPrefixSmt = record.getContext().mkAnd(matchPrefixIpSmt, matchPrefixLengthSmt);
 
     return new BDDSMT(matchPrefixBdd, matchPrefixSmt);
@@ -728,7 +733,7 @@ public class TransferBDDSMT {
 
   // Produce a BDD representing conditions under which the route's next-hop address is within a
   // given prefix range.
-  private static BDDSMT isRelevantForNextHop(BDDSMTRoute record, PrefixRange range) {
+  private /*static*/ BDDSMT isRelevantForNextHop(BDDSMTRoute record, PrefixRange range) {
     SubRange r = range.getLengthRange();
     int lower = r.getStart();
     int upper = r.getEnd();
@@ -739,9 +744,8 @@ public class TransferBDDSMT {
       // synthesis match nexthop ip bdd logical expression
       BDD matchNexthopBdd = record.getNextHop().toBDD(range.getPrefix());
       // synthesis match nexthop ip smt logical expression
-      BoolExpr matchNexthopSmt = 
-          // record.getNextHop().toSMT(range.getPrefix(), smtExprName(MATCH_NEXTHOP_IP, ++_exprIndex));
-          record.getNextHop().toSMT(range.getPrefix(), smtExprName(MATCH_NEXTHOP_IP, 100));
+      String matchNexthopExprName = smtExprName(MATCH_NEXTHOP_IP);
+      BoolExpr matchNexthopSmt = record.getNextHop().toSMT(range.getPrefix(), matchNexthopExprName);
       return new BDDSMT(matchNexthopBdd, matchNexthopSmt);
     } else {
       return new BDDSMT(record.getFactory().zero(), record.getContext().mkFalse());
@@ -781,7 +785,8 @@ public class TransferBDDSMT {
     // initialize bdd and smt logical expression
     BDD matchAspathAclBdd = _factory.zero();
     // create a named boolean smt variable and then initialize it with false
-    String aspathAclExprName = smtExprName(MATCH_ASPATH_ACCESSLIST, ++_exprIndex);
+    // String aspathAclExprName = smtExprName(MATCH_ASPATH_ACCESSLIST, ++_exprIndex);
+    String aspathAclExprName = smtExprName(MATCH_ASPATH_ACCESSLIST);
     BoolExpr matchAspathAclSmt = _context.mkBoolConst(aspathAclExprName);
     matchAspathAclSmt = _context.mkFalse();
 
@@ -799,7 +804,8 @@ public class TransferBDDSMT {
       // synthesis match aspath access list bdd logical expression
       matchAspathAclBdd = ite(regexApsBdd, mkBDD(action), matchAspathAclBdd);
       // synthesis match aspath access list smt logical expression
-      String actionPermitExprName = smtExprName(ACTION_PERMIT, ++_exprIndex);
+      // String actionPermitExprName = smtExprName(ACTION_PERMIT, ++_exprIndex);
+      String actionPermitExprName = smtExprName(ACTION_PERMIT);
       BoolExpr actionSmt = _context.mkBoolConst(actionPermitExprName);
       actionSmt = action ? _context.mkTrue() : _context.mkFalse();
       matchAspathAclSmt = (BoolExpr) _context.mkITE(regexApsSmt, actionSmt, matchAspathAclSmt);
@@ -821,7 +827,8 @@ public class TransferBDDSMT {
     // initialize bdd and smt logical expression
     BDD matchFilterListBdd = _factory.zero();
     // create a named boolean smt variable and then initialize it with false
-    String filterListExprName = smtExprName(MATCH_FILTER_LIST, ++_exprIndex);
+    // String filterListExprName = smtExprName(MATCH_FILTER_LIST, ++_exprIndex);
+    String filterListExprName = smtExprName(MATCH_FILTER_LIST);
     BoolExpr matchFilterListSmt = _context.mkBoolConst(filterListExprName);
     matchFilterListSmt = _context.mkFalse();
 
@@ -845,7 +852,8 @@ public class TransferBDDSMT {
       // synthesis match filter list bdd logical expression
       matchFilterListBdd = ite(matchesBdd, mkBDD(action), matchFilterListBdd);
       // synthesis match filter list smt logical expression
-      String actionPermitExprName = smtExprName(ACTION_PERMIT, ++_exprIndex);
+      // String actionPermitExprName = smtExprName(ACTION_PERMIT, ++_exprIndex);
+      String actionPermitExprName = smtExprName(ACTION_PERMIT);
       BoolExpr actionSmt = _context.mkBoolConst(actionPermitExprName);
       matchFilterListSmt = (BoolExpr) _context.mkITE(matchesSmt, actionSmt, matchFilterListSmt);
     }
@@ -859,14 +867,18 @@ public class TransferBDDSMT {
   private BiFunction<BDDSMTRoute, PrefixRange, BDDSMT> prefixExprToSymbolicMatcher(PrefixExpr pe)
       throws UnsupportedOperationException {
     if (pe.equals(DestinationNetwork.instance())) {
-      return TransferBDDSMT::isRelevantForDestination;
+      // return TransferBDDSMT::isRelevantForDestination;
+      return this::isRelevantForDestination;
+
     } else if (pe instanceof IpPrefix) {
       IpPrefix ipp = (IpPrefix) pe;
       if (ipp.getIp().equals(NextHopIp.instance())
           && ipp.getPrefixLength().equals(new LiteralInt(Prefix.MAX_PREFIX_LENGTH))) {
-        return TransferBDDSMT::isRelevantForNextHop;
+        // return TransferBDDSMT::isRelevantForNextHop;
+        return this::isRelevantForNextHop;
       }
     }
+
     throw new UnsupportedOperationException(pe.toString());
   }
 
@@ -879,27 +891,35 @@ public class TransferBDDSMT {
     BiFunction<BDDSMTRoute, PrefixRange, BDDSMT> symbolicMatcher =
         prefixExprToSymbolicMatcher(m.getPrefix());
     PrefixSetExpr e = m.getPrefixSet();
+
     if (e instanceof ExplicitPrefixSet) {
       ExplicitPrefixSet x = (ExplicitPrefixSet) e;
 
       Set<PrefixRange> ranges = x.getPrefixSpace().getPrefixRanges();
       BDD matchPrefixSetBdd = _factory.zero();
-      String prefixSetExprName = smtExprName(MATCH_PREFIX_SET, ++_exprIndex);
+      // String prefixSetExprName = smtExprName(MATCH_PREFIX_SET, ++_exprIndex);
+      String prefixSetExprName = smtExprName(MATCH_PREFIX_SET);
       BoolExpr matchPrefixSetSmt = _context.mkBoolConst(prefixSetExprName);
       matchPrefixSetSmt = _context.mkFalse();
+
       for (PrefixRange range : ranges) {
         p.debug("Prefix Range: %s", range);
+        // synthesis bdd and smt logical expression
         BDDSMT bddsmt = symbolicMatcher.apply(other, range);
         matchPrefixSetBdd = matchPrefixSetBdd.or(bddsmt.getBddVariable());
         matchPrefixSetSmt = _context.mkOr(matchPrefixSetSmt, bddsmt.getSmtVariable());
       }
+
       return new BDDSMT(matchPrefixSetBdd, matchPrefixSetSmt);
 
     } else if (e instanceof NamedPrefixSet) {
       NamedPrefixSet x = (NamedPrefixSet) e;
-      p.debug("Named: %s", x.getName());
+
       String name = x.getName();
       RouteFilterList fl = conf.getRouteFilterLists().get(name);
+      p.debug("Named: %s", name);
+
+      // synthesis bdd and smt logical expression
       return matchFilterList(p, fl, other, symbolicMatcher);
 
     } else {
@@ -1066,8 +1086,12 @@ public class TransferBDDSMT {
   }
 
   /** Return a smt expression name accoring to exprName. */
-  private static String smtExprName(String exprName, long exprIndex) {
-    return exprName + exprIndex;
+  // private static String smtExprName(String exprName, long exprIndex) {
+  //   return exprName + exprIndex;
+  // }
+  private /*static*/ String smtExprName(String exprName) {
+      ++_exprIndex;
+      return exprName + _exprIndex;
   }
 
   /** Return a BDD from a boolean. */
