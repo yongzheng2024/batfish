@@ -1,6 +1,6 @@
 package org.batfish.minesweeper.bddsmt;
 
-import com.google.errorprone.annotations.FormatMethod;
+// import com.google.errorprone.annotations.FormatMethod;
 import javax.annotation.Nullable;
 import org.batfish.datamodel.routing_policy.statement.SetDefaultPolicy;
 import org.batfish.minesweeper.collections.PList;
@@ -166,7 +166,25 @@ public class TransferBDDSMTParam {
     return ret;
   }
 
-  @FormatMethod
+  public int getIndent() {
+    return _indent;
+  }
+
+  public String getDebug(String fmt, Object... args) {
+    StringBuilder sb = new StringBuilder();
+    for (int i = 0; i < _indent; i++) {
+      sb.append("    ");
+    }
+    String s = _scopes.get(0);
+    String scope = (s == null ? "" : s);
+    sb.append("[");
+    sb.append(scope);
+    sb.append("]: ");
+    sb.append(String.format(fmt, args));
+    return sb.toString();
+  }
+
+  /* @FormatMethod */
   public void debug(String fmt, Object... args) {
     if (_debug) {
       StringBuilder sb = new StringBuilder();

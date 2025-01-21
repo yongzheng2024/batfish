@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
+import java.io.PrintWriter;
 import net.sf.javabdd.BDD;
 import net.sf.javabdd.BDDFactory;
 import net.sf.javabdd.JFactory;
@@ -154,15 +155,25 @@ public class TransferBDDSMT {
 
   private final Set<String> _unsupportedAlreadyWarned;
 
-  // smt expression count
-  private long _exprIndex;
+  private final PrintWriter _linkWriter;
+
+  // debug flag, true - print debug message to terminal, false (default)
+  private final boolean _debug;
+
+  // smt expression index for unique smt variable name
+  private long _smtVarialbeIndex;
+
+  // blank filler characters at the beginning for format printing smt variable
+  private static String BLANK = "    ";
+  private String _blankFiller;
 
   // a summary about smt variable name about configuration and expression
-  // actual smt variable name needs to be added smt expression count
-  private static final String PREFIX_IP = "prefix_ip_";
-  private static final String PREFIX_LENGTH = "prefix_length_";
-  private static final String NEXTHOP_IP = "nexthop_ip_";
-  private static final String ASPATH_REGEXES = "aspath_regexes_";
+  // actual smt variable name needs to be added smt expression index
+  private static final String PREFIX_IP = "config_prefix_ip_";
+  private static final String PREFIX_LENGTH = "config_prefix_length_";
+  private static final String NEXTHOP_IP = "config_nexthop_ip_";
+  private static final String ASPATH_REGEXES = "config_aspath_regexes_";
+  private static final String ACTION_PERMIT = "config_action_permit_";
 
   private static final String MATCH_PREFIX_SET = "match_prefix_set_";
   private static final String MATCH_PREFIX_IP = "match_prefix_ip_";
@@ -170,17 +181,30 @@ public class TransferBDDSMT {
   private static final String MATCH_NEXTHOP_IP = "match_nexthop_ip_";
   private static final String MATCH_ASPATH_REGEXES = "match_aspath_regexes_";
   private static final String MATCH_ASPATH_ACCESSLIST = "match_aspatch_accesslist_";
-  private static final String MATCH_FILTER_LIST = "match_filter_list_"; 
+  private static final String MATCH_FILTER_LIST = "match_filter_list_";
 
-  private static final String ACTION_PERMIT = "action_premit_";
   private static final String UNMATCHED = "unmatched_";
 
-  public TransferBDDSMT(ConfigAtomicPredicates aps, RoutingPolicy policy) {
-    this(JFactory.init(100000, 10000), new Context(), aps, policy);
+  // limit of bdd variable number, bdd variable cache number
+  private static final int BDD_VARIABLE_LIMIT = 100000;
+  private static final int BDD_VARIABLE_CACHE_LIMIT = 10000;
+
+  // limit of smt variable number
+  private static final int SMT_VARIABLE_LIMIT = 100000;
+
+  public TransferBDDSMT(ConfigAtomicPredicates aps, RoutingPolicy policy, PrintWriter linkWriter) {
+    this(aps, policy, linkWriter, false);
   }
 
   public TransferBDDSMT(
-      BDDFactory factory, Context context, ConfigAtomicPredicates aps, RoutingPolicy policy) {
+      ConfigAtomicPredicates aps, RoutingPolicy policy, PrintWriter linkWriter, boolean isDebug) {
+    this(JFactory.init(BDD_VARIABLE_LIMIT, BDD_VARIABLE_CACHE_LIMIT), 
+         new Context(), aps, policy, linkWriter, isDebug);
+  }
+
+  public TransferBDDSMT(
+      BDDFactory factory, Context context, ConfigAtomicPredicates aps, RoutingPolicy policy, 
+      PrintWriter linkWriter, boolean isDebug) {
     _configAtomicPredicates = aps;
     _policy = policy;
     _conf = policy.getOwner();
@@ -204,8 +228,15 @@ public class TransferBDDSMT {
     _asPathRegexAtomicPredicates =
         _configAtomicPredicates.getAsPathRegexAtomicPredicates().getRegexAtomicPredicates();
 
-    // initialize smt variable count
-    _exprIndex = 0;
+    // configure is debug flag
+    _debug = isDebug;
+
+    // configure link print writer
+    _linkWriter = linkWriter;
+
+    // initialize smt variable index and blank filler
+    _smtVarialbeIndex = 0;
+    _blankFiller = "";
   }
 
   /**
@@ -219,9 +250,10 @@ public class TransferBDDSMT {
    */
   public List<TransferBDDSMTReturn> computePaths() {
     BDDSMTRoute o = new BDDSMTRoute(_factory, _context, _configAtomicPredicates);
-    // NOTE: modified by yongzheng to enable debug information in TransferBDDSMTParam
+    // NOTE: modified by yongzheng to enable debug message in TransferBDDSMTParam
     // TransferBDDSMTParam p = new TransferBDDSMTParam(o, false);
-    TransferBDDSMTParam p = new TransferBDDSMTParam(o, true);
+    // TransferBDDSMTParam p = new TransferBDDSMTParam(o, true);
+    TransferBDDSMTParam p = new TransferBDDSMTParam(o, _debug);
     return computePaths(_statements, p)
         .stream().map(TransferBDDSMTResult::getReturnValue)
         .collect(ImmutableList.toImmutableList());
@@ -254,7 +286,8 @@ public class TransferBDDSMT {
         continue;
       }
 
-      curP.debug("InitialCall finalizing");
+      // curP.debug("InitialCall finalizing");
+      writeDebugMessage(curP, "InitialCall finalizing");
 
       // Only accept routes that are not suppressed
       if (result.getSuppressedValue()) {
@@ -313,7 +346,8 @@ public class TransferBDDSMT {
 
     // TODO: right now everything is IPv4
     if (expr instanceof MatchIpv4) {
-      p.debug("MatchIpv4 Result: true");
+      // p.debug("MatchIpv4 Result: true");
+      writeDebugMessage(p, "MatchIpv4 Result: true");
       // method 1, use routeForMatching to get current BDDSMTRoute, then get Context
       // method 2, directly use Context object _context
       // NOTE: currently adopt method 2
@@ -326,7 +360,8 @@ public class TransferBDDSMT {
 
     // Not aBoolExpr -> ! compute(aBoolExpr, state)
     } else if (expr instanceof Not) {
-      p.debug("mkNot");
+      // p.debug("mkNot");
+      writeDebugMessage(p, "mkNot");
       Not n = (Not) expr;
       List<TransferBDDSMTResult> results = compute(n.getExpr(), state);
       for (TransferBDDSMTResult currResult : results) {
@@ -376,7 +411,8 @@ public class TransferBDDSMT {
       finalResults.addAll(currResults);
 
     } else if (expr instanceof MatchPrefixSet) {
-      p.debug("MatchPrefixSet");
+      // p.debug("MatchPrefixSet");
+      writeDebugMessage(p, "MatchPrefixSet");
       MatchPrefixSet m = (MatchPrefixSet) expr;
 
       // MatchPrefixSet::evaluate obtains the prefix to match (either the destination network or
@@ -386,7 +422,8 @@ public class TransferBDDSMT {
       finalResults.add(bddsmtResult.setReturnValueAccepted(true));
 
     } else if (expr instanceof LegacyMatchAsPath) {
-      p.debug("MatchAsPath");
+      // p.debug("MatchAsPath");
+      writeDebugMessage(p, "MatchAsPath");
       checkForAsPathMatchAfterUpdate(p);
       LegacyMatchAsPath legacyMatchAsPathNode = (LegacyMatchAsPath) expr;
       BDDSMT asPathPredicate =
@@ -418,7 +455,7 @@ public class TransferBDDSMT {
             .map(r -> r.getReturnValue().getInputSmtConstraints())
             .toArray(BoolExpr[]::new)
     );
-    String unmatchedExprName = smtVariableName(UNMATCHED);
+    String unmatchedExprName = createSmtVariableName(UNMATCHED);
     BoolExpr unmatchedSmt = _context.mkBoolConst(unmatchedExprName);
     unmatchedSmt = _context.mkNot(matchedSmt);
 
@@ -449,72 +486,86 @@ public class TransferBDDSMT {
 
       switch (ss.getType()) {
         case ExitAccept:
-          curP.debug("ExitAccept");
+          // curP.debug("ExitAccept");
+          writeDebugMessage(curP, "ExitAccept");
           result = exitValue(result, true);
           return ImmutableList.of(toTransferBDDSMTState(curP, result));
 
         case ReturnTrue:
-          curP.debug("ReturnTrue");
+          // curP.debug("ReturnTrue");
+          writeDebugMessage(curP, "ReturnTrue");
           result = returnValue(result, true);
           return ImmutableList.of(toTransferBDDSMTState(curP, result));
 
         case ExitReject:
-          curP.debug("ExitReject");
+          // curP.debug("ExitReject");
+          writeDebugMessage(curP, "ExitReject");
           result = exitValue(result, false);
           return ImmutableList.of(toTransferBDDSMTState(curP, result));
 
         case ReturnFalse:
-          curP.debug("ReturnFalse");
+          // curP.debug("ReturnFalse");
+          writeDebugMessage(curP, "ReturnFalse");
           result = returnValue(result, false);
           return ImmutableList.of(toTransferBDDSMTState(curP, result));
 
         case SetDefaultActionAccept:
-          curP.debug("SetDefaultActionAccept");
+          // curP.debug("SetDefaultActionAccept");
+          writeDebugMessage(curP, "SetDefaultActionAccept");
           curP = curP.setDefaultAccept(true);
           return ImmutableList.of(toTransferBDDSMTState(curP, result));
 
         case SetDefaultActionReject:
-          curP.debug("SetDefaultActionReject");
+          // curP.debug("SetDefaultActionReject");
+          writeDebugMessage(curP, "SetDefaultActionReject");
           curP = curP.setDefaultAccept(false);
           return ImmutableList.of(toTransferBDDSMTState(curP, result));
 
         case SetLocalDefaultActionAccept:
-          curP.debug("SetLocalDefaultActionAccept");
+          // curP.debug("SetLocalDefaultActionAccept");
+          writeDebugMessage(curP, "SetLocalDefaultActionAccept");
           curP = curP.setDefaultAcceptLocal(true);
           return ImmutableList.of(toTransferBDDSMTState(curP, result));
 
         case SetLocalDefaultActionReject:
-          curP.debug("SetLocalDefaultActionReject");
+          // curP.debug("SetLocalDefaultActionReject");
+          writeDebugMessage(curP, "SetLocalDefaultActionReject");
           curP = curP.setDefaultAcceptLocal(false);
           return ImmutableList.of(toTransferBDDSMTState(curP, result));
 
         case ReturnLocalDefaultAction:
-          curP.debug("ReturnLocalDefaultAction");
+          // curP.debug("ReturnLocalDefaultAction");
+          writeDebugMessage(curP, "ReturnLocalDefaultAction");
           result = returnValue(result, curP.getDefaultAcceptLocal());
           return ImmutableList.of(toTransferBDDSMTState(curP, result));
 
         case DefaultAction:
-          curP.debug("DefaultAction");
+          // curP.debug("DefaultAction");
+          writeDebugMessage(curP, "DefaultAction");
           result = exitValue(result, curP.getDefaultAccept());
           return ImmutableList.of(toTransferBDDSMTState(curP, result));
 
         case FallThrough:
-          curP.debug("Fallthrough");
+          // curP.debug("Fallthrough");
+          writeDebugMessage(curP, "Fallthrough");
           result = fallthrough(result);
           return ImmutableList.of(toTransferBDDSMTState(curP, result));
 
         case Return:
-          curP.debug("Return");
+          // curP.debug("Return");
+          writeDebugMessage(curP, "Return");
           result = result.setReturnAssignedValue(true);
           return ImmutableList.of(toTransferBDDSMTState(curP, result));
 
         case Suppress:
-          curP.debug("Suppress");
+          // curP.debug("Suppress");
+          writeDebugMessage(curP, "Suppress");
           result = suppressedValue(result, true);
           return ImmutableList.of(toTransferBDDSMTState(curP, result));
 
         case Unsuppress:
-          curP.debug("Unsuppress");
+          // curP.debug("Unsuppress");
+          writeDebugMessage(curP, "Unsuppress");
           result = suppressedValue(result, false);
           return ImmutableList.of(toTransferBDDSMTState(curP, result));
 
@@ -550,7 +601,8 @@ public class TransferBDDSMT {
       }
 
     } else if (stmt instanceof If) {
-      curP.debug("If");
+      // curP.debug("If");
+      writeDebugMessage(curP, "If");
       If i = (If) stmt;
       List<TransferBDDSMTResult> guardResults =
           compute(i.getGuard(), new TransferBDDSMTState(curP.indent(), result));
@@ -589,7 +641,8 @@ public class TransferBDDSMT {
       return ImmutableList.copyOf(newStates);
 
     } else if (stmt instanceof SetLocalPreference) {
-      curP.debug("SetLocalPreference");
+      // curP.debug("SetLocalPreference");
+      writeDebugMessage(curP, "SetLocalPreference");
       SetLocalPreference slp = (SetLocalPreference) stmt;
       LongExpr ie = slp.getLocalPreference();
       MutableBDDSMTInteger newValue =
@@ -599,6 +652,7 @@ public class TransferBDDSMT {
 
     } else if (stmt instanceof SetCommunities) {
       curP.debug("SetCommunities");
+      writeDebugMessage(curP, "SetCommunities");
       SetCommunities sc = (SetCommunities) stmt;
       CommunitySetExpr setExpr = sc.getCommunitySetExpr();
       // SetCommunitiesVisitor requires a BDDRoute that maps each community atomic predicate BDD
@@ -625,11 +679,13 @@ public class TransferBDDSMT {
       throws UnsupportedOperationException {
     if (e instanceof LiteralLong) {
       LiteralLong z = (LiteralLong) e;
-      p.debug("LiteralLong: %s", z.getValue());
+      // p.debug("LiteralLong: %s", z.getValue());
+      writeDebugMessage(p, String.format("LiteralLong: %s", z.getValue()));
       return MutableBDDSMTInteger.makeFromValue(x.getFactory(), x.getContext(), 32, z.getValue());
     } else if (e instanceof IncrementMetric) {
       IncrementMetric z = (IncrementMetric) e;
-      p.debug("Increment: %s", z.getAddend());
+      // p.debug("Increment: %s", z.getAddend());
+      writeDebugMessage(p, String.format("Increment: %s", z.getAddend()));
       return x.addClipping(
           MutableBDDSMTInteger.makeFromValue(x.getFactory(), x.getContext(), 32, z.getAddend()));
     } else {
@@ -642,17 +698,20 @@ public class TransferBDDSMT {
 
     if (e instanceof DecrementMetric) {
       DecrementMetric z = (DecrementMetric) e;
-      p.debug("Decrement: %s", z.getSubtrahend());
+      // p.debug("Decrement: %s", z.getSubtrahend());
+      writeDebugMessage(p, String.format("Decrement: %s", z.getSubtrahend()));
       return x.sub(MutableBDDInteger.makeFromValue(x.getFactory(), 32, z.getSubtrahend()));
     }
     if (e instanceof IncrementLocalPreference) {
       IncrementLocalPreference z = (IncrementLocalPreference) e;
-      p.debug("IncrementLocalPreference: %s", z.getAddend());
+      // p.debug("IncrementLocalPreference: %s", z.getAddend());
+      writeDebugMessage(p, String.format("IncrementLocalPreference: %s", z.getAddend()));
       return x.add(MutableBDDInteger.makeFromValue(x.getFactory(), 32, z.getAddend()));
     }
     if (e instanceof DecrementLocalPreference) {
       DecrementLocalPreference z = (DecrementLocalPreference) e;
-      p.debug("DecrementLocalPreference: %s", z.getSubtrahend());
+      // p.debug("DecrementLocalPreference: %s", z.getSubtrahend());
+      writeDebugMessage(p, String.format("DecrementLocalPreference: %s", z.getSubtrahend()));
       return x.sub(MutableBDDInteger.makeFromValue(x.getFactory(), 32, z.getSubtrahend()));
     }
      */
@@ -679,8 +738,8 @@ public class TransferBDDSMT {
             .collect(Collectors.toList()));
 
     // synthesis a smt expression that represents the disjunction of all as-path regexes APs
-    String aspathConfigName = smtVariableName(ASPATH_REGEXES);
-    String aspathExprName = smtVariableName(MATCH_ASPATH_REGEXES);
+    String aspathConfigName = createSmtVariableName(ASPATH_REGEXES);
+    String aspathExprName = createSmtVariableName(MATCH_ASPATH_REGEXES);
     BoolExpr matchAspathSmt = route.getContext().mkOr(
         asPathAPs.stream().map(ap -> route.getAsPathRegexAtomicPredicates().
             valueSmt(ap, aspathConfigName, aspathExprName)
@@ -728,10 +787,10 @@ public class TransferBDDSMT {
     BDD matchPrefixBdd = matchPrefixIpBdd.and(matchPrefixLengthBdd);
 
     // synthesis match prefix ip/length smt logical expression
-    String prefixIpConfigName        = smtVariableName(PREFIX_IP);
-    String prefixLengthConfigName    = smtVariableName(PREFIX_LENGTH);
-    String matchPrefixIpExprName     = smtVariableName(MATCH_PREFIX_IP);
-    String matchPrefixLengthExprName = smtVariableName(MATCH_PREFIX_LENGTH);
+    String prefixIpConfigName        = createSmtVariableName(PREFIX_IP);
+    String prefixLengthConfigName    = createSmtVariableName(PREFIX_LENGTH);
+    String matchPrefixIpExprName     = createSmtVariableName(MATCH_PREFIX_IP);
+    String matchPrefixLengthExprName = createSmtVariableName(MATCH_PREFIX_LENGTH);
     BoolExpr matchPrefixIpSmt = 
         record.getPrefix().toSMT(range.getPrefix(), prefixIpConfigName, matchPrefixIpExprName);
     BoolExpr matchPrefixLengthSmt = 
@@ -756,8 +815,8 @@ public class TransferBDDSMT {
       BDD matchNexthopBdd = record.getNextHop().toBDD(range.getPrefix());
 
       // synthesis match nexthop ip smt logical expression
-      String nexthopConfigName = smtVariableName(NEXTHOP_IP);
-      String matchNexthopExprName = smtVariableName(MATCH_NEXTHOP_IP);
+      String nexthopConfigName = createSmtVariableName(NEXTHOP_IP);
+      String matchNexthopExprName = createSmtVariableName(MATCH_NEXTHOP_IP);
       BoolExpr matchNexthopSmt = 
           record.getNextHop().toSMT(range.getPrefix(), nexthopConfigName, matchNexthopExprName);
       return new BDDSMT(matchNexthopBdd, matchNexthopSmt);
@@ -774,7 +833,8 @@ public class TransferBDDSMT {
     if (e instanceof NamedAsPathSet) {
       NamedAsPathSet namedAsPathSet = (NamedAsPathSet) e;
       AsPathAccessList accessList = conf.getAsPathAccessLists().get(namedAsPathSet.getName());
-      p.debug("Named As Path Set: %s", namedAsPathSet.getName());
+      // p.debug("Named As Path Set: %s", namedAsPathSet.getName());
+      writeDebugMessage(p, String.format("Named As Path Set: %s", namedAsPathSet.getName()));
       return matchAsPathAccessList(accessList, other);
     }
     // TODO: handle other kinds of AsPathSetExprs
@@ -800,7 +860,7 @@ public class TransferBDDSMT {
     // initialize bdd and smt logical expression
     BDD matchAspathAclBdd = _factory.zero();
     // create a named boolean smt variable and then initialize it with false
-    String aspathAclExprName = smtVariableName(MATCH_ASPATH_ACCESSLIST);
+    String aspathAclExprName = createSmtVariableName(MATCH_ASPATH_ACCESSLIST);
     BoolExpr matchAspathAclSmt = _context.mkBoolConst(aspathAclExprName);
     matchAspathAclSmt = _context.mkFalse();
 
@@ -818,7 +878,7 @@ public class TransferBDDSMT {
       // synthesis match aspath access list bdd logical expression
       matchAspathAclBdd = ite(regexApsBdd, mkBDD(action), matchAspathAclBdd);
       // synthesis match aspath access list smt logical expression
-      String actionPermitExprName = smtVariableName(ACTION_PERMIT);
+      String actionPermitExprName = createSmtVariableName(ACTION_PERMIT);
       BoolExpr actionSmt = _context.mkBoolConst(actionPermitExprName);
       actionSmt = action ? _context.mkTrue() : _context.mkFalse();
       matchAspathAclSmt = (BoolExpr) _context.mkITE(regexApsSmt, actionSmt, matchAspathAclSmt);
@@ -840,7 +900,7 @@ public class TransferBDDSMT {
     // initialize bdd and smt logical expression
     BDD matchFilterListBdd = _factory.zero();
     // create a named boolean smt variable and then initialize it with false
-    String filterListExprName = smtVariableName(MATCH_FILTER_LIST);
+    String filterListExprName = createSmtVariableName(MATCH_FILTER_LIST);
     BoolExpr matchFilterListSmt = _context.mkBoolConst(filterListExprName);
     matchFilterListSmt = _context.mkFalse();
 
@@ -854,8 +914,10 @@ public class TransferBDDSMT {
       Prefix pfx = line.getIpWildcard().toPrefix();
       SubRange r = line.getLengthRange();
       PrefixRange range = new PrefixRange(pfx, r);
-      p.debug("Prefix Range: %s", range);
-      p.debug("Action: %s", line.getAction());
+      // p.debug("Prefix Range: %s", range);
+      writeDebugMessage(p, String.format("Prefix Range: %s", range));
+      // p.debug("Action: %s", line.getAction());
+      writeDebugMessage(p, String.format("Action: %s", line.getAction()));
 
       BDDSMT matchesBddsmt = symbolicMatcher.apply(other, range);
       BDD matchesBdd = matchesBddsmt.getBddVariable();
@@ -864,7 +926,7 @@ public class TransferBDDSMT {
       // synthesis match filter list bdd logical expression
       matchFilterListBdd = ite(matchesBdd, mkBDD(action), matchFilterListBdd);
       // synthesis match filter list smt logical expression
-      String actionPermitExprName = smtVariableName(ACTION_PERMIT);
+      String actionPermitExprName = createSmtVariableName(ACTION_PERMIT);
       BoolExpr actionSmt = _context.mkBoolConst(actionPermitExprName);
       matchFilterListSmt = (BoolExpr) _context.mkITE(matchesSmt, actionSmt, matchFilterListSmt);
     }
@@ -908,12 +970,13 @@ public class TransferBDDSMT {
 
       Set<PrefixRange> ranges = x.getPrefixSpace().getPrefixRanges();
       BDD matchPrefixSetBdd = _factory.zero();
-      String prefixSetExprName = smtVariableName(MATCH_PREFIX_SET);
+      String prefixSetExprName = createSmtVariableName(MATCH_PREFIX_SET);
       BoolExpr matchPrefixSetSmt = _context.mkBoolConst(prefixSetExprName);
       matchPrefixSetSmt = _context.mkFalse();
 
       for (PrefixRange range : ranges) {
-        p.debug("Prefix Range: %s", range);
+        // p.debug("Prefix Range: %s", range);
+        writeDebugMessage(p, String.format("Prefix Range: %s", range));
         // synthesis bdd and smt logical expression
         BDDSMT bddsmt = symbolicMatcher.apply(other, range);
         matchPrefixSetBdd = matchPrefixSetBdd.or(bddsmt.getBddVariable());
@@ -927,7 +990,8 @@ public class TransferBDDSMT {
 
       String name = x.getName();
       RouteFilterList fl = conf.getRouteFilterLists().get(name);
-      p.debug("Named: %s", name);
+      // p.debug("Named: %s", name);
+      writeDebugMessage(p, String.format("Named: %s", name));
 
       // synthesis bdd and smt logical expression
       return matchFilterList(p, fl, other, symbolicMatcher);
@@ -1096,11 +1160,39 @@ public class TransferBDDSMT {
   }
 
   /** Return a smt expression name accoring to exprName. */
-  private /*static*/ String smtVariableName(String exprName) {
-      ++_exprIndex;
-      System.out.println("[+] " + exprName + _exprIndex);
-      return exprName + _exprIndex;
+  private /*static*/ String createSmtVariableName(String exprName) {
+      ++_smtVarialbeIndex;
+
+      // check smt variable number limit
+      if (SMT_VARIABLE_LIMIT < _smtVarialbeIndex) {
+        System.err.println("Error: The limit of SMT variable is reached.");
+        System.exit(1);  // Exit with an error code
+      }
+
+      // if debug is enabled, print smt variable name to terminal
+      if (_debug) {
+        System.out.println(_blankFiller + "--- " + exprName + _smtVarialbeIndex);
+      }
+
+      // write smt variable name to specific file
+      _linkWriter.println(_blankFiller + "--- " + exprName + _smtVarialbeIndex);
+
+      // return unique smt variable name
+      return exprName + _smtVarialbeIndex;
   }
+
+  /** Write debug message and smt variable name to specific file. */
+  private /*static*/ void writeDebugMessage(TransferBDDSMTParam curParam, String curMessage) {
+    // print debug message to terminal
+    curParam.debug(curMessage);
+    // write debug message to specific file
+    String debugMessage = curParam.getDebug(curMessage);
+    _linkWriter.println(debugMessage);
+
+    // set blank filler prefix for format print smt variable to terminal
+    _blankFiller = BLANK.repeat(curParam.getIndent()); 
+  }
+
 
   /** Return a BDD from a boolean. */
   public BDD mkBDD(boolean b) {

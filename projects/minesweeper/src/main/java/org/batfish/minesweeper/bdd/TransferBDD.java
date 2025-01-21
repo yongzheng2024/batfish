@@ -269,10 +269,12 @@ public class TransferBDD {
 
     // TODO: right now everything is IPV4
     if (expr instanceof MatchIpv4) {
+      // System.out.println("[+] match MatchIpv4");
       p.debug("MatchIpv4 Result: true");
       finalResults.add(result.setReturnValueBDD(_factory.one()).setReturnValueAccepted(true));
 
     } else if (expr instanceof Not) {
+      // System.out.println("[+] match Not");
       p.debug("mkNot");
       Not n = (Not) expr;
       List<TransferResult> results = compute(n.getExpr(), state);
@@ -282,6 +284,7 @@ public class TransferBDD {
       }
 
     } else if (expr instanceof Conjunction) {
+      // System.out.println("[+] match Conjunction");
       Conjunction conj = (Conjunction) expr;
       List<TransferResult> currResults = new ArrayList<>();
       // the default result is true
@@ -315,6 +318,7 @@ public class TransferBDD {
       finalResults.addAll(currResults);
 
     } else if (expr instanceof Disjunction) {
+      // System.out.println("[+] match Disjunction");
       Disjunction disj = (Disjunction) expr;
       /*
       Disjunctions of as-path matches are handled specially when building as-path atomic
@@ -384,6 +388,7 @@ public class TransferBDD {
       // TODO: This code is here for backward-compatibility reasons but has not been tested and is
       // not currently maintained
     } else if (expr instanceof ConjunctionChain) {
+      // System.out.println("[+] match ConjunctionChain");
       p.debug("ConjunctionChain");
       ConjunctionChain d = (ConjunctionChain) expr;
       List<BooleanExpr> conjuncts = new ArrayList<>(d.getSubroutines());
@@ -421,6 +426,7 @@ public class TransferBDD {
       }
 
     } else if (expr instanceof FirstMatchChain) {
+      // System.out.println("[+] match FirstMatchChain");
       p.debug("FirstMatchChain");
       FirstMatchChain chain = (FirstMatchChain) expr;
       List<BooleanExpr> chainPolicies = new ArrayList<>(chain.getSubroutines());
@@ -462,12 +468,14 @@ public class TransferBDD {
       }
 
     } else if (expr instanceof MatchProtocol) {
+      // System.out.println("[+] match MatchProtocol");
       MatchProtocol mp = (MatchProtocol) expr;
       Set<RoutingProtocol> rps = mp.getProtocols();
       BDD matchRPBDD = _originalRoute.anyElementOf(rps, p.getData().getProtocolHistory());
       finalResults.add(result.setReturnValueBDD(matchRPBDD).setReturnValueAccepted(true));
 
     } else if (expr instanceof MatchPrefixSet) {
+      // System.out.println("[+] match MatchPrefixSet");
       p.debug("MatchPrefixSet");
       MatchPrefixSet m = (MatchPrefixSet) expr;
 
@@ -477,6 +485,7 @@ public class TransferBDD {
       finalResults.add(result.setReturnValueBDD(prefixSet).setReturnValueAccepted(true));
 
     } else if (expr instanceof CallExpr) {
+      // System.out.println("[+] match CallExpr");
       p.debug("CallExpr");
       CallExpr c = (CallExpr) expr;
       String name = c.getCalledPolicyName();
@@ -503,6 +512,7 @@ public class TransferBDD {
       }
 
     } else if (expr instanceof WithEnvironmentExpr) {
+      // System.out.println("[+] match WithEnvironmentExpr");
       p.debug("WithEnvironmentExpr");
       // TODO: this is not correct
       WithEnvironmentExpr we = (WithEnvironmentExpr) expr;
@@ -510,6 +520,7 @@ public class TransferBDD {
       finalResults.addAll(compute(we.getExpr(), state));
 
     } else if (expr instanceof MatchCommunities) {
+      // System.out.println("[+] match MatchCommunities");
       p.debug("MatchCommunities");
       MatchCommunities mc = (MatchCommunities) expr;
       // we only handle the case where the expression being matched is just the input communities
@@ -522,17 +533,20 @@ public class TransferBDD {
       finalResults.add(result.setReturnValueBDD(mcPredicate).setReturnValueAccepted(true));
 
     } else if (expr instanceof MatchTag) {
+      // System.out.println("[+] match MatchTag");
       MatchTag mt = (MatchTag) expr;
       BDD mtBDD = matchLongComparison(mt.getCmp(), mt.getTag(), routeForMatching(p).getTag());
       finalResults.add(result.setReturnValueBDD(mtBDD).setReturnValueAccepted(true));
 
     } else if (expr instanceof MatchMetric) {
+      // System.out.println("[+] match MatchMetric");
       MatchMetric mm = (MatchMetric) expr;
       BDD mmBDD =
           matchLongComparison(mm.getComparator(), mm.getMetric(), routeForMatching(p).getMed());
       finalResults.add(result.setReturnValueBDD(mmBDD).setReturnValueAccepted(true));
 
     } else if (expr instanceof MatchClusterListLength) {
+      // System.out.println("[+] match MatchClusterListLength");
       MatchClusterListLength mcll = (MatchClusterListLength) expr;
       BDD mcllBDD =
           matchIntComparison(
@@ -540,6 +554,7 @@ public class TransferBDD {
       finalResults.add(result.setReturnValueBDD(mcllBDD).setReturnValueAccepted(true));
 
     } else if (expr instanceof BooleanExprs.StaticBooleanExpr) {
+      // System.out.println("[+] match BooleanExprs.StaticBooleanExpr");
       BooleanExprs.StaticBooleanExpr b = (BooleanExprs.StaticBooleanExpr) expr;
       switch (b.getType()) {
         case CallExprContext:
@@ -571,6 +586,7 @@ public class TransferBDD {
       }
 
     } else if (expr instanceof LegacyMatchAsPath) {
+      // System.out.println("[+] match LegacyMatchAsPath");
       p.debug("MatchAsPath");
       checkForAsPathMatchAfterUpdate(p);
       LegacyMatchAsPath legacyMatchAsPathNode = (LegacyMatchAsPath) expr;
@@ -581,6 +597,7 @@ public class TransferBDD {
 
     } else if (expr instanceof MatchAsPath
         && ((MatchAsPath) expr).getAsPathExpr().equals(InputAsPath.instance())) {
+      // System.out.println("[+] match MatchAsPath+++");
       checkForAsPathMatchAfterUpdate(p);
       MatchAsPath matchAsPath = (MatchAsPath) expr;
       BDDRoute currRoute = routeForMatching(p);
@@ -594,6 +611,7 @@ public class TransferBDD {
       finalResults.add(result.setReturnValueBDD(asPathPredicate).setReturnValueAccepted(true));
 
     } else if (expr instanceof MatchSourceVrf) {
+      // System.out.println("[+] match MatchSourceVrf");
       MatchSourceVrf msv = (MatchSourceVrf) expr;
       // we add 1 to the index since 0 in the BDDDomain is used to represent the absence of a value
       int index = _configAtomicPredicates.getSourceVrfs().indexOf(msv.getSourceVrf()) + 1;
@@ -601,6 +619,7 @@ public class TransferBDD {
       finalResults.add(result.setReturnValueBDD(sourceVrfPred).setReturnValueAccepted(true));
 
     } else if (expr instanceof TrackSucceeded) {
+      // System.out.println("[+] match TrackSucceeded");
       TrackSucceeded ts = (TrackSucceeded) expr;
       BDD trackPred =
           itemToBDD(
@@ -608,6 +627,7 @@ public class TransferBDD {
       finalResults.add(result.setReturnValueBDD(trackPred).setReturnValueAccepted(true));
 
     } else if (expr instanceof MatchInterface) {
+      // System.out.println("[+] match MatchInterface");
       MatchInterface mi = (MatchInterface) expr;
       if (_useOutputAttributes && p.getData().getNextHopSet()) {
         // we don't yet properly model the situation where a modified next-hop is later matched
@@ -663,6 +683,7 @@ public class TransferBDD {
     TransferResult result = state.getTransferResult();
 
     if (stmt instanceof StaticStatement) {
+      // System.out.println("[*] action StaticStatement");
       StaticStatement ss = (StaticStatement) stmt;
 
       switch (ss.getType()) {
@@ -767,6 +788,7 @@ public class TransferBDD {
       }
 
     } else if (stmt instanceof If) {
+      // System.out.println("[*] action If");
       curP.debug("If");
       If i = (If) stmt;
       List<TransferResult> guardResults =
@@ -801,6 +823,7 @@ public class TransferBDD {
       return ImmutableList.copyOf(newStates);
 
     } else if (stmt instanceof SetAdministrativeCost) {
+      // System.out.println("[*] action SetAdministrativeCost");
       curP.debug("SetAdministrativeCost");
       SetAdministrativeCost sac = (SetAdministrativeCost) stmt;
       IntExpr ie = sac.getAdmin();
@@ -812,11 +835,13 @@ public class TransferBDD {
       return ImmutableList.of(toTransferBDDState(curP, result));
 
     } else if (stmt instanceof SetDefaultPolicy) {
+      // System.out.println("[*] action SetDefaultPolicy");
       curP.debug("SetDefaultPolicy");
       curP = curP.setDefaultPolicy((SetDefaultPolicy) stmt);
       return ImmutableList.of(toTransferBDDState(curP, result));
 
     } else if (stmt instanceof SetMetric) {
+      // System.out.println("[*] action SetMetric");
       curP.debug("SetMetric");
       SetMetric sm = (SetMetric) stmt;
       LongExpr ie = sm.getMetric();
@@ -824,7 +849,9 @@ public class TransferBDD {
       MutableBDDInteger med = applyLongExprModification(curP.indent(), curMed, ie);
       curP.getData().setMed(med);
       return ImmutableList.of(toTransferBDDState(curP, result));
+
     } else if (stmt instanceof SetOrigin) {
+      // System.out.println("[*] action SetOrigin");
       curP.debug("SetOrigin");
       OriginExpr oe = ((SetOrigin) stmt).getOriginType();
       if (oe instanceof LiteralOrigin) {
@@ -836,7 +863,9 @@ public class TransferBDD {
       } else {
         throw new UnsupportedOperationException(oe.toString());
       }
+
     } else if (stmt instanceof SetOspfMetricType) {
+      // System.out.println("[*] action SetOspfMetricType");
       curP.debug("SetOspfMetricType");
       SetOspfMetricType somt = (SetOspfMetricType) stmt;
       OspfMetricType mt = somt.getMetricType();
@@ -853,6 +882,7 @@ public class TransferBDD {
       return ImmutableList.of(toTransferBDDState(curP, result));
 
     } else if (stmt instanceof SetLocalPreference) {
+      // System.out.println("[*] action SetLocalPreference");
       curP.debug("SetLocalPreference");
       SetLocalPreference slp = (SetLocalPreference) stmt;
       LongExpr ie = slp.getLocalPreference();
@@ -862,6 +892,7 @@ public class TransferBDD {
       return ImmutableList.of(toTransferBDDState(curP, result));
 
     } else if (stmt instanceof SetTag) {
+      // System.out.println("[*] action SetTag");
       curP.debug("SetTag");
       SetTag st = (SetTag) stmt;
       LongExpr ie = st.getTag();
@@ -872,6 +903,7 @@ public class TransferBDD {
 
     } else if (stmt instanceof RemoveTunnelEncapsulationAttribute
         || stmt instanceof SetTunnelEncapsulationAttribute) {
+      // System.out.println("[*] action RemoveTunnelEncapsulationAttribute+++");
       curP.debug("%s", stmt.getClass().getSimpleName());
       BDDTunnelEncapsulationAttribute current =
           result.getReturnValue().getOutputRoute().getTunnelEncapsulationAttribute();
@@ -889,6 +921,7 @@ public class TransferBDD {
       return ImmutableList.of(toTransferBDDState(curP, result));
 
     } else if (stmt instanceof SetWeight) {
+      // System.out.println("[*] action SetWeight");
       curP.debug("SetWeight");
       SetWeight sw = (SetWeight) stmt;
       IntExpr ie = sw.getWeight();
@@ -903,6 +936,7 @@ public class TransferBDD {
       return ImmutableList.of(toTransferBDDState(curP, result));
 
     } else if (stmt instanceof SetCommunities) {
+      // System.out.println("[*] action SetCommunities");
       curP.debug("SetCommunities");
       SetCommunities sc = (SetCommunities) stmt;
       org.batfish.datamodel.routing_policy.communities.CommunitySetExpr setExpr =
@@ -915,6 +949,7 @@ public class TransferBDD {
       return ImmutableList.of(toTransferBDDState(curP, result));
 
     } else if (stmt instanceof CallStatement) {
+      // System.out.println("[*] action CallStatement");
       /*
        this code is based on the concrete semantics defined by CallStatement::execute, which also
        relies on RoutingPolicy::call
@@ -948,17 +983,20 @@ public class TransferBDD {
           .collect(ImmutableList.toImmutableList());
 
     } else if (stmt instanceof SetNextHop) {
+      // System.out.println("[*] action SetNextHop");
       curP.debug("SetNextHop");
       setNextHop(((SetNextHop) stmt).getExpr(), curP.getData());
       return ImmutableList.of(toTransferBDDState(curP, result));
 
     } else if (stmt instanceof PrependAsPath) {
+      // System.out.println("[*] action PrependAsPath");
       curP.debug("PrependAsPath");
       PrependAsPath pap = (PrependAsPath) stmt;
       prependASPath(pap.getExpr(), curP.getData());
       return ImmutableList.of(toTransferBDDState(curP, result));
 
     } else if (stmt instanceof TraceableStatement) {
+      // System.out.println("[*] action TraceableStatement");
       return compute(((TraceableStatement) stmt).getInnerStatements(), ImmutableList.of(state));
 
     } else {

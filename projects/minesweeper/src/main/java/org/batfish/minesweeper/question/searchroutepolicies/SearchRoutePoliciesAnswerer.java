@@ -98,9 +98,23 @@ public final class SearchRoutePoliciesAnswerer extends Answerer {
   private final @Nonnull Set<RegexConstraint> _communityRegexes;
   private final @Nonnull Set<RegexConstraint> _asPathRegexes;
 
-  private static final String BDD_OUTPUT_FILE = "bdds/routing_policies";
-  private static final String BDD_FILE_EXTENSION = ".txt";
+  // the limit about output directory number
+  private static final int OUTPUT_DIRECTORY_LIMIT = 9999;
+
+  // output directory and relevant file name
+  private static final String OUTPUT_DIRECTORY = "bdds/routing_policies";
+  private static final String BDD_FILE_NAME = "bdd_encoding";
+  private static final String SMT_FILE_NAME = "smt_encoding";
+  private static final String LINK_FILE_NAME = "link_configuration";
+
+  // output directory prefix name `bdds/routing_policiesxxxx`
+  // for creating specific router directory according to different router
+  private final String _outputDirectoryPrefix;
+
+  // print writer for writing bdd encoding, smt encoding, and link between configs and smt variables
   private /*final*/ /*@Nonnull*/ PrintWriter _bddWriter;
+  private /*final*/ /*@Nonnull*/ PrintWriter _smtWriter;
+  private /*final*/ /*@Nonnull*/ PrintWriter _linkWriter;
 
   /**
    * Some route-map statements, notably setting the next hop to the address of the BGP peer, can
@@ -157,30 +171,34 @@ public final class SearchRoutePoliciesAnswerer extends Answerer {
             .addAll(_inputConstraints.getAsPath().getRegexConstraints())
             .build();
 
-    String firstFileName = String.format("%s_000%s", BDD_OUTPUT_FILE, BDD_FILE_EXTENSION);
-    File bddOutputFile = new File(firstFileName);
+    // create an unused output directory for output bdd encoding, smt encoding,  and link
+    String outputDirectoryName = String.format("%s_0000", OUTPUT_DIRECTORY);
+    File outputDirectory = new File(outputDirectoryName);
 
-    int counter = 0;
-    int limit = 999;
+    int directoryCounter = 0;
+    boolean directoryCreated = false;
 
-    while (bddOutputFile.exists() && counter <= limit) {
-      String otherFileName = String.format("%s_%03d%s", BDD_OUTPUT_FILE, counter, BDD_FILE_EXTENSION);
-      bddOutputFile = new File(otherFileName);
-      ++counter;
+    while (outputDirectory.exists() && OUTPUT_DIRECTORY_LIMIT >= directoryCounter) {
+      outputDirectoryName = String.format("%s_%04d", OUTPUT_DIRECTORY, directoryCounter);
+
+      outputDirectory = new File(outputDirectoryName);
+      ++directoryCounter;
     }
 
-    if (limit < counter) {
-      System.err.println("Error: All filenames (from 000 to 999) are taken.");
+    if (OUTPUT_DIRECTORY_LIMIT < directoryCounter) {
+      System.err.println("Error: All filenames (from 0000 to 9999) are taken.");
       System.exit(1);  // Exit with an error code
     }
 
-    // create bdd print writer for write bdd encode
     try {
-      _bddWriter = new PrintWriter(new FileWriter(bddOutputFile), true);
-    } catch (IOException e) {
-      // Handle any file I/O exceptions
-      System.err.println("Error: Writing to file: " + e.getMessage());
+      // create the root output directory
+      directoryCreated = outputDirectory.mkdirs();
+    } catch (SecurityException e) {
+      System.err.println("Error: Unable to create directory: " + e.getMessage());
     }
+
+    // assign root output directory prefix name according to the directory creation result
+    _outputDirectoryPrefix = outputDirectoryName;
   }
 
   /**
@@ -559,22 +577,23 @@ public final class SearchRoutePoliciesAnswerer extends Answerer {
           e);
     }
 
-    // added by yongzheng for shadow smt encoding according to bdd encoding
-    TransferBDDSMT bddsmtTrans = new TransferBDDSMT(configAPs, policy);
+    // NOTE: you can set debug flag to true for print debug message, default is false
+    // shadow smt encoding according to bdd encoding for access the smt encoding information
+    TransferBDDSMT bddsmtTrans = new TransferBDDSMT(configAPs, policy, _linkWriter);
+    // TransferBDDSMT bddsmtTrans = new TransferBDDSMT(configAPs, policy, _linkWriter, true);
     List<TransferBDDSMTReturn> bddsmtPaths = bddsmtTrans.computePaths();
-    System.out.println("============================================================");
 
     for (TransferBDDSMTReturn bddsmtPath : bddsmtPaths) {
       BoolExpr pathExpr = bddsmtPath.getInputSmtConstraints();
-      System.out.println(pathExpr);
-      System.out.println("------------------------------------------------------------");
-    } 
+      _smtWriter.println(pathExpr);
+      _smtWriter.println("------------------------------------------------------------");
+    }
 
     // added by yongzheng in 20241221 for output bdd encoding information
     // print BDD encoding information to specific file `bdds/routing_policies_xxx.txt`
     for (int i = 0; i < paths.size(); ++i) {
-       _bddWriter.println(paths.get(i));
-       _bddWriter.println(paths.get(i).debug());
+      // _bddWriter.println(paths.get(i));
+      _bddWriter.println(paths.get(i).debug());
     }
     _bddWriter.println("------------------------------------------------------------");
 
@@ -644,15 +663,35 @@ public final class SearchRoutePoliciesAnswerer extends Answerer {
    * @return all results from analyzing those route policies
    */
   private Stream<Row> searchPoliciesForNode(Configuration config, Set<RoutingPolicy> policies) {
-    // added by yongzheng for print configuration and routing policy in 20250107
-    // System.out.println(config.toString());
-    // for (RoutingPolicy policy : policies) {
-    //   System.out.println(policy.toString());
-    //   List<Statement> statements = policy.getStatements();
-    //   for (Statement statement : statements) {
-    //     System.out.println(statement.toString());
-    //   }
-    // }
+    String routerName = config.getHostname();
+    String routerOutputDirectoryName = _outputDirectoryPrefix + "/" + routerName;
+    File routerOutputDirectory = new File(routerOutputDirectoryName);
+
+    boolean routerDirectoryCreated = false;
+
+    try {
+      // create the specific router output directory
+      routerDirectoryCreated = routerOutputDirectory.mkdirs();
+    } catch (SecurityException e) {
+      System.err.println("Error: Unable to create directory: " + e.getMessage());
+    }
+
+    File bddOutputFile = new File(routerOutputDirectoryName + "/" + BDD_FILE_NAME);
+    File smtOutputFile = new File(routerOutputDirectoryName + "/" + SMT_FILE_NAME);
+    File linkOutputFile = new File(routerOutputDirectoryName + "/" + LINK_FILE_NAME);
+
+    try {
+      // create a bdd print writer for write smt encoding information to specific file
+      _bddWriter = new PrintWriter(new FileWriter(bddOutputFile), true);
+      // create a smt print writer for write smt encoding information to specific file
+      _smtWriter = new PrintWriter(new FileWriter(smtOutputFile), true);
+      // create a link print writer for write the link about configs -> smt variables
+      _linkWriter = new PrintWriter(new FileWriter(linkOutputFile), true);
+    } catch (IOException e) {
+      // Handle any file I/O exceptions
+      System.err.println("Error: Writing to file: " + e.getMessage());
+    }
+
     ConfigAtomicPredicates configAPs =
         new ConfigAtomicPredicates(
             ImmutableList.of(new SimpleImmutableEntry<>(config, policies)),
