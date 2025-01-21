@@ -155,67 +155,79 @@ omitting ...
 
 ```txt
 Batfish
-├── bdds                 ### bdd encode output (order from 000 to 999)
-│   ├── routing_policies_000.txt
-│   └── routing_policies_001.txt
-├── docs                 ### documents
-│   ├── building_and_running
-│   ├── contributing
-│   ├── conversion
-│   ├── data_plane
-│   ├── example_code
-│   ├── extraction
-│   ├── flow_dispositions
-│   ├── forwarding_analysis
-│   ├── intellij_setup
-│   ├── lab_notes
-│   ├── parsing
-│   ├── post_processing
-│   ├── proposals
-│   ├── question_development
-│   ├── README.md
-│   ├── symbolic_engine
-│   └── topology
-├── networks             ### network topology and router configuration
-│   ├── BUILD.bazel
-│   ├── example
-│   │   ├── candidate
-│   │   ├── example_layer1_topology.json
-│   │   ├── example-network.png
-│   │   ├── live   -------------------------------------------+
-│   │   ├── live-with-bgp-announcements                       |
-│   │   ├── live-with-interface-outage                        |
-│   │   ├── live-with-isp                                     |
-│   │   ├── README.md                                         |
-│   │   └── route-analysis   ------------------------------+  |
-│   ├── hybrid-cloud-aws                                   |  |
-│   └── iptables-firewall                                  |  |
-├── projects             ### Batfish source code           |  |
-│   ├── allinone                                           |  |
-│   ├── batfish                                            |  |
-│   ├── batfish-client                                     |  |
-│   ├── batfish-common-protocol                            |  |
-│   ├── bdd                                                |  |
-│   ├── BUILD.bazel                                        |  |
-│   ├── checkstyle.xml                                     |  |
-│   ├── client                                             |  |
-│   ├── coordinator                                        |  |
-│   ├── minesweeper                                        |  |
-│   ├── question                                           |  |
-│   ├── symbolic                                           |  |
-│   └── VERSION                                            |  |
-├── README.md            ### README by yongzheng           |  |
-├── README_original.md   ### original README by Batfish    |  |
-├── tests                                                  |  |
-│   ├── aws                                                |  |
-│   ├── basic                                              |  |
-│   ├── logging                                            |  |
-│   ├── parsing-errors-tests                               |  |
-│   ├── parsing-tests                                      |  |
-│   ├── questions                                          |  |
-│   ├── roles                                              |  |
-│   └── test             ### test cases via pybatfish      |  |
-│       ├── test_batfish_0001.py   <-----------------------|--+
+├── bdds                 ### output directory (order from 0000 to 9999), invlving bdd
+│   │                    ### encoding, smt encoding and link between configs and smt variables
+│   ├── README.md        ### README file about output
+│   └── routing_policies_0000
+│       ├── border1   <----------------------------------------------+
+│       │   ├── bdd_encoding                                         |
+│       │   ├── link_configuration   <-------------------------------+ 
+│       │   └── smt_encoding                                         |
+│       └── border2   <----------------------------------------------|---+
+│           ├── bdd_encoding                                         |   |
+│           ├── link_configuration   <-------------------------------|---+
+│           └── smt_encoding                                         |   |
+├── docs                 ### documents                               |   |
+│   ├── building_and_running                                         |   |
+│   ├── contributing                                                 |   |
+│   ├── conversion                                                   |   |
+│   ├── data_plane                                                   |   |
+│   ├── example_code                                                 |   |
+│   ├── extraction                                                   |   |
+│   ├── flow_dispositions                                            |   |
+│   ├── forwarding_analysis                                          |   |
+│   ├── intellij_setup                                               |   |
+│   ├── lab_notes                                                    |   |
+│   ├── parsing                                                      |   |
+│   ├── post_processing                                              |   |
+│   ├── proposals                                                    |   |
+│   ├── question_development                                         |   |
+│   ├── README.md                                                    |   |
+│   ├── symbolic_engine                                              |   |
+│   └── topology                                                     |   |
+├── networks             ### network topology and configuration      |   |
+│   ├── BUILD.bazel                                                  |   |
+│   ├── example                                                      |   |
+│   │   ├── candidate                                                |   |
+│   │   ├── example_layer1_topology.json                             |   |
+│   │   ├── example-network.png                                      |   |
+│   │   ├── live   --------------------------------------------+     |   |
+│   │   ├── live-with-bgp-announcements                        |     |   |
+│   │   ├── live-with-interface-outage                         |     |   |
+│   │   ├── live-with-isp                                      |     |   |
+│   │   ├── README.md                                          |     |   |
+│   │   └── route-analysis   ------------------------------+   |     |   |
+│   │       └── configs                                    |   |     |   |
+│   │           ├── border1.cfg   -------------------------|---|-----+   |
+│   │           └── border2.cfg   -------------------------|---|---------+
+│   ├── hybrid-cloud-aws                                   |   |
+│   └── iptables-firewall                                  |   |
+├── projects             ### Batfish source code           |   |
+│   ├── allinone                                           |   |
+│   ├── batfish                                            |   |
+│   ├── batfish-client                                     |   |
+│   ├── batfish-common-protocol                            |   |
+│   ├── bdd                                                |   |
+│   ├── BUILD.bazel                                        |   |
+│   ├── checkstyle.xml                                     |   |
+│   ├── client                                             |   |
+│   ├── coordinator                                        |   |
+│   ├── minesweeper                                        |   |
+│   ├── question                                           |   |
+│   ├── symbolic                                           |   |
+│   └── VERSION                                            |   |
+├── README.md            ### README by yongzheng           |   |
+├── README_original.md   ### original README by Batfish    |   |
+├── tests                                                  |   |
+│   ├── aws                                                |   |
+│   ├── basic                                              |   |
+│   ├── logging                                            |   |
+│   ├── parsing-errors-tests                               |   |
+│   ├── parsing-tests                                      |   |
+│   ├── questions                                          |   |
+│   ├── roles                                              |   |
+│   └── test             ### test cases via pybatfish      |   |
+│       ├── test_batfish_0001.py   <-----------------------|---+
 │       └── test_routing_policies_0001.py   <--------------+
 └── tools                ### tools involves some script
     ├── bazel_run.sh
@@ -255,5 +267,5 @@ $ python3 test_routing_policies_0001.py
 
 [1 rows x 7 columns]
 
-# you can refer the bdd encode output in the last `./bdds/routing_policies_xxx.txt`
+# you can refer the relevant output in the last `./bdds/routing_policies_xxxx`
 ```
