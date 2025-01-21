@@ -1,0 +1,89 @@
+[]: If
+    []: MatchPrefixSet
+        []: Named: private-ips
+        --- match_filter_list_1
+        []: Prefix Range: 192.168.0.0/16
+        []: Action: PERMIT
+        --- config_prefix_ip_2
+        --- config_prefix_length_3
+        --- match_prefix_ip_4
+        --- match_prefix_length_5
+        --- config_action_permit_6
+        []: Prefix Range: 172.16.0.0/12:12-32
+        []: Action: PERMIT
+        --- config_prefix_ip_7
+        --- config_prefix_length_8
+        --- match_prefix_ip_9
+        --- match_prefix_length_10
+        --- config_action_permit_11
+        []: Prefix Range: 10.0.0.0/8:8-32
+        []: Action: PERMIT
+        --- config_prefix_ip_12
+        --- config_prefix_length_13
+        --- match_prefix_ip_14
+        --- match_prefix_length_15
+        --- config_action_permit_16
+        --- unmatched_17
+    []: ReturnFalse
+    []: If
+            []: MatchAsPath
+                []: Named As Path Set: origin44
+                --- match_aspatch_accesslist_18
+                --- config_aspath_regexes_19
+                --- match_aspath_regexes_20
+                --- config_action_permit_21
+                --- unmatched_22
+            []: MatchPrefixSet
+                []: Named: from44
+                --- match_filter_list_23
+                []: Prefix Range: 5.5.5.0/24:24-32
+                []: Action: PERMIT
+                --- config_prefix_ip_24
+                --- config_prefix_length_25
+                --- match_prefix_ip_26
+                --- match_prefix_length_27
+                --- config_action_permit_28
+                --- unmatched_29
+                --- unmatched_30
+        []: If
+            []: MatchPrefixSet
+                []: Named: from44
+                --- match_filter_list_31
+                []: Prefix Range: 5.5.5.0/24:24-32
+                []: Action: PERMIT
+                --- config_prefix_ip_32
+                --- config_prefix_length_33
+                --- match_prefix_ip_34
+                --- match_prefix_length_35
+                --- config_action_permit_36
+                --- unmatched_37
+            []: ReturnFalse
+            []: SetCommunities
+            []: SetLocalPreference
+                []: LiteralLong: 300
+            []: ReturnTrue
+        []: If
+            []: MatchPrefixSet
+                []: Named: from44
+                --- match_filter_list_38
+                []: Prefix Range: 5.5.5.0/24:24-32
+                []: Action: PERMIT
+                --- config_prefix_ip_39
+                --- config_prefix_length_40
+                --- match_prefix_ip_41
+                --- match_prefix_length_42
+                --- config_action_permit_43
+                --- unmatched_44
+            []: SetCommunities
+            []: SetLocalPreference
+                []: LiteralLong: 300
+            []: ReturnTrue
+        []: SetCommunities
+        []: SetLocalPreference
+            []: LiteralLong: 300
+        []: ReturnTrue
+    []: InitialCall finalizing
+            []: InitialCall finalizing
+            []: InitialCall finalizing
+            []: InitialCall finalizing
+        []: InitialCall finalizing
