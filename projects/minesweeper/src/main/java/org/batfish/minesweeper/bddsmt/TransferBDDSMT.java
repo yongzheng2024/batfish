@@ -651,7 +651,7 @@ public class TransferBDDSMT {
       return ImmutableList.of(toTransferBDDSMTState(curP, result));
 
     } else if (stmt instanceof SetCommunities) {
-      curP.debug("SetCommunities");
+      // curP.debug("SetCommunities");
       writeDebugMessage(curP, "SetCommunities");
       SetCommunities sc = (SetCommunities) stmt;
       CommunitySetExpr setExpr = sc.getCommunitySetExpr();
