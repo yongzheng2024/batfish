@@ -79,6 +79,9 @@ import org.batfish.specifier.SpecifierFactories;
 import org.batfish.minesweeper.bddsmt.TransferBDDSMT;
 import org.batfish.minesweeper.bddsmt.TransferBDDSMTReturn;
 
+import com.microsoft.z3.Context;
+import com.microsoft.z3.Solver;
+// import com.microsoft.z3.Expr;
 import com.microsoft.z3.BoolExpr;
 
 
@@ -103,18 +106,22 @@ public final class SearchRoutePoliciesAnswerer extends Answerer {
 
   // output directory and relevant file name
   private static final String OUTPUT_DIRECTORY = "bdds/routing_policies";
-  private static final String BDD_FILE_NAME = "bdd_encoding";
-  private static final String SMT_FILE_NAME = "smt_encoding";
+  private static final String BDD_ENCODING_FILE_NAME = "bdd_encoding";
+  private static final String SMT_ENCODING_FILE_NAME = "smt_encoding";
   private static final String LINK_FILE_NAME = "link_configuration";
+  private static final String SMT2_OUTPUT_FILE_NAME = "smt.smt2";
 
   // output directory prefix name `bdds/routing_policiesxxxx`
   // for creating specific router directory according to different router
   private final String _outputDirectoryPrefix;
 
-  // print writer for writing bdd encoding, smt encoding, and link between configs and smt variables
+  // print writer for writing bdd encoding, smt encoding
   private /*final*/ /*@Nonnull*/ PrintWriter _bddWriter;
   private /*final*/ /*@Nonnull*/ PrintWriter _smtWriter;
+  // print writer for link between configs and smt variables
   private /*final*/ /*@Nonnull*/ PrintWriter _linkWriter;
+  // print writer for output full smt2 file
+  private /*final*/ /*@Nonnull*/ PrintWriter _smt2Writer;
 
   /**
    * Some route-map statements, notably setting the next hop to the address of the BGP peer, can
@@ -587,9 +594,34 @@ public final class SearchRoutePoliciesAnswerer extends Answerer {
       BoolExpr pathExpr = bddsmtPath.getInputSmtConstraints();
       _smtWriter.println(pathExpr);
       _smtWriter.println("------------------------------------------------------------");
+
+      // NOTE: check input smt constraints == true
+      Context context = bddsmtPath.getOutputRoute().getContext();
+      Solver solver = context.mkSolver();
+      BoolExpr inputConstraint = context.mkEq(pathExpr, context.mkTrue());
+      solver.add(inputConstraint);
+
+      // print smt2 format encoding (declarations + constraints)
+      // System.out.println(solver.toString());
+      // write smt2 format encoding (declarations + constraints) to specific file
+      _smt2Writer.println(solver.toString());
+      _smt2Writer.println("------------------------------------------------------------");
+
+      // print smt2 format constraint expression encoding
+      // for (Expr constraint : solver.getAssertions()) {
+      //   System.out.println(constraint);
+      // }
+
+      // return result of symbolic analysis (match or not match)
+      // if (solver.check() == com.microsoft.z3.Status.SATISFIABLE) {
+      //   System.out.println("OK");
+      // } else {
+      //   System.out.println("ERROR");
+      // }
+
+      // System.out.println("------------------------------------------------------------");
     }
 
-    // added by yongzheng in 20241221 for output bdd encoding information
     // print BDD encoding information to specific file `bdds/routing_policies_xxx.txt`
     for (int i = 0; i < paths.size(); ++i) {
       // _bddWriter.println(paths.get(i));
@@ -634,7 +666,6 @@ public final class SearchRoutePoliciesAnswerer extends Answerer {
       Optional<RowAndRoute> result =
           constraintsToResult(intersection, policy, outConfigAPs, outputRoute);
 
-      // added by yongzheng in 20241223 for output bdd encode information
       // print BDD encode information to specific file `bdds/routing_policies_xxx.txt`
       // _bddWriter.println(outputRoute.dotWrapper(intersection));
       // _bddWriter.println("------------------------------------------------------------");
@@ -676,17 +707,20 @@ public final class SearchRoutePoliciesAnswerer extends Answerer {
       System.err.println("Error: Unable to create directory: " + e.getMessage());
     }
 
-    File bddOutputFile = new File(routerOutputDirectoryName + "/" + BDD_FILE_NAME);
-    File smtOutputFile = new File(routerOutputDirectoryName + "/" + SMT_FILE_NAME);
+    File bddEncodingFile = new File(routerOutputDirectoryName + "/" + BDD_ENCODING_FILE_NAME);
+    File smtEncodingFile = new File(routerOutputDirectoryName + "/" + SMT_ENCODING_FILE_NAME);
     File linkOutputFile = new File(routerOutputDirectoryName + "/" + LINK_FILE_NAME);
+    File smt2OutputFile = new File(routerOutputDirectoryName + "/" + SMT2_OUTPUT_FILE_NAME);
 
     try {
       // create a bdd print writer for write smt encoding information to specific file
-      _bddWriter = new PrintWriter(new FileWriter(bddOutputFile), true);
+      _bddWriter = new PrintWriter(new FileWriter(bddEncodingFile), true);
       // create a smt print writer for write smt encoding information to specific file
-      _smtWriter = new PrintWriter(new FileWriter(smtOutputFile), true);
+      _smtWriter = new PrintWriter(new FileWriter(smtEncodingFile), true);
       // create a link print writer for write the link about configs -> smt variables
       _linkWriter = new PrintWriter(new FileWriter(linkOutputFile), true);
+      // create a smt2 print writer for print output smt2 file
+      _smt2Writer = new PrintWriter(new FileWriter(smt2OutputFile), true);
     } catch (IOException e) {
       // Handle any file I/O exceptions
       System.err.println("Error: Writing to file: " + e.getMessage());
