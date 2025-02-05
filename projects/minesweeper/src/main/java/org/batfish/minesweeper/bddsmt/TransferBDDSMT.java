@@ -466,6 +466,11 @@ public class TransferBDDSMT {
       TransferBDDSMTResult bddsmtRemaining = 
           remaining.setReturnValueBDDSMT(unmatchedBdd, unmatchedSmt);
       finalResults.add(bddsmtRemaining.setReturnValueAccepted(false));
+
+      // TODO to understand unmatched smt encoding
+      // BoolExpr unmatched_smt = bddsmtRemaining.getReturnValue().getInputSmtConstraints();
+      // System.out.println(unmatched_smt);
+      // System.out.println("------------------------------------------");
     }
 
     // return match bdd and smt logical expression finalResults
@@ -606,6 +611,13 @@ public class TransferBDDSMT {
       If i = (If) stmt;
       List<TransferBDDSMTResult> guardResults =
           compute(i.getGuard(), new TransferBDDSMTState(curP.indent(), result));
+
+      // TODO to understand if guard expression smt encoding
+      // for (TransferBDDSMTResult guardResult : guardResults) {
+      //   BoolExpr unmatched_smt = guardResult.getReturnValue().getInputSmtConstraints();
+      //   System.out.println(unmatched_smt);
+      //   System.out.println("------------------------------------------");
+      // }
 
       // for each path coming from the guard, symbolically execute the appropriate branch of the If
       List<TransferBDDSMTState> newStates = new ArrayList<>();
