@@ -226,12 +226,14 @@ public final class MutableBDDSMTInteger extends MutableBDDInteger {
         "toBDD(Prefix) requires %s bits",
         Prefix.MAX_PREFIX_LENGTH);
 
-    // 192.168.0.0/16 -> startIp is 192.168.0.0, endIp is 192.168.255.255
-    long startIp = prefix.getStartIp().asLong();
+    // 10.0.0.0/8     -> beginIp is 10.0.0.0,    endIp is 10.255.255.255
+    // 172.16.0.0/12  -> beginIp is 172.16.0.0,  endIp is 172.31.255.255
+    // 192.168.0.0/16 -> beginIp is 192.168.0.0, endIp is 192.168.255.255
+    long beginIp = prefix.getStartIp().asLong();
     int prefixLength = prefix.getPrefixLength();
-    long suffixEndIp = (1 << prefixLength) - 1;
-    long endIp = startIp | suffixEndIp;
-    return rangeSmt(startIp, endIp, configName, exprName);
+    long suffixEndIp = (1 << (32 - prefixLength)) - 1;
+    long endIp = beginIp | suffixEndIp;
+    return rangeSmt(beginIp, endIp, configName, exprName);
   }
 
   public BDDSMT toBDDSMT(Prefix prefix, String configName, String exprName) {
@@ -265,9 +267,9 @@ public final class MutableBDDSMTInteger extends MutableBDDInteger {
     // configVar == val AND exprVar == configVar
 
     IntExpr  smtConfigVar = _context.mkIntConst(configName);
-    IntExpr  smtExprVar   = _context.mkIntConst(exprName);
+    IntExpr  smtMatchVar  = _context.mkIntConst(exprName);
     BoolExpr smtConfigEq  = _context.mkEq(smtConfigVar, _context.mkInt(val));
-    BoolExpr smtExprEq    = _context.mkEq(smtExprVar, smtConfigVar);
+    BoolExpr smtExprEq    = _context.mkEq(smtMatchVar, smtConfigVar);
     BoolExpr smtSingle    = _context.mkAnd(smtConfigEq, smtExprEq);
 
     return smtSingle;
@@ -292,13 +294,26 @@ public final class MutableBDDSMTInteger extends MutableBDDInteger {
 
     // ( configVar >= begVal AND configVar <= endVal ) AND exprVar == configVar
 
-    IntExpr  smtConfigVar = _context.mkIntConst(configName);
-    IntExpr  smtExprVar   = _context.mkIntConst(exprName);
+    String configNameBeginSuffix = "_begin";
+    String configNameEndSuffix   = "_end";
+
+    // IntExpr  smtConfigVar = _context.mkIntConst(configName);
+    IntExpr  smtConfigVarBegin = _context.mkIntConst(configName + configNameBeginSuffix);
+    IntExpr  smtConfigVarEnd   = _context.mkIntConst(configName + configNameEndSuffix);
+    IntExpr  smtMatchVar  = _context.mkIntConst(exprName);
+    // BoolExpr smtConfigRng = _context.mkAnd(
+    //     _context.mkGe(smtConfigVar, _context.mkInt(begVal)),
+    //     _context.mkLe(smtConfigVar, _context.mkInt(endVal))
+    // );
+    // BoolExpr smtExprRng   = _context.mkEq(smtExprVar, smtConfigVar);
     BoolExpr smtConfigRng = _context.mkAnd(
-        _context.mkGe(smtConfigVar, _context.mkInt(begVal)),
-        _context.mkLe(smtConfigVar, _context.mkInt(endVal))
+        _context.mkEq(smtConfigVarBegin, _context.mkInt(begVal)),
+        _context.mkEq(smtConfigVarEnd,   _context.mkInt(endVal))
     );
-    BoolExpr smtExprRng   = _context.mkEq(smtExprVar, smtConfigVar);
+    BoolExpr smtExprRng   = _context.mkAnd(
+        _context.mkGe(smtMatchVar, smtConfigVarBegin), 
+        _context.mkLe(smtMatchVar, smtConfigVarEnd)
+    );
     BoolExpr smtRange     = _context.mkAnd(smtConfigRng, smtExprRng);
 
     return smtRange;
@@ -318,9 +333,11 @@ public final class MutableBDDSMTInteger extends MutableBDDInteger {
     // configVar <= val AND exprVar == configVar
 
     IntExpr  smtConfigVar = _context.mkIntConst(configName);
-    IntExpr  smtExprVar   = _context.mkIntConst(exprName);
-    BoolExpr smtConfigLeq = _context.mkLe(smtConfigVar, _context.mkInt(val));
-    BoolExpr smtExprLeq   = _context.mkEq(smtExprVar, smtConfigVar);
+    IntExpr  smtMatchVar  = _context.mkIntConst(exprName);
+    // BoolExpr smtConfigLeq = _context.mkLe(smtConfigVar, _context.mkInt(val));
+    // BoolExpr smtExprLeq   = _context.mkEq(smtMatchVar, smtConfigVar);
+    BoolExpr smtConfigLeq = _context.mkEq(smtConfigVar, _context.mkInt(val));
+    BoolExpr smtExprLeq   = _context.mkLe(smtMatchVar, smtConfigVar);
     BoolExpr smtLeq       = _context.mkAnd(smtConfigLeq, smtExprLeq);
 
     return smtLeq;
@@ -334,9 +351,11 @@ public final class MutableBDDSMTInteger extends MutableBDDInteger {
     // configVar >= val AND exprVar == configVar
 
     IntExpr  smtConfigVar = _context.mkIntConst(configName);
-    IntExpr  smtExprVar   = _context.mkIntConst(exprName);
-    BoolExpr smtConfigGeq = _context.mkGe(smtConfigVar, _context.mkInt(val));
-    BoolExpr smtExprGeq   = _context.mkEq(smtExprVar, smtConfigVar);
+    IntExpr  smtMatchVar  = _context.mkIntConst(exprName);
+    // BoolExpr smtConfigGeq = _context.mkGe(smtConfigVar, _context.mkInt(val));
+    // BoolExpr smtExprGeq   = _context.mkEq(smtMatchVar, smtConfigVar);
+    BoolExpr smtConfigGeq = _context.mkEq(smtConfigVar, _context.mkInt(val));
+    BoolExpr smtExprGeq   = _context.mkGe(smtMatchVar, smtConfigVar);
     BoolExpr smtGeq       = _context.mkAnd(smtConfigGeq, smtExprGeq);
 
     return smtGeq;
