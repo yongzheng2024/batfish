@@ -601,30 +601,13 @@ public final class SearchRoutePoliciesAnswerer extends Answerer {
       BoolExpr inputConstraint = context.mkEq(pathExpr, context.mkTrue());
       solver.add(inputConstraint);
 
-      // print smt2 format encoding (declarations + constraints)
-      // System.out.println(solver.toString());
       // write smt2 format encoding (declarations + constraints) to specific file
       _smt2Writer.println(solver.toString());
       _smt2Writer.println("------------------------------------------------------------");
-
-      // print smt2 format constraint expression encoding
-      // for (Expr constraint : solver.getAssertions()) {
-      //   System.out.println(constraint);
-      // }
-
-      // return result of symbolic analysis (match or not match)
-      // if (solver.check() == com.microsoft.z3.Status.SATISFIABLE) {
-      //   System.out.println("OK");
-      // } else {
-      //   System.out.println("ERROR");
-      // }
-
-      // System.out.println("------------------------------------------------------------");
     }
 
-    // print BDD encoding information to specific file `bdds/routing_policies_xxx.txt`
+    // write BDD encoding information to specific file
     for (int i = 0; i < paths.size(); ++i) {
-      // _bddWriter.println(paths.get(i));
       _bddWriter.println(paths.get(i).debug());
     }
     _bddWriter.println("------------------------------------------------------------");
@@ -640,9 +623,15 @@ public final class SearchRoutePoliciesAnswerer extends Answerer {
     List<TransferReturn> relevantPaths = pathMap.get(false);
     relevantPaths.addAll(pathMap.get(true));
     Set<PrefixSpace> blockedPrefixes = new HashSet<>();
-    BDD inConstraints =
-        routeConstraintsToBDD(
-            _inputConstraints, new BDDRoute(tbdd.getFactory(), configAPs), false, tbdd);
+
+    // synthesis the input constraints bdd encoding
+    BDDRoute inRoute = new BDDRoute(tbdd.getFactory(), configAPs);
+    BDD inConstraints = routeConstraintsToBDD(_inputConstraints, inRoute, false, tbdd);
+
+    // print the input constraints bdd encoding
+    // System.out.println(inRoute.dotWrapper(inConstraints));
+    // System.out.println("------------------------------------------------------------");
+
     ImmutableList.Builder<Row> builder = ImmutableList.builder();
     for (TransferReturn path : relevantPaths) {
       BDD pathAnnouncements = path.getInputConstraints();
@@ -663,12 +652,16 @@ public final class SearchRoutePoliciesAnswerer extends Answerer {
         intersection = intersection.and(outConstraints);
       }
 
+      // print the symbolic constraints bdd encoding
+      // print the output constraints bdd encoding
+      // System.out.println(path);
+      // System.out.println(outputRoute.dotWrapper(pathAnnouncements));
+      // System.out.println("............................................................");
+      // System.out.println(outputRoute.dotWrapper(intersection));
+      // System.out.println("------------------------------------------------------------");
+
       Optional<RowAndRoute> result =
           constraintsToResult(intersection, policy, outConfigAPs, outputRoute);
-
-      // print BDD encode information to specific file `bdds/routing_policies_xxx.txt`
-      // _bddWriter.println(outputRoute.dotWrapper(intersection));
-      // _bddWriter.println("------------------------------------------------------------");
 
       if (result.isPresent()) {
         builder.add(result.get()._row);
@@ -683,6 +676,10 @@ public final class SearchRoutePoliciesAnswerer extends Answerer {
         }
       }
     }
+
+    // System.out.println();
+    // System.out.println();
+
     return builder.build();
   }
 
