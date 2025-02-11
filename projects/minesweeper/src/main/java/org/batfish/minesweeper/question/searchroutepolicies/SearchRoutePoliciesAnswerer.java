@@ -628,10 +628,6 @@ public final class SearchRoutePoliciesAnswerer extends Answerer {
     BDDRoute inRoute = new BDDRoute(tbdd.getFactory(), configAPs);
     BDD inConstraints = routeConstraintsToBDD(_inputConstraints, inRoute, false, tbdd);
 
-    // print the input constraints bdd encoding
-    // System.out.println(inRoute.dotWrapper(inConstraints));
-    // System.out.println("------------------------------------------------------------");
-
     ImmutableList.Builder<Row> builder = ImmutableList.builder();
     for (TransferReturn path : relevantPaths) {
       BDD pathAnnouncements = path.getInputConstraints();
@@ -652,12 +648,11 @@ public final class SearchRoutePoliciesAnswerer extends Answerer {
         intersection = intersection.and(outConstraints);
       }
 
-      // print the symbolic constraints bdd encoding
-      // print the output constraints bdd encoding
-      // System.out.println(path);
-      // System.out.println(outputRoute.dotWrapper(pathAnnouncements));
+      // print the input constraints bdd encoding
+      // System.out.println(inRoute.dotWrapper(inConstraints));
       // System.out.println("............................................................");
-      // System.out.println(outputRoute.dotWrapper(intersection));
+      // print the output constraints bdd encoding
+      // System.out.println(outputRoute.dotWrapper(pathAnnouncements));
       // System.out.println("------------------------------------------------------------");
 
       Optional<RowAndRoute> result =

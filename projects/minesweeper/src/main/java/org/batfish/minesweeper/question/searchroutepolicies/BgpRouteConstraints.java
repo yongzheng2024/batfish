@@ -99,6 +99,24 @@ public class BgpRouteConstraints {
       @Nullable Prefix nextHopIp,
       @Nullable Set<OriginType> originType,
       @Nullable Set<RoutingProtocol> protocol) {
+    // if (null == prefix)           System.out.println("null prefix");
+    // else                          System.out.println("non-null prefix");
+    // if (null == localPreference)  System.out.println("null localPreference");
+    // else                          System.out.println("non-null localPreference");
+    // if (null == med)              System.out.println("null med");
+    // else                          System.out.println("non-null med");
+    // if (null == tag)              System.out.println("null tag");
+    // else                          System.out.println("non-null tag");
+    // if (null == communities)      System.out.println("null communities");
+    // else                          System.out.println("non-null communities");
+    // if (null == asPath)           System.out.println("null asPath");
+    // else                          System.out.println("non-null asPath");
+    // if (null == nextHopIp)        System.out.println("null nextHopIp");
+    // else                          System.out.println("non-null nextHopIp");
+    // if (null == originType)       System.out.println("null originType");
+    // else                          System.out.println("non-null originType");
+    // if (null == protocol)         System.out.println("null protocol");
+    // else                          System.out.println("non-null protocol");
     _prefix = firstNonNull(prefix, new PrefixSpace());
     _complementPrefix = complementPrefix;
     _localPreference = firstNonNull(localPreference, LongSpace.EMPTY);
