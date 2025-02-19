@@ -15,12 +15,14 @@ routing_policies_0000          # minesweeper searchRoutePolicies output director
 ├── border1                      # router border1
 │   ├── bdd_encoding               # bdd encoding about symbolic route analysis
 │   ├── link_configuration         # link between configurations and smt variables
-│   └── smt_encoding               # shadow smt encoding about symbolic route analysis
-│                                  # shadow smt encoding is created based on bdd encoding
+│   ├── smt_encoding               # shadow smt encoding about symbolic route analysis
+│   │                              # shadow smt encoding is created based on bdd encoding
+│   └── smt.smt2                   # related full smt2 file for border1
 └── border2                      # router border2
     ├── bdd_encoding               # ...
     ├── link_configuration         # ...
-    └── smt_encoding               # ...
+    ├── smt_encoding               # ...
+    └── smt.smt2                   # related full smt2 file for border2
 ```
 
 #### Link Configuration Parse
