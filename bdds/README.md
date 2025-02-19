@@ -6,8 +6,7 @@ The configuration files for the routers border1 and border2 are stored in the di
 
 > Firstly, run the command `tools/bazel_run.sh` to build and run batfish server.
 
-You can use the command `python3 0_test_routing_policies_0001.py` to run test case test\_routing\_policies\_0001.
-The related output files (i.e., BDD encoding, SMT encoding and link between configuration variables and SMT variables in the file `routing_policies_xxxx`.
+You can use the command `python3 0_test_routing_policies_0001.py` to run test case test\_routing\_policies\_0001. Every time you run the command, the output files (i.e., BDD encoding, SMT encoding and link between configuration variables and SMT variables) are stored in the most recently generated directory `routing_policies_xxxx`.
 
 #### Output Directory Structure
 
