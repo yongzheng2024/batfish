@@ -1,0 +1,11 @@
+// for subspec2.smt2
+config_prefix_ip_2_begin
+match_prefix_ip_4
+match_prefix_ip_9
+match_prefix_ip_14
+
+// for subspec3.smt2
+config_prefix_length_3
+match_prefix_length_5
+match_prefix_length_10
+match_prefix_length_15

@@ -1,0 +1,79 @@
+(declare-fun config_action_permit_6 () Bool)
+(declare-fun config_prefix_length_3_end () Int)
+(declare-fun match_prefix_length_5 () Int)
+(declare-fun config_prefix_length_3_begin () Int)
+(declare-fun config_prefix_ip_2_end () Int)
+(declare-fun match_prefix_ip_4 () Int)
+(declare-fun config_prefix_ip_2_begin () Int)
+(declare-fun config_action_permit_11 () Bool)
+(declare-fun config_prefix_length_8_end () Int)
+(declare-fun match_prefix_length_10 () Int)
+(declare-fun config_prefix_length_8_begin () Int)
+(declare-fun config_prefix_ip_7_end () Int)
+(declare-fun match_prefix_ip_9 () Int)
+(declare-fun config_prefix_ip_7_begin () Int)
+(declare-fun config_action_permit_16 () Bool)
+(declare-fun config_prefix_length_13_end () Int)
+(declare-fun match_prefix_length_15 () Int)
+(declare-fun config_prefix_length_13_begin () Int)
+(declare-fun config_prefix_ip_12_end () Int)
+(declare-fun match_prefix_ip_14 () Int)
+(declare-fun config_prefix_ip_12_begin () Int)
+
+
+(assert (let ((a!1 (ite (and (>= match_prefix_ip_9 config_prefix_ip_7_begin)
+                             (<= match_prefix_ip_9 config_prefix_ip_7_end)
+                             (>= match_prefix_length_10 config_prefix_length_8_begin)
+                             (<= match_prefix_length_10 config_prefix_length_8_end))
+                    config_action_permit_11
+                    (ite (and (>= match_prefix_ip_4 config_prefix_ip_2_begin)
+                              (<= match_prefix_ip_4 config_prefix_ip_2_end)
+                              (>= match_prefix_length_5 config_prefix_length_3_begin)
+                              (<= match_prefix_length_5 config_prefix_length_3_end))
+                         config_action_permit_6
+                         false))))
+(let ((a!2 (and true
+                (ite (and (>= match_prefix_ip_14 config_prefix_ip_12_begin)
+                          (<= match_prefix_ip_14 config_prefix_ip_12_end)
+                          (>= match_prefix_length_15 config_prefix_length_13_begin)
+                          (<= match_prefix_length_15 config_prefix_length_13_end))
+                     config_action_permit_16
+                     a!1))))
+  (= a!2 false))))
+
+
+(assert (= config_prefix_ip_7_begin 2886729728))
+(assert (= config_prefix_ip_7_end 2887778303))
+(assert (= config_prefix_length_8_begin 12))
+(assert (= config_prefix_length_8_end 32))
+(assert (= config_action_permit_11 true))
+(assert (= config_prefix_ip_2_end 3232301055))
+(assert (= config_prefix_length_3_begin 16))
+(assert (= config_prefix_length_3_end 32))
+(assert (= config_action_permit_6 true))
+(assert (= config_prefix_ip_12_begin 167772160))
+(assert (= config_prefix_ip_12_end 184549375))
+(assert (= config_prefix_length_13_begin 8))
+(assert (= config_prefix_length_13_end 32))
+(assert (= config_action_permit_16 true))
+
+
+(assert
+   (or
+        (and (>= match_prefix_ip_4 167772160) (<= match_prefix_ip_4 184549375)
+             (>= match_prefix_length_5 8) (<= match_prefix_length_5 32))
+        (and (>= match_prefix_ip_4 2886729728) (<= match_prefix_ip_4 2887778303)
+             (>= match_prefix_length_5 12) (<= match_prefix_length_5 32))
+        (and (>= match_prefix_ip_4 3232235520) (<= match_prefix_ip_4 3232301055)
+             (>= match_prefix_length_5 16) (<= match_prefix_length_5 32))
+   )
+)
+
+(assert (= match_prefix_ip_4 match_prefix_ip_9))
+(assert (= match_prefix_ip_4 match_prefix_ip_14))
+(assert (= match_prefix_length_5 match_prefix_length_10))
+(assert (= match_prefix_length_5 match_prefix_length_15))
+
+
+(check-sat)
+(get-model)

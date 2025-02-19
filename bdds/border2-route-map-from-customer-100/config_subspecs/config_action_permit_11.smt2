@@ -1,0 +1,5 @@
+(declare-fun config_action_permit_11 () Bool)
+(assert (= (ite (and (>= match_prefix_ip_14 167772160) (<= match_prefix_ip_14 184549375) (>= match_prefix_length_15 8) (<= match_prefix_length_15 32)) true (ite (and (>= match_prefix_ip_9 2886729728) (<= match_prefix_ip_9 2887778303) (>= match_prefix_length_10 12) (<= match_prefix_length_10 32)) config_action_permit_11 (ite (and (>= match_prefix_ip_4 3232235520) (<= match_prefix_ip_4 3232301055) (= match_prefix_length_5 16)) true false))) false))
+(assert (= config_action_permit_11 true))
+(check-sat)
+(get-model)
