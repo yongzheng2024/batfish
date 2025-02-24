@@ -15,8 +15,8 @@ $ sudo ln -s bazelisk /usr/local/bin/bazel
 # git clone batfish/batfish with tags (v2024.07.10)
 # git clone --branch v2024.07.10 https://github.com/batfish/batfish.git
 
-# git clone yongzheng2024/batfish with branch feature-v2024
-$ git clone --branch feature-v2024 https://github.com/yongzheng2024/batfish.git
+# git clone yongzheng2024/batfish with branch batfish-v2024
+$ git clone --branch batfish-v2024 https://github.com/yongzheng2024/batfish.git
 
 # build and run batfish
 $ cd /PATH-TO/batfish
