@@ -17,20 +17,21 @@ install_for_linux() {
     Z3_DIR="${Z3_BASENAME}"
 
     # Z3 shared library directory
-    # Z3_JAVA_LIB_DIR="/usr/local/lib"
-    Z3_JAVA_LIB_DIR="/usr/lib"
+    Z3_BIN_DIR="/usr/bin"
+    Z3_INCLUDE_DIR="/usr/include"
+    Z3_LIB_DIR="/usr/lib"
 
     # Batfish Python3 venv
-    VENV_NAME = "batfish-venv"
+    # VENV_NAME = "batfish-venv"
 
     # update apt
     sudo apt-get update
 
     # install OpenJDK 11
-    sudo apt install openjdk-11-jdk openjdk-11-dbg
+    sudo apt install openjdk-11-jdk openjdk-11-dbg -y
 
     # install Wget
-    sudo apt install wget
+    sudo apt install wget -y
 
     # install Bazel
     wget -O- https://github.com/bazelbuild/bazelisk/releases/download/v1.12.2/bazelisk-linux-amd64 | sudo tee /usr/local/bin/bazelisk > /dev/null
@@ -40,10 +41,13 @@ install_for_linux() {
     # install Z3
     wget "$Z3_URL"
     unzip "$Z3_ARCHIVE"
-    sudo cp "$Z3_DIR/bin/libz3java.so" "$Z3_JAVA_LIB_DIR/libz3java.so"
-    sudo cp "$Z3_DIR/bin/libz3.so" "$Z3_JAVA_LIB_DIR/libz3.so"
-    sudo chmod 755 "$Z3_DIR/bin/libz3java.so"
-    sudo chmod 755 "$Z3_DIR/bin/libz3.so"
+    sudo cp "$Z3_DIR/bin/z3" "$Z3_BIN_DIR/z3"
+    sudo find "$Z3_DIR/include" -type f -exec cp {} "$Z3_INCLUDE_DIR" \;
+    sudo cp "$Z3_DIR/bin/libz3java.so" "$Z3_LIB_DIR/libz3java.so"
+    sudo cp "$Z3_DIR/bin/libz3.so" "$Z3_LIB_DIR/libz3.so"
+    sudo cp "$Z3_DIR/bin/com.microsoft.z3.jar" "$Z3_LIB_DIR/com.microsoft.z3.jar"
+    sudo chmod 755 "$Z3_LIB_DIR/libz3java.so"
+    sudo chmod 755 "$Z3_LIB_DIR/libz3.so"
     rm -r "$Z3_ARCHIVE"
     rm -rf "$Z3_DIR"
     
