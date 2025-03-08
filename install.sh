@@ -8,22 +8,6 @@ VENV_NAME="batfish-venv"
 install_for_linux() {
     echo "Detected Linux system (${ARCH})"
 
-    # Z3 download URL and relevant local archive file and relevant directory
-    Z3_VERSION="4.14.0"
-    Z3_OS="x64-glibc-2.35"
-    Z3_BASENAME="z3-${Z3_VERSION}-${Z3_OS}"
-    Z3_URL="https://github.com/Z3Prover/z3/releases/download/z3-${Z3_VERSION}/${Z3_BASENAME}.zip"
-    Z3_ARCHIVE="${Z3_BASENAME}.zip"
-    Z3_DIR="${Z3_BASENAME}"
-
-    # Z3 shared library directory
-    Z3_BIN_DIR="/usr/bin"
-    Z3_INCLUDE_DIR="/usr/include"
-    Z3_LIB_DIR="/usr/lib"
-
-    # Batfish Python3 venv
-    # VENV_NAME = "batfish-venv"
-
     # update apt
     sudo apt-get update
 
@@ -34,23 +18,51 @@ install_for_linux() {
     sudo apt install wget -y
 
     # install Bazel
-    wget -O- https://github.com/bazelbuild/bazelisk/releases/download/v1.12.2/bazelisk-linux-amd64 | sudo tee /usr/local/bin/bazelisk > /dev/null
-    sudo chmod +x /usr/local/bin/bazelisk
-    sudo ln -s bazelisk /usr/local/bin/bazel
+    if ! command -v bazel $>/dev/null; then
+        wget -O- https://github.com/bazelbuild/bazelisk/releases/download/v1.12.2/bazelisk-linux-amd64 | sudo tee /usr/local/bin/bazelisk > /dev/null
+        sudo chmod +x /usr/local/bin/bazelisk
+        sudo ln -s bazelisk /usr/local/bin/bazel
+    fi
+
+    # Z3 download URL and relevant local archive file and relevant directory
+    Z3_VERSION="4.14.0"
+    Z3_OS="x64-glibc-2.35"
+    Z3_BASENAME="z3-${Z3_VERSION}-${Z3_OS}"
+    Z3_URL="https://github.com/Z3Prover/z3/releases/download/z3-${Z3_VERSION}/${Z3_BASENAME}.zip"
+    Z3_ARCHIVE="${Z3_BASENAME}.zip"
+    Z3_DIR="${Z3_BASENAME}"
+    # Z3 shared library directory
+    Z3_BIN_DIR="/usr/bin"
+    Z3_INCLUDE_DIR="/usr/include"
+    Z3_LIB_DIR="/usr/lib"
 
     # install Z3
     wget "$Z3_URL"
     unzip "$Z3_ARCHIVE"
     sudo cp "$Z3_DIR/bin/z3" "$Z3_BIN_DIR/z3"
     sudo find "$Z3_DIR/include" -type f -exec cp {} "$Z3_INCLUDE_DIR" \;
+    # sudo rsync -a "$Z3_DIR/include/" "$Z3_INCLUDE_DIR/" 
     sudo cp "$Z3_DIR/bin/libz3java.so" "$Z3_LIB_DIR/libz3java.so"
     sudo cp "$Z3_DIR/bin/libz3.so" "$Z3_LIB_DIR/libz3.so"
     sudo cp "$Z3_DIR/bin/com.microsoft.z3.jar" "$Z3_LIB_DIR/com.microsoft.z3.jar"
     sudo chmod 755 "$Z3_LIB_DIR/libz3java.so"
     sudo chmod 755 "$Z3_LIB_DIR/libz3.so"
     rm -r "$Z3_ARCHIVE"
-    rm -rf "$Z3_DIR"
-    
+    rm -rf "$Z3_DIR" 
+
+    if false; then
+        # install Z3 via source code
+        git clone https://github.com/Z3Prover/z3.git
+        cd z3
+        python3 scripts/mk_make.py --java
+        cd build
+        make examples
+        sudo make install
+    fi
+
+    # Batfish Python3 venv
+    # VENV_NAME = "batfish-venv"
+
     # create Python3 venv
     # cd batfish
     # python3 -m venv $VENV_NAME
@@ -59,6 +71,8 @@ install_for_linux() {
     # source $VENV_NAME/bin/activate
     
     # install Pybatfish
+    sudo apt-get install python3-pip -y
+    python3 -m pip install --upgrade pip
     python3 -m pip install --upgrade setuptools
     python3 -m pip install --upgrade pybatfish
 
@@ -68,20 +82,6 @@ install_for_linux() {
 
 install_for_macos() {
     echo "Detected macOS system (${ARCH})"
-
-    # Z3 download URL and relevant local archive file and relevant directory
-    # Z3_URL="https://github.com/Z3Prover/z3/releases/download/z3-4.14.0/z3-4.14.0-arm64-osx-13.7.2.zip"
-    # Z3_ARCHIVE="z3-4.14.0-arm64-osx-13.7.2.zip"
-    # Z3_DIR="z3-4.14.0-arm64-osx-13.7.2"
-    Z3_VERSION="4.14.0"
-    Z3_OS="arm64-osx-13.7.2"
-    Z3_BASENAME="z3-${Z3_VERSION}-${Z3_OS}"
-    Z3_URL="https://github.com/Z3Prover/z3/releases/download/z3-${Z3_VERSION}/${Z3_BASENAME}.zip"
-    Z3_ARCHIVE="${Z3_BASENAME}.zip"
-    Z3_DIR="${Z3_BASENAME}"
-
-    # Z3 shared library directory
-    Z3_JAVA_LIB_DIR="/usr/local/lib"
 
     # install or check Homebrew
     if ! command -v brew &>/dev/null; then
@@ -117,6 +117,19 @@ install_for_macos() {
     #     brew install wget
     # fi
 
+    # Z3 download URL and relevant local archive file and relevant directory
+    Z3_VERSION="4.14.0"
+    Z3_OS="arm64-osx-13.7.2"
+    Z3_BASENAME="z3-${Z3_VERSION}-${Z3_OS}"
+    Z3_URL="https://github.com/Z3Prover/z3/releases/download/z3-${Z3_VERSION}/${Z3_BASENAME}.zip"
+    Z3_ARCHIVE="${Z3_BASENAME}.zip"
+    Z3_DIR="${Z3_BASENAME}"
+
+    # Z3 shared library directory
+    Z3_BIN_DIR="/usr/local/bin"
+    Z3_INCLUDE_DIR="/usr/local/include"
+    Z3_LIB_DIR="/usr/local/lib"
+
     # download or check Z3
     if [[ ! -f "$Z3_ARCHIVE" && ! -d "$Z3_DIR" ]]; then
         echo "Downloading Z3 from $Z3_URL..."
@@ -135,18 +148,28 @@ install_for_macos() {
     fi
 
     # install Z3 shared library to system lib directory
-    echo "Copying Z3 shared libraries to $Z3_JAVA_LIB_DIR..."
-    sudo mkdir -p $Z3_JAVA_LIB_DIR
-    sudo cp "$Z3_DIR/bin/libz3java.dylib" "$Z3_JAVA_LIB_DIR/libz3java.dylib"
-    sudo cp "$Z3_DIR/bin/libz3.dylib" "$Z3_JAVA_LIB_DIR/libz3.dylib"
+    echo "install Z3 to $Z3_BIN_DIR $Z3_INCLUDE_DIR $Z3_LIB_DIR..."
+    sudo mkdir -p $Z3_BIN_DIR
+    sudo mkdir -p $Z3_INCLUDE_DIR
+    sudo mkdir -p $Z3_LIB_DIR
+    sudo cp "$Z3_DIR/bin/z3" "$Z3_BIN_DIR/z3"
+    sudo find "$Z3_DIR/include" -type f -exec cp {} "$Z3_INCLUDE_DIR" \;
+    # sudo rsync -a "$Z3_DIR/include/" "$Z3_INCLUDE_DIR/" 
+    sudo cp "$Z3_DIR/bin/libz3java.dylib" "$Z3_LIB_DIR/libz3java.dylib"
+    sudo cp "$Z3_DIR/bin/libz3.dylib" "$Z3_LIB_DIR/libz3.dylib"
+    sudo cp "$Z3_DIR/bin/com.microsoft.z3.jar" "$Z3_LIB_DIR/com.microsoft.z3.jar"
 
     # update shared library cache
     echo "Updating shared library cache..."
-    sudo chmod 755 "$Z3_JAVA_LIB_DIR/libz3java.dylib" "$Z3_JAVA_LIB_DIR/libz3.dylib"
-    sudo chown root:wheel "$Z3_JAVA_LIB_DIR/libz3java.dylib" "$Z3_JAVA_LIB_DIR/libz3.dylib"
+    sudo chmod 755 "$Z3_LIB_DIR/libz3java.dylib"
+    sudo chmod 755 "$Z3_LIB_DIR/libz3.dylib"
+    sudo chown root:wheel "$Z3_LIB_DIR/libz3java.dylib"
+    sudo chown root:wheel "$Z3_LIB_DIR/libz3.dylib"
+
     # remove apple quarantine
-    sudo xattr -d com.apple.quarantine "$Z3_JAVA_LIB_DIR/libz3java.dylib"
-    sudo xattr -d com.apple.quarantine "$Z3_JAVA_LIB_DIR/libz3.dylib"
+    echo "Remove apple network quarantine..."
+    sudo xattr -d com.apple.quarantine "$Z3_LIB_DIR/libz3java.dylib"
+    sudo xattr -d com.apple.quarantine "$Z3_LIB_DIR/libz3.dylib"
 
     # clean up Z3 archive file and relevant directory
     echo "Cleaning up Z3 installation files..."
@@ -157,19 +180,23 @@ install_for_macos() {
     if ! command -v python3 &>/dev/null; then
         echo "Python3 is not installed. Installing it now..."
         brew install python3
+        brew install python3-pip
     fi
 
+    # Batfish Python3 venv
+    # VENV_NAME = "batfish-venv"
+
     # create Python3 venv `batfish-venv`
-    echo "Creating virtual environment: $VENV_NAME..."
-    python3 -m venv "$VENV_NAME"
+    # echo "Creating virtual environment: $VENV_NAME..."
+    # python3 -m venv "$VENV_NAME"
 
     # activate Python3 venv `batfish-venv`
-    echo "Activating virtual environment: $VENV_NAME..."
-    source "$VENV_NAME/bin/activate"
+    # echo "Activating virtual environment: $VENV_NAME..."
+    # source "$VENV_NAME/bin/activate"
 
     # update Python3 pip
     echo "Upgrading python3 pip..."
-    pip install --upgrade pip
+    python3 -m pip install --upgrade pip
 
     # install setuptools (pkg_resources) in Python3 venv `batfish`
     echo "Install setuptools in Python3 venv $VENV_NAME..."
@@ -180,20 +207,40 @@ install_for_macos() {
     python3 -m pip install --upgrade pybatfish
 
     # exit Python3 venv `batfish-venv`
-    echo "Deactivate virtual environment: $VENV_NAME..."
-    deactivate
+    # echo "Deactivate virtual environment: $VENV_NAME..."
+    # deactivate
 
+    echo 'export PATH="/usr/local/bin:$PATH"' >> ~/.zshrc
+    echo 'export PATH="/usr/local/bin:$PATH"' >> ~/.bashrc
+    echo 'export CPATH="/usr/local/include${CPATH:+:$CPATH}"' >> ~/.zshrc
+    echo 'export CPATH="/usr/local/include${CPATH:+:$CPATH}"' >> ~/.bashrc
+    echo 'export LIBRARY_PATH="/usr/local/lib${LIBRARY_PATH:+:$LIBRARY_PATH}"' >> ~/.zshrc
+    echo 'export LIBRARY_PATH="/usr/local/lib${LIBRARY_PATH:+:$LIBRARY_PATH}"' >> ~/.bashrc
+    echo 'export DYLD_LIBRARY_PATH="/usr/local/lib${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}"' >> ~/.zshrc
+    echo 'export DYLD_LIBRARY_PATH="/usr/local/lib${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}"' >> ~/.bashrc
+    export PATH="/usr/local/bin:$PATH"
+    export CPATH="/usr/local/include${CPATH:+:$CPATH}"
+    export LIBRARY_PATH="/usr/local/lib${LIBRARY_PATH:+:$LIBRARY_PATH}"
+    export DYLD_LIBRARY_PATH="/usr/local/lib${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}"
+    
     # add DYLD_LIBRARY_PATH export command to ~/.zshrc
-    CONFIG_FILE="$HOME/.zshrc"
-    LIBRARY_PATH="/usr/local/lib"
-    EXPORT_CMD="export DYLD_LIBRARY_PATH=$LIBRARY_PATH\${DYLD_LIBRARY_PATH:+:\$DYLD_LIBRARY_PATH}"
+    # ZSH_CONFIG_FILE="$HOME/.zshrc"
+    # BASH_CONFIG_FILE="$HOME/.bashrc"
+    # EXPORT_CMD="export DYLD_LIBRARY_PATH=$Z3_LIB_DIR\${DYLD_LIBRARY_PATH:+:\$DYLD_LIBRARY_PATH}"
 
-    if ! grep -Fxq "$EXPORT_CMD" "$CONFIG_FILE"; then
-        echo "Add DYLD_LIBRARY_PATH to $CONFIG_FILE..."
-        echo "$EXPORT_CMD" | sudo tee -a "$CONFIG_FILE" > /dev/null
-    else
-        echo "DYLD_LIBRARY_PATH already exists, no need to add it again"
-    fi
+    # if ! grep -Fxq "$EXPORT_CMD" "$ZSH_CONFIG_FILE"; then
+    #     echo "Add DYLD_LIBRARY_PATH to $ZSH_CONFIG_FILE..."
+    #     echo "$EXPORT_CMD" | sudo tee -a "$ZSH_CONFIG_FILE" > /dev/null
+    # else
+    #     echo "DYLD_LIBRARY_PATH already exists in $ZSH_CONFIG_FILE, no need to add it again"
+    # fi
+
+    # if ! grep -Fxq "$EXPORT_CMD" "$BASH_CONFIG_FILE"; then
+    #     echo "Add DYLD_LIBRARY_PATH to $BASH_CONFIG_FILE..."
+    #     echo "$EXPORT_CMD" | sudo tee -a "$BASH_CONFIG_FILE" > /dev/null
+    # else
+    #     echo "DYLD_LIBRARY_PATH already exists in $BASH_CONFIG_FILE, no need to add it again"
+    # fi
 }
 
 # install batfish/minesweeper/pybatfish/z3 according to $OS and $ARCH
