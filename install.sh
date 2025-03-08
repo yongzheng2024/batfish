@@ -18,7 +18,7 @@ install_for_linux() {
 
     # Z3 shared library directory
     # Z3_JAVA_LIB_DIR="/usr/local/lib"
-    Z3_JAVA_LIB_DIR="/usr/local/lib"
+    Z3_JAVA_LIB_DIR="/usr/lib"
 
     # Batfish Python3 venv
     VENV_NAME = "batfish-venv"
@@ -40,10 +40,12 @@ install_for_linux() {
     # install Z3
     wget "$Z3_URL"
     unzip "$Z3_ARCHIVE"
-    sudo cp "$Z3_DIR/bin/libz3java.dylib" "$Z3_JAVA_LIB_DIR/libz3java.dylib"
-    sudo cp "$Z3_DIR/bin/libz3.dylib" "$Z3_JAVA_LIB_DIR/libz3.dylib"
-    sudo chmod 755 "$Z3_DIR/bin/libz3java.dylib"
-    sudo chmod 755 "$Z3_DIR/bin/libz3.dylib"
+    sudo cp "$Z3_DIR/bin/libz3java.so" "$Z3_JAVA_LIB_DIR/libz3java.so"
+    sudo cp "$Z3_DIR/bin/libz3.so" "$Z3_JAVA_LIB_DIR/libz3.so"
+    sudo chmod 755 "$Z3_DIR/bin/libz3java.so"
+    sudo chmod 755 "$Z3_DIR/bin/libz3.so"
+    rm -r "$Z3_ARCHIVE"
+    rm -rf "$Z3_DIR"
     
     # create Python3 venv
     # cd batfish
@@ -112,7 +114,7 @@ install_for_macos() {
     # fi
 
     # download or check Z3
-    if [[ ! -f "$Z3_ARCHIVE" and ! -d "$Z3_DIR" ]]; then
+    if [[ ! -f "$Z3_ARCHIVE" && ! -d "$Z3_DIR" ]]; then
         echo "Downloading Z3 from $Z3_URL..."
         # wget "$Z3_URL"
         curl -L -o "$Z3_URL"
