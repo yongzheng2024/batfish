@@ -2,9 +2,24 @@ load("@rules_java//java:defs.bzl", "java_import")
 
 package(default_visibility = ["//visibility:public"])
 
-licenses(["notice"])  # MIT
+licenses(["notice"])  # MIT License
+
+config_setting(
+    name = "linux",
+    constraint_values = ["@platforms//os:linux"],
+)
+
+config_setting(
+    name = "macos",
+    constraint_values = ["@platforms//os:macos"],
+)
 
 java_import(
     name = "z3",
-    jars = ["com.microsoft.z3.jar"],
+    jars = select({
+        ":linux": ["com.microsoft.z3-4-14-0-x64-glibc.jar"],
+        ":macos": ["com.microsoft.z3-4-14-0-arm64-osx.jar"],
+        "//conditions:default": ["com.microsoft.z3-4-14-0-x64-glibc.jar"],
+    }),
+    srcjar = "com.microsoft.z3-4-14-0-sources.jar",
 )
