@@ -184,31 +184,31 @@ install_for_macos() {
     fi
 
     # Batfish Python3 venv
-    # VENV_NAME = "batfish-venv"
+    VENV_NAME = "batfish-venv"
 
     # create Python3 venv `batfish-venv`
-    # echo "Creating virtual environment: $VENV_NAME..."
-    # python3 -m venv "$VENV_NAME"
+    echo "Creating virtual environment: $VENV_NAME..."
+    python3 -m venv "$VENV_NAME"
 
     # activate Python3 venv `batfish-venv`
-    # echo "Activating virtual environment: $VENV_NAME..."
-    # source "$VENV_NAME/bin/activate"
+    echo "Activating virtual environment: $VENV_NAME..."
+    source "$VENV_NAME/bin/activate"
 
-    # update Python3 pip
+    # upgrade Python3 pip
     echo "Upgrading python3 pip..."
     python3 -m pip install --upgrade pip
 
-    # install setuptools (pkg_resources) in Python3 venv `batfish`
+    # install setuptools (pkg_resources) in Python3 venv `batfish-venv`
     echo "Install setuptools in Python3 venv $VENV_NAME..."
     python3 -m pip install --upgrade setuptools
 
-    # install Pybatfish in Python3 venv `batfish`
+    # install Pybatfish in Python3 venv `batfish-venv`
     echo "Install Pybatfish in Python3 venv $VENV_NAME..."
     python3 -m pip install --upgrade pybatfish
 
     # exit Python3 venv `batfish-venv`
-    # echo "Deactivate virtual environment: $VENV_NAME..."
-    # deactivate
+    echo "Deactivate virtual environment: $VENV_NAME..."
+    deactivate
 
     echo 'export PATH="/usr/local/bin:$PATH"' >> ~/.zshrc
     echo 'export PATH="/usr/local/bin:$PATH"' >> ~/.bashrc
