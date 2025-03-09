@@ -60,15 +60,14 @@ install_for_linux() {
         sudo make install
     fi
 
-    # Batfish Python3 venv
-    # VENV_NAME = "batfish-venv"
+    # Batfish Python3 venv `batfish-venv`
+    VENV_NAME = "batfish-venv"
 
     # create Python3 venv
-    # cd batfish
-    # python3 -m venv $VENV_NAME
+    python3 -m venv $VENV_NAME
 
     # activate Python3 venv batfish-venv
-    # source $VENV_NAME/bin/activate
+    source $VENV_NAME/bin/activate
     
     # install Pybatfish
     sudo apt-get install python3-pip -y
@@ -77,7 +76,7 @@ install_for_linux() {
     python3 -m pip install --upgrade pybatfish
 
     # exit Python3 venv batfish-venv
-    # deactivate
+    deactivate
 }
 
 install_for_macos() {
@@ -134,7 +133,7 @@ install_for_macos() {
     if [[ ! -f "$Z3_ARCHIVE" && ! -d "$Z3_DIR" ]]; then
         echo "Downloading Z3 from $Z3_URL..."
         # wget "$Z3_URL"
-        curl -L -o "$Z3_URL"
+        curl -L -O "$Z3_URL"
     else
         echo "Z3 archive already exists, skipping download."
     fi
@@ -183,7 +182,7 @@ install_for_macos() {
         brew install python3-pip
     fi
 
-    # Batfish Python3 venv
+    # Batfish Python3 venv `batfish-venv`
     VENV_NAME = "batfish-venv"
 
     # create Python3 venv `batfish-venv`
@@ -195,7 +194,7 @@ install_for_macos() {
     source "$VENV_NAME/bin/activate"
 
     # upgrade Python3 pip
-    echo "Upgrading python3 pip..."
+    echo "Upgrading python3 pip in Python3 venv $VENV_NAME..."
     python3 -m pip install --upgrade pip
 
     # install setuptools (pkg_resources) in Python3 venv `batfish-venv`
