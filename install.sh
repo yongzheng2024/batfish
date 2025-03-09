@@ -71,6 +71,7 @@ install_for_linux() {
     
     # install Pybatfish
     sudo apt-get install python3-pip -y
+    sudo apt-get install python3-venv -y
     python3 -m pip install --upgrade pip
     python3 -m pip install --upgrade setuptools
     python3 -m pip install --upgrade pybatfish
