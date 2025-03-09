@@ -7,7 +7,7 @@ Batfish/Minesweeper depend on the following software.
 * Z3
 * Pytbatfish
 
-You can directly run the command "./install.sh" to install these software in Ubuntu22.04 (tested) or macOS (to do test).
+You can directly run the command `./install.sh` to install these software in Ubuntu22.04 (tested) or macOS (to do test, error).
 
 ### <b>Test</b>
 
