@@ -63,6 +63,10 @@ install_for_linux() {
     # Batfish Python3 venv `batfish-venv`
     VENV_NAME = "batfish-venv"
 
+    # install Python3 pip and venv
+    sudo apt-get install python3-pip -y
+    sudo apt-get install python3-venv -y
+
     # create Python3 venv
     python3 -m venv $VENV_NAME
 
@@ -70,8 +74,6 @@ install_for_linux() {
     source $VENV_NAME/bin/activate
     
     # install Pybatfish
-    sudo apt-get install python3-pip -y
-    sudo apt-get install python3-venv -y
     python3 -m pip install --upgrade pip
     python3 -m pip install --upgrade setuptools
     python3 -m pip install --upgrade pybatfish
