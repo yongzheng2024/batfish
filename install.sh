@@ -18,11 +18,10 @@ install_for_linux() {
     sudo apt install wget -y
 
     # install Bazel
-    if ! command -v bazel $>/dev/null; then
-        wget -O- https://github.com/bazelbuild/bazelisk/releases/download/v1.12.2/bazelisk-linux-amd64 | sudo tee /usr/local/bin/bazelisk > /dev/null
-        sudo chmod +x /usr/local/bin/bazelisk
-        sudo ln -s bazelisk /usr/local/bin/bazel
-    fi
+    # wget -O- https://github.com/bazelbuild/bazelisk/releases/download/v1.12.2/bazelisk-linux-amd64 | sudo tee /usr/local/bin/bazelisk > /dev/null
+    wget -O- https://github.com/bazelbuild/bazelisk/releases/download/v1.25.0/bazelisk-linux-amd64 | sudo tee /usr/local/bin/bazelisk > /dev/null
+    sudo chmod +x /usr/local/bin/bazelisk
+    sudo ln -s bazelisk /usr/local/bin/bazel
 
     # Z3 download URL and relevant local archive file and relevant directory
     Z3_VERSION="4.14.0"
