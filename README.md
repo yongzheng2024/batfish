@@ -53,6 +53,15 @@ cd /PATH-TO/tests/test
 python3 test_routing_policies_0001.py
 ```
 
+#### Test Case 2 SmtReachabilityTest
+
+Just open one terminal, and run test case script.
+
+```sh
+cd /PATH-TO/batfish
+tools/bazel_test_SmtReachabilityTest.sh
+```
+
 ### <b>Partical Directory Structure</b>
 
 * projects (source code)
@@ -63,15 +72,6 @@ python3 test_routing_policies_0001.py
 * install.sh (intall all required software dependencies)
 * .bazelversion (bazel configuration file)
 * .bazelrc (bazel configuration file)
-
-#### Test Case 2 SmtReachabilityTest
-
-Just open one terminal, and run test case script.
-
-```sh
-cd /PATH-TO/batfish
-tools/bazel_test_SmtReachabilityTest.sh
-```
 
 ### <b>Configure Intellij IDEA</b>
 
