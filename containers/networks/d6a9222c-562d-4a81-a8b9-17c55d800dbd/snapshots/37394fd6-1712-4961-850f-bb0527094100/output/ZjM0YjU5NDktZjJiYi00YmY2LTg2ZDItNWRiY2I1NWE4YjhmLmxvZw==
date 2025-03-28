@@ -1,0 +1,60 @@
+
+*** READING DEVICE CONFIGURATION FILES ***
+Reading: "configs/as1core1.cfg"
+Reading: "configs/as2border1.cfg"
+Reading: "configs/as1border1.cfg"
+Snapshot 37394fd6-1712-4961-850f-bb0527094100 in network d6a9222c-562d-4a81-a8b9-17c55d800dbd has total number of network configs:3	Parsing...OK
+	Post-processing...OK
+	Parsing...OK
+	Post-processing...OK
+	Parsing...OK
+	Post-processing...OK
+
+*** SERIALIZING VENDOR CONFIGURATION STRUCTURES ***
+Time taken for this task: 0.066 seconds
+
+*** READING AWS CONFIGS ***
+
+*** SERIALIZING AWS CONFIGURATION STRUCTURES ***
+Serializing AWSOK
+Time taken for this task: 0.011 seconds
+
+*** DESERIALIZING VENDOR CONFIGURATION STRUCTURES ***
+Reading org.batfish.vendor.VendorConfiguration 'as1core1' from '/home/deza/codes/batfish/containers/networks/d6a9222c-562d-4a81-a8b9-17c55d800dbd/snapshots/37394fd6-1712-4961-850f-bb0527094100/output/vendor/as1core1'
+Reading org.batfish.vendor.VendorConfiguration 'as1border1' from '/home/deza/codes/batfish/containers/networks/d6a9222c-562d-4a81-a8b9-17c55d800dbd/snapshots/37394fd6-1712-4961-850f-bb0527094100/output/vendor/as1border1'
+Reading org.batfish.vendor.VendorConfiguration 'as2border1' from '/home/deza/codes/batfish/containers/networks/d6a9222c-562d-4a81-a8b9-17c55d800dbd/snapshots/37394fd6-1712-4961-850f-bb0527094100/output/vendor/as2border1'
+Reading org.batfish.vendor.VendorConfiguration 'aws_configs' from '/home/deza/codes/batfish/containers/networks/d6a9222c-562d-4a81-a8b9-17c55d800dbd/snapshots/37394fd6-1712-4961-850f-bb0527094100/output/vendor/aws_configs'
+Time taken for this task: 0.029 seconds
+
+*** CONVERTING VENDOR CONFIGURATIONS TO INDEPENDENT FORMAT ***
+Processing: "aws_configs" ...OK
+Job terminated successfully with result: [] after elapsed time: 00:00:00.00 - 1/4 (25.0%) complete
+Processing: "as1border1" ...OK
+   MISCELLANEOUS: Could not determine update source for BGP neighbor: '3.2.2.2'
+   MISCELLANEOUS: Could not determine update source for BGP neighbor: '5.6.7.8'
+Job terminated successfully with result: [as1border1] after elapsed time: 00:00:00.04 - 2/4 (50.0%) complete
+Processing: "as2border1" ...OK
+Job terminated successfully with result: [as2border1] after elapsed time: 00:00:00.04 - 3/4 (75.0%) complete
+Processing: "as1core1" ...OK
+Job terminated successfully with result: [as1core1] after elapsed time: 00:00:00.04 - 4/4 (100.0%) complete
+Time taken for this task: 0.052 seconds
+
+*** SERIALIZING 3 VENDOR-INDEPENDENT CONFIGURATION STRUCTURES FOR SNAPSHOT 37394FD6-1712-4961-850F-BB0527094100***
+Loading configurations for NetworkSnapshot{network=d6a9222c-562d-4a81-a8b9-17c55d800dbd, snapshot=37394fd6-1712-4961-850f-bb0527094100}
+Loading configurations for NetworkSnapshot{network=d6a9222c-562d-4a81-a8b9-17c55d800dbd, snapshot=37394fd6-1712-4961-850f-bb0527094100}, cache miss
+*** DESERIALIZING VENDOR-INDEPENDENT CONFIGURATION STRUCTURES ***
+Reading org.batfish.datamodel.Configuration 'as1core1' from '/home/deza/codes/batfish/containers/networks/d6a9222c-562d-4a81-a8b9-17c55d800dbd/snapshots/37394fd6-1712-4961-850f-bb0527094100/output/indep/as1core1'
+Reading org.batfish.datamodel.Configuration 'as1border1' from '/home/deza/codes/batfish/containers/networks/d6a9222c-562d-4a81-a8b9-17c55d800dbd/snapshots/37394fd6-1712-4961-850f-bb0527094100/output/indep/as1border1'
+Reading org.batfish.datamodel.Configuration 'as2border1' from '/home/deza/codes/batfish/containers/networks/d6a9222c-562d-4a81-a8b9-17c55d800dbd/snapshots/37394fd6-1712-4961-850f-bb0527094100/output/indep/as2border1'
+Loaded configurations for NetworkSnapshot{network=d6a9222c-562d-4a81-a8b9-17c55d800dbd, snapshot=37394fd6-1712-4961-850f-bb0527094100} off diskLoading configurations for NetworkSnapshot{network=d6a9222c-562d-4a81-a8b9-17c55d800dbd, snapshot=37394fd6-1712-4961-850f-bb0527094100}
+Loading configurations for NetworkSnapshot{network=d6a9222c-562d-4a81-a8b9-17c55d800dbd, snapshot=37394fd6-1712-4961-850f-bb0527094100}
+Loading configurations for NetworkSnapshot{network=d6a9222c-562d-4a81-a8b9-17c55d800dbd, snapshot=37394fd6-1712-4961-850f-bb0527094100}
+Loading configurations for NetworkSnapshot{network=d6a9222c-562d-4a81-a8b9-17c55d800dbd, snapshot=37394fd6-1712-4961-850f-bb0527094100}
+{
+  "class" : "org.batfish.datamodel.answers.InitInfoAnswerElement",
+  "parseStatus" : {
+    "configs/as1border1.cfg" : "PASSED",
+    "configs/as1core1.cfg" : "PASSED",
+    "configs/as2border1.cfg" : "PASSED"
+  }
+}{"answerElements":[{"class":"org.batfish.datamodel.answers.InitInfoAnswerElement","parseStatus":{"configs/as1border1.cfg":"PASSED","configs/as1core1.cfg":"PASSED","configs/as2border1.cfg":"PASSED"}}],"status":"SUCCESS","summary":{"numFailed":0,"numPassed":0,"numResults":0}}
