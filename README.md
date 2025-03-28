@@ -32,17 +32,6 @@ Batfish batfish = BatfishTestUtils.initBatfish(new TreeMap<>(), path);
 // /home/deza/codes/batfish -> /PATH-TO/batfish
 ```
 
-### <b>Partical Directory Structure</b>
-
-* projects (source code)
-* tools (build and run scripts)
-* networks (network configuration files)
-* tests/test (test case files via pybatfish)
-* smts (smt encoding files)
-* install.sh (intall all required software dependencies)
-* .bazelversion (bazel configuration file)
-* .bazelrc (bazel configuration file)
-
 ### <b>Test</b>
 
 > [PyBatfish usage document](https://pybatfish.readthedocs.io/en/latest/getting_started.html) <br>
@@ -63,6 +52,17 @@ In the second terminal, run the Pybatfish test case:
 cd /PATH-TO/tests/test
 python3 test_routing_policies_0001.py
 ```
+
+### <b>Partical Directory Structure</b>
+
+* projects (source code)
+* tools (build and run scripts)
+* networks (network configuration files)
+* tests/test (test case files via pybatfish)
+* smts (smt encoding files)
+* install.sh (intall all required software dependencies)
+* .bazelversion (bazel configuration file)
+* .bazelrc (bazel configuration file)
 
 #### Test Case 2 SmtReachabilityTest
 
