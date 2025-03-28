@@ -9,6 +9,8 @@ import com.microsoft.z3.Model;
 import com.microsoft.z3.Solver;
 import com.microsoft.z3.Status;
 import com.microsoft.z3.Tactic;
+
+import java.io.*;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -56,24 +58,26 @@ import org.batfish.minesweeper.utils.Tuple;
  * @author Ryan Beckett
  */
 public class Encoder {
-
+  // enable debugging
   static final Boolean ENABLE_DEBUGGING = false;
   static final String MAIN_SLICE_NAME = "SLICE-MAIN_";
   private static final boolean ENABLE_UNSAT_CORE = false;
+  // Encoder object identifier, the default configuration is 0
   private int _encodingId;
-
+  // the default configuration is true
   private boolean _modelIgp;
 
   private HeaderQuestion _question;
-
+  // NOTE: <HostName, EncoderSlice>
   private Map<String, EncoderSlice> _slices;
-
+  // NOTE: <HostName, Map<OtherHostName, BoolExpr>>
+  // TODO: annotated by yongzheng on 20250318
   private Map<String, Map<String, BoolExpr>> _sliceReachability;
 
   private Encoder _previousEncoder;
-
+  // a collection of symbolic variables representing the possible link failures
   private SymbolicFailures _symbolicFailures;
-
+  // a map of all smt variables, the relevant format is <Expr.toString(), Expr>
   private Map<String, Expr> _allVariables;
 
   private Graph _graph;
@@ -148,6 +152,9 @@ public class Encoder {
       if (ENABLE_UNSAT_CORE) {
         _solver = _ctx.mkSolver();
       } else {
+        // The following string, such as "simplify", "propagate-values", "solve-eqs", ...
+        // are hardcoded in Z3 and have a fixed meaning and fixed functionality.
+        // The following code line that make a specific tactic pipeline.
         Tactic t1 = _ctx.mkTactic("simplify");
         Tactic t2 = _ctx.mkTactic("propagate-values");
         Tactic t3 = _ctx.mkTactic("solve-eqs");
@@ -175,8 +182,17 @@ public class Encoder {
 
     _unsatCore = new UnsatCore(ENABLE_UNSAT_CORE);
 
+    // initialize _symbolicFailures and _allVariables, which involving
+    //   + all GraphEdge getPeer() == null according to _edgeMap  (_failedEdgeLinks)
+    //   + all neighbor node pair according to _neighbors         (_failedInternalLinks)
     initFailedLinkVariables();
+    // initialize _symbolicFailures and _allVariables, which involving
+    //   + all node according to _routers                         (_failedNodes)
     initFailedNodeVariables();
+    // initialize _slices
+    //   + one main slice (or only one null slice)
+    //   + other slices according to domain (i.e. ibgp neighbors)
+    // initialize _sliceReachability (call PropertyAdder instrumentReachability)
     initSlices(_question.getHeaderSpace(), graph);
   }
 
@@ -184,6 +200,7 @@ public class Encoder {
    * Initialize symbolic variables to represent link failures.
    */
   private void initFailedLinkVariables() {
+    // initialize all isNullPeer GraphEdge, i.e. GraphEdge.getPeer() == null
     for (List<GraphEdge> edges : _graph.getEdgeMap().values()) {
       for (GraphEdge ge : edges) {
         if (ge.getPeer() == null) {
@@ -196,6 +213,7 @@ public class Encoder {
       }
     }
 
+    // initialize all neighbor node pair, recorded in Graph Map<String, Set<String>> _neighbors
     for (Entry<String, Set<String>> entry : _graph.getNeighbors().entrySet()) {
       String router = entry.getKey();
       Set<String> peers = entry.getValue();
@@ -214,6 +232,7 @@ public class Encoder {
    * Initialize symbolic variables to represent node failures.
    */
   private void initFailedNodeVariables() {
+    // initialize all node, recorded in Graph Set<String> _routers
     for (String router : _graph.getRouters()) {
       String name = getId() + "_FAILED-NODE_" + router;
       ArithExpr var = _ctx.mkIntConst(name);
@@ -273,6 +292,7 @@ public class Encoder {
           EncoderSlice slice = new EncoderSlice(this, hs, gNew, sliceName);
           _slices.put(sliceName, slice);
 
+          // TODO: annotated by yongzheng on 20250319
           PropertyAdder pa = new PropertyAdder(slice);
           Map<String, BoolExpr> reachVars = pa.instrumentReachability(router);
           _sliceReachability.put(router, reachVars);
@@ -735,13 +755,27 @@ public class Encoder {
 
     EncoderSlice mainSlice = _slices.get(MAIN_SLICE_NAME);
 
+    // count the number of smt variable and constraint
     int numVariables = _allVariables.size();
     int numConstraints = _solver.getAssertions().length;
+    // count the number of network node and edge according to main encoder slice
     int numNodes = mainSlice.getGraph().getConfigurations().size();
     int numEdges = 0;
     for (Map.Entry<String, Set<String>> e : mainSlice.getGraph().getNeighbors().entrySet()) {
       numEdges += e.getValue().size();
     }
+
+    // simplify all assertions and record in simplifiedSolver
+    Solver simplifiedSolver = _ctx.mkSolver();
+    for (BoolExpr assertion : _solver.getAssertions()) {
+      BoolExpr simplifiedAssertion = (BoolExpr) assertion.simplify();
+      simplifiedSolver.add(simplifiedAssertion);
+    }
+
+    // System.out.println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
+    // System.out.println(simplifiedSolver.toString());
+    writeStringToFile(simplifiedSolver.toString());
+    // System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
 
     long start = System.currentTimeMillis();
     Status status = _solver.check();
@@ -823,13 +857,53 @@ public class Encoder {
     }
     addFailedLinkConstraints(_question.getFailures());
     addFailedNodeConstraints(_question.getNodeFailures());
+    // addEnvironmentVariables
     getMainSlice().computeEncoding();
+
     for (Entry<String, EncoderSlice> entry : _slices.entrySet()) {
       String name = entry.getKey();
       EncoderSlice slice = entry.getValue();
       if (!name.equals(MAIN_SLICE_NAME)) {
         slice.computeEncoding();
       }
+    }
+
+    // print _unsatCore _trackingVars BoolExpr expression
+    // Map<String, BoolExpr> trackingVars = _unsatCore.getTrackingVars();
+    // for (BoolExpr boolexprVar : trackingVars.values()) {
+    //   System.out.println(boolexprVar);
+    // }
+  }
+
+  public static void writeStringToFile(String content) {
+    final String DIRECTORY_PREFIX = System.getenv("SMT_DIRECTORY_PREFIX");
+    final String FILE_PREFIX = "smt_encoding_";
+    final String FILE_EXTENSION = ".smt2";
+    final int MAX_FILES = 9999;
+
+    for (int i = 1; i <= MAX_FILES; i++) {
+      String smtEncodingFileName = String.format("%s%04d%s", FILE_PREFIX, i, FILE_EXTENSION);
+      File smtEncodingFile = new File(DIRECTORY_PREFIX, smtEncodingFileName);
+
+      if (smtEncodingFile.exists()) {
+        continue;
+      }
+
+      PrintWriter smtWriter = null;
+      try {
+        smtWriter = new PrintWriter(new FileWriter(smtEncodingFile, true));
+        smtWriter.println(content);
+        smtWriter.println("(check-sat)");
+        smtWriter.println("(get-model)");
+        System.out.println("SMT encoding written to " + smtEncodingFileName);
+      } catch (IOException e) {
+        e.printStackTrace();
+      } finally {
+        if (null != smtWriter) {
+          smtWriter.close();
+        }
+      }
+      break;
     }
   }
 

@@ -96,6 +96,8 @@ public class PropertyChecker {
 
     // Infer relevant destination IP headerspace from interfaces
     HeaderSpace headerSpace = q.getHeaderSpace();
+    // TODO: the following modification whether to modify the original headerSpace of q ?
+    // annotated by yongzheng in 20250314
     for (GraphEdge ge : destPorts) {
       // If there is an external interface, then
       // it can be any prefix, so we leave it unconstrained
@@ -362,10 +364,34 @@ public class PropertyChecker {
       Function<VerifyParam, AnswerElement> answer) {
 
     long totalTime = System.currentTimeMillis();
+    // _dstRegex, _notDstRegex, ifaceRegex, _notIfaceRegex, 
+    // _srcRegex, _notSrcRegex
     PathRegexes p = new PathRegexes(qOrig);
+    // configure Graph _bddBasedAnalysis to false by default
+    //   * true:  BDD-based analysis
+    //   * false: SMT-based analysis
+    // TODO: initialize Graph ...
     Graph graph = new Graph(_batfish, snapshot);
+
+    // filter GrapeEdge
+    //   * match _dstRegex and not match _notDstRegex
+    //     + if ! edge.isAbstract()
+    //       - match _ifaceRegex and not match _notIfaceRegex
     Set<GraphEdge> destPorts = findFinalInterfaces(graph, p);
+    // filter Router(String)
+    //   * match _srcRegex and not match _notSrcRegex
     List<String> sourceRouters = PatternUtils.findMatchingSourceNodes(graph, p);
+
+    // print all destination ports and source routers
+    // System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+    // for (GraphEdge destPort : destPorts) {
+    //   System.out.println(destPort);
+    // }
+    // System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+    // for (String sourceRouter : sourceRouters) {
+    //   System.out.println(sourceRouter);
+    // }
+    // System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 
     if (destPorts.isEmpty()) {
       throw new BatfishException("Set of valid destination interfaces is empty");
@@ -377,10 +403,25 @@ public class PropertyChecker {
     // copy before updating header space, so these changes don't get propagated to the answer
     HeaderLocationQuestion q = new HeaderLocationQuestion(qOrig);
     q.setHeaderSpace(q.getHeaderSpace().toBuilder().build());
+    // inference dstIps and notDstIps in HeaderLocationQuestion HeaderSpace
+    // * isExternal interface
+    //   + it can be any prefix, leave it unconstrained
+    //   + set headerSpace.setDstIps    (Collections.emptySet())
+    //   + set headerSpace.setNotDstIps (Collections.emptySet())
+    // * isNull (ge.getPeer() == null)
+    //   + set headerSpace.setDstIps    (ge.getStart() IpSpaces)
+    // * isHost
+    //   + set headerSpace.setDstIps    (ge.getStart() IpSpaces)
+    //   + set headerSpace.setNotDstIps (ge.getEnd()   exact Ip address)
+    // * otherwise
+    //   + set headerSpace.setDstIps    (ge.getStart() exact Ip address)
     inferDestinationHeaderSpace(graph, destPorts, q);
 
+    // find all failed GraphEdges
     Set<GraphEdge> failOptions = failLinkSet(graph, q);
+    // find all failed Routers
     Set<String> failNodeOptions = failNodeSet(graph, q);
+    // TODO: I don't understand how NetworkSlice work. Needs further review.
     Tuple<Stream<Supplier<NetworkSlice>>, Long> ecs = findAllNetworkSlices(q, graph, true);
     Stream<Supplier<NetworkSlice>> stream = ecs.getFirst();
     Long timeAbstraction = ecs.getSecond();
@@ -404,10 +445,15 @@ public class PropertyChecker {
 
                 // Get the EC graph and mapping
                 Graph g = slice.getGraph();
+                // TODO concrete nodes -> abstract nodes
                 Set<String> srcRouters = mapConcreteToAbstract(slice, sourceRouters);
 
                 long timeEncoding = System.currentTimeMillis();
+                // TODO: initialize Encoder ...
+                // TODO: initialize EncoderSlice ...
                 Encoder enc = new Encoder(g, question);
+                // TODO: call Encoder computeEncoding ..., add some basic constraints ?
+                // TODO: call EncoderSlice computeEncoding ...
                 enc.computeEncoding();
                 timeEncoding = System.currentTimeMillis() - timeEncoding;
 
@@ -420,6 +466,8 @@ public class PropertyChecker {
                   addEnvironmentConstraints(enc, question.getBaseEnvironmentType());
                 }
 
+                // TODO: annotated by yongzheng in 20250312
+                // call PropertyAdder instrumentReachability (initialReachability and resursiveReachability)
                 Map<String, BoolExpr> prop = instrument.apply(enc, srcRouters, destPorts);
 
                 // If this is a equivalence query, we create a second copy of the network
@@ -496,6 +544,7 @@ public class PropertyChecker {
                 addLinkFailureConstraints(enc, destPorts, failOptions);
                 addNodeFailureConstraints(enc, failNodeOptions);
 
+                // Encoder verify() call Solver check() and print relevant information
                 Tuple<VerificationResult, Model> tup = enc.verify();
                 VerificationResult res = tup.getFirst();
                 Model model = tup.getSecond();
@@ -559,6 +608,7 @@ public class PropertyChecker {
         snapshot,
         q,
         (enc, srcRouters, destPorts) -> {
+          // FIXME the parameter srcRouters is declared but not used in the lambda body.
           PropertyAdder pa = new PropertyAdder(enc.getMainSlice());
           return pa.instrumentReachability(destPorts);
         },

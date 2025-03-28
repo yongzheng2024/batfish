@@ -51,19 +51,20 @@ class PropertyAdder {
       Solver solver,
       Map<String, BoolExpr> reachableVars,
       Map<String, ArithExpr> idVars) {
-
     String sliceName = slice.getSliceName();
     ArithExpr zero = ctx.mkInt(0);
     for (String r : _encoderSlice.getGraph().getRouters()) {
       int id = _encoderSlice.getEncoder().getId();
       String s1 = id + "_" + sliceName + "_reachable-id_" + r;
       String s2 = id + "_" + sliceName + "_reachable_" + r;
-      ArithExpr idVar = ctx.mkIntConst(s1);
-      BoolExpr var = ctx.mkBoolConst(s2);
+      ArithExpr idVar = ctx.mkIntConst(s1);     // idVar
+      BoolExpr var = ctx.mkBoolConst(s2);       // reachableVar
       idVars.put(r, idVar);
       reachableVars.put(r, var);
       _encoderSlice.getAllVariables().put(idVar.toString(), idVar);
       _encoderSlice.getAllVariables().put(var.toString(), var);
+      // (= var (> idVar, 0))  ->  idVar = 0, ReachableVar = False
+      // (>= idVar, 0)         ->  idVar > 0, ReachalceVar = True
       solver.add(ctx.mkEq(var, ctx.mkGt(idVar, zero)));
       solver.add(ctx.mkGe(idVar, zero));
     }
@@ -76,6 +77,7 @@ class PropertyAdder {
    * we interpret the router as reachable. If there is no such neighbor, then this router is
    * not reachable and we set the id to 0.
    */
+  // TODO: I have not understand this method, annotated by yongzheng in 20250314
   private BoolExpr recursiveReachability(
       Context ctx,
       EncoderSlice slice,
@@ -87,9 +89,13 @@ class PropertyAdder {
     ArithExpr zero = ctx.mkInt(0);
     BoolExpr hasRecursiveRoute = ctx.mkFalse();
     BoolExpr largerIds = ctx.mkTrue();
+
     for (GraphEdge edge : edges) {
       if (!edge.isAbstract()) {
+        // data_fwd(router's GraphEdge) = 
+        //     data_fwd(router's GraphEdge) and not inbound acl(otherEnd's GraphEdge)
         BoolExpr fwd = _encoderSlice.getForwardsAcross().get(router, edge);
+
         if (edge.getPeer() != null) {
           ArithExpr peerId = idVars.get(edge.getPeer());
           BoolExpr peerReachable = ctx.mkGt(peerId, zero);
@@ -116,6 +122,7 @@ class PropertyAdder {
     EncoderSlice slice = _encoderSlice;
     Map<String, BoolExpr> reachableVars = new HashMap<>();
     Map<String, ArithExpr> idVars = new HashMap<>();
+    // initialize idVars and reachableVars
     initializeReachabilityVars(slice, ctx, solver, reachableVars, idVars);
     Graph g = _encoderSlice.getGraph();
 
@@ -124,8 +131,11 @@ class PropertyAdder {
       List<GraphEdge> edges = entry.getValue();
       ArithExpr id = idVars.get(router);
       // Add the base case, reachable if we forward to a directly connected interface
+      // TODO hasDirectRoute and isAbsorbed ??
       BoolExpr hasDirectRoute = ctx.mkFalse();
       BoolExpr isAbsorbed = ctx.mkFalse();
+      // if singleProtocol, call SymbolicDecisions BestNeighbor
+      // else,              call SymbolicDecisions BestNeighborPerProtocol
       SymbolicRoute r = _encoderSlice.getBestNeighborPerProtocol(router, Protocol.CONNECTED);
 
       for (GraphEdge ge : edges) {
@@ -137,6 +147,8 @@ class PropertyAdder {
           }
           // Reachable if we leave the network
           if (ge.getPeer() == null) {
+            // router (outbound acl) <--> (inbound acl) peer router
+            // data_fwd(iface) = control_fwd(iface) and not outbound acl(iface)
             BoolExpr fwdIface = _encoderSlice.getForwardsAcross().get(ge.getRouter(), ge);
             assert (fwdIface != null);
             hasDirectRoute = ctx.mkOr(hasDirectRoute, fwdIface);
@@ -150,7 +162,10 @@ class PropertyAdder {
           }
         }
       }
+
       // Add the recursive case, where it is reachable through a neighbor
+      // TODO annotated by yongzheng in 20250312
+      // if guard then expr1 else expr2
       BoolExpr recursive = recursiveReachability(ctx, slice, edges, idVars, router, id);
       BoolExpr guard = ctx.mkOr(hasDirectRoute, isAbsorbed);
       BoolExpr cond = slice.mkIf(guard, ctx.mkEq(id, ctx.mkInt(1)), recursive);

@@ -95,7 +95,7 @@ import org.batfish.minesweeper.utils.MsPair;
  * <p>Batfish represents the AST much like vendors where there is a simple imperative language for
  * matching fields and making modifications to fields. Since this is not a good fit for a
  * declarative symbolic encoding of the network, we convert this stateful representation into a
- * stateless representation
+ * stateless representation.
  *
  * <p>The TransferSSA class makes policies stateless by converting the vendor-independent format to
  * a Static Single Assignment (SSA) form where all updates are reflected in new variables. Rather
@@ -111,7 +111,7 @@ import org.batfish.minesweeper.utils.MsPair;
  * the value of each variable modified based on the branch taken. For example:
  *
  * <p>c2' = (c1 ? true : c2) metric' = (c1 ? metric : metric + 2)
- *
+ RoutingPolicy.java *
  * <p>To model the return value of functions, we introduce three new variables: [fallthrough],
  * [returnValue] and [returnAssigned]. For example, if we have the following AST function in
  * Batfish:
@@ -494,6 +494,7 @@ class TransferSSA {
     }
 
     if (expr instanceof MatchPrefixSet) {
+      // TODO added by yongzheng in 20250312
       pCur.debug("MatchPrefixSet");
       MatchPrefixSet m = (MatchPrefixSet) expr;
       // For BGP, may change prefix length

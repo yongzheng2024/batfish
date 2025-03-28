@@ -28,7 +28,8 @@ public class SymbolicRoute implements IDeepCopy<SymbolicRoute> {
   private Protocol _proto;
 
   private EncoderSlice _enc;
-
+  // configure _isUsed to false via call ... (only two parameters constructor method)
+  // configure _isUsed to true via call ... (more than two parameters constructor method)
   private boolean _isUsed;
 
   private boolean _isEnv;
@@ -130,7 +131,6 @@ public class SymbolicRoute implements IDeepCopy<SymbolicRoute> {
       Optimizations opts,
       @Nullable SymbolicEnum<Protocol> h,
       boolean isAbstract) {
-
     _name = name;
     _proto = proto;
     _enc = slice;

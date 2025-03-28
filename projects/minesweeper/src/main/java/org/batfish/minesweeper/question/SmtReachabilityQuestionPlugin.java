@@ -21,6 +21,8 @@ public class SmtReachabilityQuestionPlugin extends QuestionPlugin {
 
   @Override
   protected Question createQuestion() {
+    // TODO: you can uncomment the following line to print createQuestion call
+    // System.out.println("------------------------------------------------");
     return new ReachabilityQuestion();
   }
 

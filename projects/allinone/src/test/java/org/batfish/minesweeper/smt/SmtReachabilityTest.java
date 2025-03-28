@@ -40,14 +40,24 @@ public class SmtReachabilityTest {
     @Before
     public void setup() throws IOException {
         // Files.copy(sourcePath, destinationPath, StandardCopyOption.REPLACE_EXISTING);
+
         /** Replace the path with your actual project path. */
         Path path = Paths.get("/home/deza/codes/minesweeper/containers");
         Batfish batfish = BatfishTestUtils.initBatfish(new TreeMap<>(), path);
+
         /** Replace network ID and snapshot ID with the actual ID at your local disk. */
-        // NetworkId networkId = new NetworkId("b0289fe7-5624-4e87-9f87-5b4e7d1ebecd");
-        NetworkId networkId = new NetworkId("db8491d8-b096-4589-be39-539e42565ebd");
-        // SnapshotId snapshotId = new SnapshotId("0fe2ccab-6d92-4f2d-bddc-28e1002a8a3b");
-        SnapshotId snapshotId = new SnapshotId("464526c1-a38a-4cc7-81cd-15c911c4aaee");
+        NetworkId networkId = new NetworkId("61b72d69-83df-497e-b9b3-2d34713be221");
+
+        // reachability true（with interface's access-list)
+        // SnapshotId snapshotId = new SnapshotId("f4816bd6-3a80-4b57-92a1-0b55c7993a42");
+        // reachability false (with interface's access-list)
+        // SnapshotId snapshotId = new SnapshotId("dfc6736a-a60a-4ddb-96ba-a400a9ff00c2");
+
+        // reachability true (removed interface's access-list)
+        SnapshotId snapshotId = new SnapshotId("24c523c3-318e-40f5-a1bf-97a17bc640d3");
+        // reachability false (removed interface's access-list)
+        // SnapshotId snapshotId = new SnapshotId("b7a75636-87ba-473b-a8c6-fb768c638143");
+
         NetworkSnapshot snapshot = new NetworkSnapshot(networkId, snapshotId);
         SortedMap<String, Configuration> configs = batfish.loadConfigurations(snapshot);
         _batfish = BatfishTestUtils.getBatfish(configs, _temp);
@@ -64,21 +74,17 @@ public class SmtReachabilityTest {
     @Test
     public void testOneFailure() {
         final ReachabilityQuestion question = new ReachabilityQuestion();
-        // question.setIngressNodeRegex(_srcNode.getHostname());
-        // question.setFinalNodeRegex(_dstNode.getHostname());
-        // question.setIngressNodeRegex("host1");
-        // question.setFinalNodeRegex("host2");
-        question.setIngressNodeRegex("border1");
-        question.setFinalNodeRegex("border2");
+        question.setIngressNodeRegex("as2border1");
+        question.setFinalNodeRegex("as1border1");
+        question.setFinalIfaceRegex("GigabitEthernet1/0");
+        // question.setFinalNodeRegex("as1core1");
+        // question.setFinalIfaceRegex("GigabitEthernet1/0");
         // question.setFailures(1);
 
         final AnswerElement answer = Answerer.create(question, _batfish).answer(_batfish.getSnapshot());
         assertThat(answer, instanceOf(SmtReachabilityAnswerElement.class));
 
         final SmtReachabilityAnswerElement smtAnswer = (SmtReachabilityAnswerElement) answer;
-        assertThat(
-                smtAnswer,
-                hasVerificationResult(allOf(hasIsVerified(false), hasFailures(singleton(_failureDesc)))));
+        assertThat(smtAnswer, hasVerificationResult(hasIsVerified(true)));
     }
-
 }
