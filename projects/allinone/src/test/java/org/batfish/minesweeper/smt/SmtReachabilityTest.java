@@ -1,5 +1,5 @@
-// package org.batfish.minesweeper.smt;
-//
+package org.batfish.minesweeper.smt;
+
 // import static java.util.Collections.singleton;
 import static org.batfish.minesweeper.smt.matchers.SmtReachabilityAnswerElementMatchers.hasVerificationResult;
 // import static org.batfish.minesweeper.smt.matchers.VerificationResultMatchers.hasFailures;
