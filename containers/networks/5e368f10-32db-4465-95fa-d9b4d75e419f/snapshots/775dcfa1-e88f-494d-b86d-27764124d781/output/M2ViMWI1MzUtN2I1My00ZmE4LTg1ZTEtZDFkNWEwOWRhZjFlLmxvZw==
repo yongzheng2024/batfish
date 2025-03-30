@@ -1,0 +1,33 @@
+Loading configurations for NetworkSnapshot{network=5e368f10-32db-4465-95fa-d9b4d75e419f, snapshot=775dcfa1-e88f-494d-b86d-27764124d781}
+
+*** READING Environment BGP Tables ***
+
+*** PARSING ENVIRONMENT BGP TABLES ***
+Loading configurations for NetworkSnapshot{network=5e368f10-32db-4465-95fa-d9b4d75e419f, snapshot=775dcfa1-e88f-494d-b86d-27764124d781}
+Time taken for this task: 0.0 seconds
+
+*** SERIALIZING ENVIRONMENT BGP TABLES ***
+Time taken for this task: 0.0 seconds
+{
+  "class" : "org.batfish.datamodel.answers.InitInfoAnswerElement",
+  "parseStatus" : {
+    "configs/as1border1.cfg" : "PASSED",
+    "configs/as1core1.cfg" : "PASSED",
+    "configs/as2border1.cfg" : "PASSED"
+  },
+  "warnings" : {
+    "as1border1" : {
+      "Red flags" : [
+        {
+          "tag" : "MISCELLANEOUS",
+          "text" : "Could not determine update source for BGP neighbor: '3.2.2.2'"
+        },
+        {
+          "tag" : "MISCELLANEOUS",
+          "text" : "Could not determine update source for BGP neighbor: '5.6.7.8'"
+        }
+      ]
+    },
+    "internet" : { }
+  }
+}{"answerElements":[{"class":"org.batfish.datamodel.answers.InitInfoAnswerElement","parseStatus":{"configs/as1border1.cfg":"PASSED","configs/as1core1.cfg":"PASSED","configs/as2border1.cfg":"PASSED"},"warnings":{"as1border1":{"Red flags":[{"tag":"MISCELLANEOUS","text":"Could not determine update source for BGP neighbor: '3.2.2.2'"},{"tag":"MISCELLANEOUS","text":"Could not determine update source for BGP neighbor: '5.6.7.8'"}]},"internet":{}}}],"question":{"class":"org.batfish.question.InitInfoQuestionPlugin$InitInfoQuestion","differential":false,"environmentBgpTables":false,"includeOneTableKeys":true,"instance":{"instanceName":"__initInfo"},"summary":false,"verboseError":false},"status":"SUCCESS","summary":{"numFailed":0,"numPassed":0,"numResults":0}}
