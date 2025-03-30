@@ -7,6 +7,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Objects;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+
+import com.microsoft.z3.Context;
 import org.batfish.datamodel.Prefix;
 import org.batfish.datamodel.RouteFilterList;
 import org.batfish.datamodel.routing_policy.Environment;
@@ -59,5 +61,12 @@ public final class NamedPrefixSet extends PrefixSetExpr {
       environment.setError(true);
       return false;
     }
+  }
+
+  /** Add configuration constant - SMT symbolic variable */
+  @Override
+  public void initSmtVariable(Context context, String configVarPrefix) {
+    // TODO: implement me
+    {}  // do nothing
   }
 }

@@ -494,7 +494,7 @@ class TransferSSA {
     }
 
     if (expr instanceof MatchPrefixSet) {
-      // TODO added by yongzheng in 20250312
+      // TODO: added by yongzheng in 20250312
       pCur.debug("MatchPrefixSet");
       MatchPrefixSet m = (MatchPrefixSet) expr;
       // For BGP, may change prefix length
@@ -1379,6 +1379,7 @@ class TransferSSA {
         for (Map.Entry<Prefix, Boolean> entry : _aggregates.entrySet()) {
           Prefix p = entry.getKey();
           Boolean isSuppressed = entry.getValue();
+          // TODO: Configuration GeneratedRoute -> SMT symbolic variables
           ArithExpr len = _enc.mkInt(p.getPrefixLength());
           BoolExpr relevantPfx = _enc.isRelevantFor(p, _enc.getSymbolicPacket().getDstIp());
           BoolExpr relevantLen = _enc.mkGt(param.getData().getPrefixLength(), len);
@@ -1392,8 +1393,8 @@ class TransferSSA {
   }
 
   private void applyMetricUpdate(TransferParam<SymbolicRoute> p) {
-    boolean updateOspf = (!_isExport && _proto.isOspf());
-    boolean updateBgp = (_isExport && _proto.isBgp());
+    boolean updateOspf = (!_isExport && _proto.isOspf());  // import && OSPF, update metric ?
+    boolean updateBgp = (_isExport && _proto.isBgp());     // export && BGP, update metric ?
     boolean updateMetric = updateOspf || updateBgp;
     if (updateMetric) {
       // If it is a BGP route learned from IGP, then we use metric 0
@@ -1413,7 +1414,7 @@ class TransferSSA {
           isBGP = _enc.mkFalse();
         }
         newValue = _enc.mkIf(isBGP, sum, cost);
-      } else {
+      } else {  // _proto.isOspf()
         newValue = sum;
       }
       p.getData().setMetric(newValue);
@@ -1430,9 +1431,19 @@ class TransferSSA {
   public BoolExpr compute() {
     SymbolicRoute o = new SymbolicRoute(_other);
     TransferParam<SymbolicRoute> p = new TransferParam<>(o, Encoder.ENABLE_DEBUGGING);
+
+    // compute aggregate route with suppress aggregate
     computeIntermediatePrefixLen(p);
+
+    // update metric
+    //   + import & OSPF, originalMetric + addedCost
+    //   + export & BGP, learned from BGP -> originalMetric + addedCost
+    //                   learned from IGP -> 0 + addedCost
     applyMetricUpdate(p);
+
+    // set default local prefence to 100
     setDefaultLocalPref(p);
+
     TransferResult<BoolExpr, BoolExpr> result = compute(_statements, p, initialResult());
     return result.getReturnValue();
   }

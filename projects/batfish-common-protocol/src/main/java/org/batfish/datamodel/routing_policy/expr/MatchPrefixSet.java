@@ -12,6 +12,8 @@ import org.batfish.datamodel.Prefix;
 import org.batfish.datamodel.routing_policy.Environment;
 import org.batfish.datamodel.routing_policy.Result;
 
+import com.microsoft.z3.Context;
+
 /**
  * Boolean expression that tests whether an IPv4 prefix extracted from an {@link Environment} using
  * a given {@link PrefixExpr} matches a given {@link PrefixSetExpr}.
@@ -84,5 +86,10 @@ public final class MatchPrefixSet extends BooleanExpr {
   @Override
   public String toString() {
     return toStringHelper().add(PROP_PREFIX, _prefix).add(PROP_PREFIX_SET, _prefixSet).toString();
+  }
+
+  /** Add configuration constant - SMT symbolic variable */
+  public final void initSmtVariable(Context context, String configVarPrefix) {
+    _prefixSet.initSmtVariable(context, configVarPrefix);
   }
 }

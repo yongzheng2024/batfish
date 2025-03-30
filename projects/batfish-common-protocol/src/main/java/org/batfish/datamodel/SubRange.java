@@ -11,6 +11,10 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.batfish.common.BatfishException;
 
+import com.microsoft.z3.Context;
+import com.microsoft.z3.ArithExpr;
+// import com.microsoft.z3.BitVecExpr;
+
 /** A closed interval of integers. */
 public final class SubRange implements Serializable, Comparable<SubRange> {
 
@@ -25,6 +29,9 @@ public final class SubRange implements Serializable, Comparable<SubRange> {
   public SubRange(int start, int end) throws IllegalArgumentException {
     _start = start;
     _end = end;
+
+    // initialize enable smt variable flag to false
+    _enableSmtVariable = false;
   }
 
   /** Create a new {@link SubRange} containing exactly the given value. */
@@ -60,6 +67,9 @@ public final class SubRange implements Serializable, Comparable<SubRange> {
       throw new BatfishException(
           "Cannot create SubRange from input object of type: " + o.getClass().getCanonicalName());
     }
+
+    // initialize enable smt variable flag to false
+    _enableSmtVariable = false;
   }
 
   public IntStream asStream() {
@@ -142,5 +152,36 @@ public final class SubRange implements Serializable, Comparable<SubRange> {
   @Override
   public String toString() {
     return "[" + _start + "," + _end + "]";
+  }
+
+  /** Add configuration constant - SMT symbolic variable */
+  // private static final long serialVersionUID = -6470930317597088503L;
+
+  private boolean _enableSmtVariable;
+
+  private transient ArithExpr _configVarStart;
+  private transient ArithExpr _configVarEnd;
+
+  public void initSmtVariable(Context context, String configVarPrefix) {
+    String configVarNameStart = configVarPrefix + "prefix-length-start-" + _start;
+    String configVarNameEnd = configVarPrefix + "prefix-length-end-" + _end;
+
+    _configVarStart = context.mkIntConst(configVarNameStart);
+    _configVarEnd = context.mkIntConst(configVarNameEnd);
+
+    // configure enable smt variable flag to true
+    _enableSmtVariable = true;
+  }
+
+  public boolean getEnableSmtVariable() {
+    return _enableSmtVariable;
+  }
+
+  public ArithExpr getConfigVarStart() {
+    return _configVarStart;
+  }
+
+  public ArithExpr getConfigVarEnd() {
+    return _configVarEnd;
   }
 }

@@ -8,6 +8,12 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.batfish.common.BatfishException;
 
+// import com.google.common.base.Preconditions;
+
+import com.microsoft.z3.Context;
+// import com.microsoft.z3.ArithExpr;
+// import com.microsoft.z3.BitVecExpr;
+
 public final class PrefixRange implements Serializable, Comparable<PrefixRange> {
 
   /** A prefix range representing all prefixes. */
@@ -25,6 +31,9 @@ public final class PrefixRange implements Serializable, Comparable<PrefixRange> 
       _prefix = Prefix.create(realPrefixAddress, prefixLength);
     }
     _lengthRange = lengthRange;
+
+    // initialize enable smt variable flag to false
+    _enableSmtVariable = false;
   }
 
   /** Returns a {@link PrefixRange} that contains exactly the specified {@link Prefix}. */
@@ -112,4 +121,20 @@ public final class PrefixRange implements Serializable, Comparable<PrefixRange> 
 
   private final Prefix _prefix;
   private final SubRange _lengthRange;
+  
+  /** Add configuration constant - SMT symbolic variable */
+  private boolean _enableSmtVariable;
+
+  public void initSmtVariable(Context context, String configVarPrefix) {
+    long prefixIp = _prefix.getStartIp().asLong();
+    _prefix.initSmtVariable(context, configVarPrefix);
+    _lengthRange.initSmtVariable(context, configVarPrefix + prefixIp + "-");
+
+    // configure enable smt variable flag to true
+    _enableSmtVariable = true;
+  }
+
+  public boolean getEnableSmtVariable() {
+    return _enableSmtVariable;
+  }
 }

@@ -18,6 +18,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import javax.annotation.Nullable;
 
+import com.microsoft.z3.Context;
+
 /** Describes a collection of {@link Prefix}es and {@link PrefixRange}s */
 public class PrefixSpace implements Serializable {
 
@@ -340,5 +342,12 @@ public class PrefixSpace implements Serializable {
   @Override
   public String toString() {
     return getPrefixRanges().toString();
+  }
+
+  /** Add configuration constant - SMT symbolic variable */
+  public void initSmtVariable(Context context, String configVarPrefix) {
+    for (PrefixRange prefixRange : getPrefixRanges()) {
+      prefixRange.initSmtVariable(context, configVarPrefix);
+    }
   }
 }

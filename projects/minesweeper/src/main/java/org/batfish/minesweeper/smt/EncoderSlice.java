@@ -441,21 +441,45 @@ class EncoderSlice {
     int len = p.getPrefixLength();
     int lower = r.getStart();
     int upper = r.getEnd();
-    // well formed prefix
+
     assert (p.getPrefixLength() <= lower && lower <= upper);
-    BoolExpr lowerBitsMatch = firstBitsEqual(_symbolicPacket.getDstIp(), pfx, len);
-    if (lower == upper) {
-      BoolExpr equalLen = mkEq(prefixLen, mkInt(lower));
-      return mkAnd(equalLen, lowerBitsMatch);
+
+    // well formed prefix
+    if (p.getEnableSmtVariable() && r.getEnableSmtVariable()) {
+      BitVecExpr configVarIp = p.getConfigVarIp();
+      BitVecExpr configVarMask = p.getConfigVarMask();
+      BoolExpr lowerBitsMatch = firstBitsEqual(
+          _symbolicPacket.getDstIp(), configVarIp, configVarMask, pfx, len);
+      if (lower == upper) {
+        ArithExpr configVarRangeStart = r.getConfigVarStart();
+        BoolExpr configEqualLen = mkEq(configVarRangeStart, mkInt(lower));
+        BoolExpr equalLen = mkEq(prefixLen, configVarRangeStart);
+        return mkAnd(equalLen, configEqualLen, lowerBitsMatch);
+      } else {
+        ArithExpr configVarRangeStart = r.getConfigVarStart();
+        ArithExpr configVarRangeEnd = r.getConfigVarEnd();
+        BoolExpr configEqualLower = mkEq(configVarRangeStart, mkInt(lower));
+        BoolExpr configEqualUpper = mkEq(configVarRangeEnd, mkInt(upper));
+        BoolExpr lengthLowerBound = mkGe(prefixLen, configVarRangeStart);
+        BoolExpr lengthUpperBound = mkLe(prefixLen, configVarRangeEnd);
+        return mkAnd(
+                configEqualLower, configEqualUpper, lengthLowerBound, lengthUpperBound,
+                lowerBitsMatch);
+      }
     } else {
-      BoolExpr lengthLowerBound = mkGe(prefixLen, mkInt(lower));
-      BoolExpr lengthUpperBound = mkLe(prefixLen, mkInt(upper));
-      return mkAnd(lengthLowerBound, lengthUpperBound, lowerBitsMatch);
+      // TODO: check here, i.e. p.getEnableSmtVariable and r.getEnableSmtVariable
+      BoolExpr lowerBitsMatch = firstBitsEqual(_symbolicPacket.getDstIp(), pfx, len);
+      if (lower == upper) {
+        BoolExpr equalLen = mkEq(prefixLen, mkInt(lower));
+        return mkAnd(equalLen, lowerBitsMatch);
+      } else {
+        BoolExpr lengthLowerBound = mkGe(prefixLen, mkInt(lower));
+        BoolExpr lengthUpperBound = mkLe(prefixLen, mkInt(upper));
+        return mkAnd(lengthLowerBound, lengthUpperBound, lowerBitsMatch);
+      }
     }
   }
 
-  // TODO: annotated by yongzheng on 20250325
-  // TODO: can modify the configuration constant to smt variable (include the constant)
   private BoolExpr firstBitsEqual(BitVecExpr x, long y, int n) {
     assert (n >= 0 && n <= 32);
     if (n == 0) {
@@ -465,9 +489,29 @@ class EncoderSlice {
     for (int i = 0; i < n; i++) {
       m |= (1 << (31 - i));
     }
+
     BitVecExpr mask = getCtx().mkBV(m, 32);
     BitVecExpr val = getCtx().mkBV(y, 32);
     return mkEq(getCtx().mkBVAND(x, mask), getCtx().mkBVAND(val, mask));
+  }
+
+  private BoolExpr firstBitsEqual(
+      BitVecExpr x, BitVecExpr configVarIp, BitVecExpr configVarMask, long y, int n) {
+    assert (n >= 0 && n <= 32);
+    if (n == 0) {
+      // TODO: check here and implement it when needed
+      return mkTrue();
+    }
+    int m = 0;
+    for (int i = 0; i < n; i++) {
+      m |= (1 << (31 - i));
+    }
+
+    BoolExpr configEqualIp = mkEq(configVarIp, getCtx().mkBV(y, 32));
+    BoolExpr configEqualMask = mkEq(configVarMask, getCtx().mkBV(m, 32));
+    BoolExpr equalPrefix =
+        mkEq(getCtx().mkBVAND(x, configVarMask), getCtx().mkBVAND(configVarIp, configVarMask));
+    return mkAnd(configEqualIp, configEqualMask, equalPrefix);
   }
 
   BoolExpr isRelevantFor(Prefix p, BitVecExpr be) {

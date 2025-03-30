@@ -43,6 +43,58 @@ import org.batfish.minesweeper.question.HeaderQuestion;
 import org.batfish.minesweeper.utils.MsPair;
 import org.batfish.minesweeper.utils.Tuple;
 
+import java.util.ArrayList;
+import java.util.stream.Collectors;
+import org.batfish.common.BatfishException;
+import org.batfish.datamodel.Configuration;
+import org.batfish.datamodel.RoutingProtocol;
+import org.batfish.datamodel.routing_policy.RoutingPolicy;
+import org.batfish.datamodel.routing_policy.expr.AsPathListExpr;
+import org.batfish.datamodel.routing_policy.expr.BooleanExpr;
+import org.batfish.datamodel.routing_policy.expr.BooleanExprs;
+import org.batfish.datamodel.routing_policy.expr.CallExpr;
+import org.batfish.datamodel.routing_policy.expr.CommunitySetExpr;
+import org.batfish.datamodel.routing_policy.expr.Conjunction;
+import org.batfish.datamodel.routing_policy.expr.ConjunctionChain;
+import org.batfish.datamodel.routing_policy.expr.DecrementLocalPreference;
+import org.batfish.datamodel.routing_policy.expr.DecrementMetric;
+import org.batfish.datamodel.routing_policy.expr.Disjunction;
+import org.batfish.datamodel.routing_policy.expr.ExplicitPrefixSet;
+import org.batfish.datamodel.routing_policy.expr.FirstMatchChain;
+import org.batfish.datamodel.routing_policy.expr.IncrementLocalPreference;
+import org.batfish.datamodel.routing_policy.expr.IncrementMetric;
+import org.batfish.datamodel.routing_policy.expr.IntExpr;
+import org.batfish.datamodel.routing_policy.expr.LiteralAsList;
+import org.batfish.datamodel.routing_policy.expr.LiteralInt;
+import org.batfish.datamodel.routing_policy.expr.LiteralLong;
+import org.batfish.datamodel.routing_policy.expr.LongExpr;
+import org.batfish.datamodel.routing_policy.expr.MatchAsPath;
+import org.batfish.datamodel.routing_policy.expr.MatchCommunitySet;
+import org.batfish.datamodel.routing_policy.expr.MatchIpv4;
+import org.batfish.datamodel.routing_policy.expr.MatchIpv6;
+import org.batfish.datamodel.routing_policy.expr.MatchPrefix6Set;
+import org.batfish.datamodel.routing_policy.expr.MatchPrefixSet;
+import org.batfish.datamodel.routing_policy.expr.MatchProtocol;
+import org.batfish.datamodel.routing_policy.expr.MultipliedAs;
+import org.batfish.datamodel.routing_policy.expr.NamedCommunitySet;
+import org.batfish.datamodel.routing_policy.expr.NamedPrefixSet;
+import org.batfish.datamodel.routing_policy.expr.Not;
+import org.batfish.datamodel.routing_policy.expr.PrefixSetExpr;
+import org.batfish.datamodel.routing_policy.expr.WithEnvironmentExpr;
+import org.batfish.datamodel.routing_policy.statement.AddCommunity;
+import org.batfish.datamodel.routing_policy.statement.DeleteCommunity;
+import org.batfish.datamodel.routing_policy.statement.If;
+import org.batfish.datamodel.routing_policy.statement.PrependAsPath;
+import org.batfish.datamodel.routing_policy.statement.SetCommunity;
+import org.batfish.datamodel.routing_policy.statement.SetDefaultPolicy;
+import org.batfish.datamodel.routing_policy.statement.SetLocalPreference;
+import org.batfish.datamodel.routing_policy.statement.SetMetric;
+import org.batfish.datamodel.routing_policy.statement.SetNextHop;
+import org.batfish.datamodel.routing_policy.statement.SetOrigin;
+import org.batfish.datamodel.routing_policy.statement.SetOspfMetricType;
+import org.batfish.datamodel.routing_policy.statement.Statement;
+import org.batfish.datamodel.routing_policy.statement.Statements.StaticStatement;
+
 /**
  * A class responsible for building a symbolic encoding of the entire network. The encoder does this
  * by maintaining a collection of encoding slices, where each slice encodes the forwarding behavior
@@ -182,6 +234,9 @@ public class Encoder {
 
     _unsatCore = new UnsatCore(ENABLE_UNSAT_CORE);
 
+    // initialize configuration constant - SMT symbolic variable
+    initConfigurationConstants();
+
     // initialize _symbolicFailures and _allVariables, which involving
     //   + all GraphEdge getPeer() == null according to _edgeMap  (_failedEdgeLinks)
     //   + all neighbor node pair according to _neighbors         (_failedInternalLinks)
@@ -189,6 +244,7 @@ public class Encoder {
     // initialize _symbolicFailures and _allVariables, which involving
     //   + all node according to _routers                         (_failedNodes)
     initFailedNodeVariables();
+
     // initialize _slices
     //   + one main slice (or only one null slice)
     //   + other slices according to domain (i.e. ibgp neighbors)
@@ -978,5 +1034,230 @@ public class Encoder {
 
   public BitVecExpr mkBVAND(BitVecExpr expr, BitVecExpr mask) {
     return _ctx.mkBVAND(expr, mask);
+  }
+
+  public ArithExpr mkIntConst(String name) {
+    return _ctx.mkIntConst(name);
+  }
+
+  public BitVecExpr mkBVConst(String name, int size) {
+    return _ctx.mkBVConst(name, size);
+  }
+
+  private void initConfigurationConstants() {
+    for (Map.Entry<String, Configuration> configEntry : _graph.getConfigurations().entrySet()) {
+      String hostName = configEntry.getKey();
+      Configuration config = configEntry.getValue();
+
+      for (Map.Entry<String, RoutingPolicy> routingPolicyEntry : config.getRoutingPolicies().entrySet()) {
+        String policyName = routingPolicyEntry.getKey();
+        RoutingPolicy routingPolicy = routingPolicyEntry.getValue();
+        List<Statement> statements = routingPolicy.getStatements();
+        initConfigurationConstants(statements, hostName + "_" + policyName);
+      }
+    }
+  }
+
+  private void initConfigurationConstants(List<Statement> statements, String configVarPrefix) {
+    for (Statement stmt : statements) {
+      if (stmt instanceof StaticStatement) {
+        // TODO: check here and implement it when needed
+        StaticStatement ss = (StaticStatement) stmt;
+        switch (ss.getType()) {
+          case ExitAccept:
+            break;
+          case Unsuppress:
+          case ReturnTrue:
+            break;
+          case ExitReject:
+            break;
+          case Suppress:
+          case ReturnFalse:
+            break;
+          case SetDefaultActionAccept:
+            break;
+          case SetDefaultActionReject:
+            break;
+          case SetLocalDefaultActionAccept:
+            break;
+          case SetLocalDefaultActionReject:
+            break;
+          case ReturnLocalDefaultAction:
+            break;
+          case FallThrough:
+            break;
+          case Return:
+            break;
+          case RemovePrivateAs:
+            break;
+          default:
+            String msg = String.format("Unimplemented feature %s", ss.getType());
+            throw new BatfishException(msg);
+        }
+
+      } else if (stmt instanceof If) {
+        If i = (If) stmt;
+        initConfigurationConstants(i.getGuard(), configVarPrefix);
+        initConfigurationConstants(i.getTrueStatements(), configVarPrefix);
+        initConfigurationConstants(i.getFalseStatements(), configVarPrefix);
+
+      } else if (stmt instanceof SetDefaultPolicy) {
+        // TODO: implement me
+        {}  // do nothing
+
+      } else if (stmt instanceof SetMetric) {
+        // TODO: implement me
+        {}  // do nothing
+
+      } else if (stmt instanceof SetOspfMetricType) {
+        // TODO: implement me
+        {}  // do nothing
+
+      } else if (stmt instanceof SetLocalPreference) {
+        // TODO: implement me
+        {}  // do nothing
+
+      } else if (stmt instanceof AddCommunity) {
+        // TODO: implement me
+        {}  // do nothing
+
+      } else if (stmt instanceof SetCommunity) {
+        // TODO: implement me
+        {}  // do nothing
+
+      } else if (stmt instanceof DeleteCommunity) {
+        // TODO: implement me
+        {}  // do nothing
+
+      } else if (stmt instanceof PrependAsPath) {
+        // TODO: implement me
+        {}  // do nothing
+
+      } else if (stmt instanceof SetOrigin) {
+        // TODO: implement me
+        {}  // do nothing
+
+      } else if (stmt instanceof SetNextHop) {
+        // TODO: implement me
+        {}  // do nothing
+
+      } else {
+        String msg = String.format("Unimplemented feature %s", stmt.toString());
+        throw new BatfishException(msg);
+      }
+    }
+  }
+
+  private void initConfigurationConstants(BooleanExpr expr, String configVarPrefix) {
+    if (expr instanceof MatchIpv4) {
+      // TODO: implement me
+      {}  // do nothing
+    }
+
+    if (expr instanceof MatchIpv6) {
+      // TODO: implement me
+      {}  // do nothing
+    }
+
+    if (expr instanceof Conjunction) {
+      Conjunction c = (Conjunction) expr;
+      for (BooleanExpr booleanExpr : c.getConjuncts()) {
+        initConfigurationConstants(booleanExpr, configVarPrefix);
+      }
+    }
+
+    if (expr instanceof Disjunction) {
+      Disjunction d = (Disjunction) expr;
+      for (BooleanExpr booleanExpr : d.getDisjuncts()) {
+        initConfigurationConstants(booleanExpr, configVarPrefix);
+      }
+    }
+
+    if (expr instanceof ConjunctionChain) {
+      // TODO: check here
+      ConjunctionChain d = (ConjunctionChain) expr;
+      List<BooleanExpr> conjuncts = new ArrayList<>(d.getSubroutines());
+      for (BooleanExpr booleanExpr : conjuncts) {
+        initConfigurationConstants(booleanExpr, configVarPrefix);
+      }
+    }
+
+    if (expr instanceof FirstMatchChain) {
+      // TODO: check here
+      FirstMatchChain chain = (FirstMatchChain) expr;
+      List<BooleanExpr> chainPolicies = new ArrayList<>(chain.getSubroutines());
+      for (BooleanExpr booleanExpr : chainPolicies) {
+        initConfigurationConstants(booleanExpr, configVarPrefix);
+      }
+    }
+
+    if (expr instanceof Not) {
+      // TODO: check here
+      Not n = (Not) expr;
+      initConfigurationConstants(n.getExpr(), configVarPrefix);
+    }
+
+    if (expr instanceof MatchProtocol) {
+      // FIXME: check here and implement it when needed
+      MatchProtocol mp = (MatchProtocol) expr;
+      Set<RoutingProtocol> rps = mp.getProtocols();
+      if (rps.size() > 1) {
+        // Hack: Minesweeper doesn't support MatchProtocol with multiple arguments.
+        List<BooleanExpr> mps = rps.stream().map(MatchProtocol::new).collect(Collectors.toList());
+        for (BooleanExpr booleanExpr : mps) {
+          initConfigurationConstants(booleanExpr, configVarPrefix);
+        }
+      }
+    }
+
+    if (expr instanceof MatchPrefixSet) {
+      // TODO: implement me
+      // {}  // do nothing
+      MatchPrefixSet mps = (MatchPrefixSet) expr;
+      mps.initSmtVariable(_ctx, configVarPrefix);
+
+    } else if (expr instanceof MatchPrefix6Set) {
+      // TODO: implement me
+      {}  // do nothing
+
+    } else if (expr instanceof CallExpr) {
+      // TODO: check here and implement it when needed
+      {}  // do nothing
+
+    } else if (expr instanceof WithEnvironmentExpr) {
+      WithEnvironmentExpr we = (WithEnvironmentExpr) expr;
+      initConfigurationConstants(we.getExpr(), configVarPrefix);
+
+    } else if (expr instanceof MatchCommunitySet) {
+      // TODO: check here and implement it when needed
+      {}  // do nothing
+
+    } else if (expr instanceof BooleanExprs.StaticBooleanExpr) {
+      BooleanExprs.StaticBooleanExpr b = (BooleanExprs.StaticBooleanExpr) expr;
+      switch (b.getType()) {
+        case CallExprContext:
+          break;
+        case CallStatementContext:
+          break;
+        case True:
+          break;
+        case False:
+          break;
+        default:
+          // FIXME: check here and implement it when needed
+          // String msg = String.format(
+          //     "Unimplemented feature %s : %s", BooleanExprs.class.getCanonicalName(), b.getType());
+          // throw new BatfishException(msg);
+          break;
+      }
+
+    } else if (expr instanceof MatchAsPath) {
+      // TODO: implement me
+      {}  // do nothing
+    }
+
+    // FIXME: check here and implement it when needed
+    // String msg = String.format("Unimplemented feature %s", expr.toString());
+    // throw new BatfishException(msg);
   }
 }

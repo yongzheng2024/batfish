@@ -2,6 +2,8 @@ package org.batfish.minesweeper.abstraction;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import java.util.Objects;
+
+import com.microsoft.z3.Context;
 import org.batfish.datamodel.Prefix;
 import org.batfish.datamodel.routing_policy.Environment;
 import org.batfish.datamodel.routing_policy.expr.PrefixSetExpr;
@@ -63,5 +65,12 @@ public final class AbstractionPrefixSet extends PrefixSetExpr {
   public boolean matches(Prefix prefix, Environment environment) {
     return _prefixTrie.containsPathFromPrefix(prefix)
         || _prefixTrie.containsIp(prefix.getStartIp());
+  }
+
+  /** Add configuration constant - SMT symbolic variable */
+  @Override
+  public void initSmtVariable(Context context, String configVarPrefix) {
+    // TODO: implement me
+    {}  // do nothing
   }
 }

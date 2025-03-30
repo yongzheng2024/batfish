@@ -529,6 +529,8 @@ class Optimizations {
               _relevantAggregates.put(router, routes);
               for (GeneratedRoute gr : conf.getDefaultVrf().getGeneratedRoutes()) {
                 Prefix p = gr.getNetwork();
+                // TODO: I have not understand this part of code yet.
+                //       annotated by yongzheng on 20250329
                 if (_encoderSlice.relevantPrefix(p)) {
                   routes.add(gr);
                 }

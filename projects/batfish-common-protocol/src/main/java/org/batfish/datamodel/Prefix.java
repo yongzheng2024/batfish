@@ -14,6 +14,10 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
+import com.microsoft.z3.Context;
+import com.microsoft.z3.ArithExpr;
+import com.microsoft.z3.BitVecExpr;
+
 /** An IPv4 Prefix */
 @ParametersAreNonnullByDefault
 public final class Prefix implements Comparable<Prefix>, Serializable {
@@ -108,6 +112,9 @@ public final class Prefix implements Comparable<Prefix>, Serializable {
       _ip = ip;
     }
     _prefixLength = prefixLength;
+    
+    // initialize enable smt variable flag to false
+    _enableSmtVariable = false;
   }
 
   public static Prefix create(Ip ip, int prefixLength) {
@@ -254,5 +261,47 @@ public final class Prefix implements Comparable<Prefix>, Serializable {
   /** Cache after deserialization. */
   private Object readResolve() throws ObjectStreamException {
     return CACHE.getUnchecked(this);
+  }
+
+  /** Add configuration constant - SMT symbolic variable */
+  // private static final long serialVersionUID = -7242147700205250810L;
+
+  private boolean _enableSmtVariable;
+
+  private transient BitVecExpr _configVarIp;
+  private transient BitVecExpr _configVarMask;
+  private transient ArithExpr _configVarLength;
+
+  public void initSmtVariable(Context context, String configVarPrefix) {
+    // FIXME: if prefix length is 0, then the encoding of ip / mask / length ?
+    long prefixIp = _ip.asLong();
+    String configVarNameIp = configVarPrefix + "prefix-ip-" + prefixIp;
+    String configVarNameMask = 
+        configVarPrefix + "prefix-mask-" + prefixIp + "-" + _prefixLength;
+    String configVarNameLength = 
+        configVarPrefix + "prefix-length-" + prefixIp + "-" + _prefixLength;
+
+    _configVarIp = context.mkBVConst(configVarNameIp, MAX_PREFIX_LENGTH);
+    _configVarMask = context.mkBVConst(configVarNameMask, MAX_PREFIX_LENGTH);
+    _configVarLength = context.mkIntConst(configVarNameLength);
+
+    // config enable smt variable flag to true
+    _enableSmtVariable = true;
+  }
+
+  public boolean getEnableSmtVariable() {
+    return _enableSmtVariable;
+  }
+
+  public BitVecExpr getConfigVarIp() {
+    return _configVarIp;
+  }
+
+  public BitVecExpr getConfigVarMask() {
+    return _configVarMask;
+  }
+
+  public ArithExpr getConfigVarLength() {
+    return _configVarLength;
   }
 }
