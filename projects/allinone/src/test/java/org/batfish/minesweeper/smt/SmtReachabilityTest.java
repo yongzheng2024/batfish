@@ -1,5 +1,5 @@
-package org.batfish.minesweeper.smt;
-
+// package org.batfish.minesweeper.smt;
+//
 // import static java.util.Collections.singleton;
 import static org.batfish.minesweeper.smt.matchers.SmtReachabilityAnswerElementMatchers.hasVerificationResult;
 // import static org.batfish.minesweeper.smt.matchers.VerificationResultMatchers.hasFailures;
@@ -46,17 +46,18 @@ public class SmtReachabilityTest {
         Batfish batfish = BatfishTestUtils.initBatfish(new TreeMap<>(), path);
 
         /** Replace network ID and snapshot ID with the actual ID at your local disk. */
-        NetworkId networkId = new NetworkId("d6a9222c-562d-4a81-a8b9-17c55d800dbd");
+        // reachability scenario1
+        NetworkId networkId = new NetworkId("5e368f10-32db-4465-95fa-d9b4d75e419f");
 
-        // reachability true (without interface's access-list)
-        SnapshotId snapshotId = new SnapshotId("37394fd6-1712-4961-850f-bb0527094100");
-        // reachability false (without interface's access-list)
-        // SnapshotId snapshotId = new SnapshotId("14c875ec-f730-4267-b628-64a27194b77a");
+        // snapshot-reachability-0001: reachability true (without interface's access-list)
+        SnapshotId snapshotId = new SnapshotId("94a6ae45-b6a5-4946-a665-6756d9fb7517");
+        // snapshot-reachability-0002: reachability false (without interface's access-list)
+        // SnapshotId snapshotId = new SnapshotId("dccc87a7-7b0f-4ccb-98b1-1747034bfc8d");
 
-        // reachability true（with interface's access-list)
-        // SnapshotId snapshotId = new SnapshotId("e551f896-7b2c-49e6-aad2-928e63f38a3f");
-        // reachability false (with interface's access-list)
-        // SnapshotId snapshotId = new SnapshotId("f94b2191-a590-42ed-a7f8-a45174482734");
+        // snapshot-reachability-0003: reachability true（with interface's access-list)
+        // SnapshotId snapshotId = new SnapshotId("2eaa248d-8e42-4858-8a72-a402274ab7cd");
+        // snapshot-reachability-0004: reachability false (with interface's access-list)
+        // SnapshotId snapshotId = new SnapshotId("d4a14ef1-3149-4a82-baeb-37f65dd64f0e");
 
         NetworkSnapshot snapshot = new NetworkSnapshot(networkId, snapshotId);
         SortedMap<String, Configuration> configs = batfish.loadConfigurations(snapshot);
@@ -75,10 +76,14 @@ public class SmtReachabilityTest {
     public void testOneFailure() {
         final ReachabilityQuestion question = new ReachabilityQuestion();
         question.setIngressNodeRegex("as2border1");
+        // test case 0001
         // question.setFinalNodeRegex("as1border1");
         // question.setFinalIfaceRegex("GigabitEthernet1/0");
+        // test case 0002
         question.setFinalNodeRegex("as1core1");
         question.setFinalIfaceRegex("GigabitEthernet1/0");
+        // question.setFinalNodeRegex("as3border2");
+        // question.setFinalIfaceRegex("GigabitEthernet1/0");
         // question.setFailures(1);
 
         final AnswerElement answer = Answerer.create(question, _batfish).answer(_batfish.getSnapshot());
