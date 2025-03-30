@@ -1053,7 +1053,7 @@ public class Encoder {
         String policyName = routingPolicyEntry.getKey();
         RoutingPolicy routingPolicy = routingPolicyEntry.getValue();
         List<Statement> statements = routingPolicy.getStatements();
-        initConfigurationConstants(statements, hostName + "_" + policyName);
+        initConfigurationConstants(statements, "Config-" + hostName + "_" + policyName);
       }
     }
   }
@@ -1211,11 +1211,18 @@ public class Encoder {
     }
 
     if (expr instanceof MatchPrefixSet) {
-      // TODO: implement me
-      // {}  // do nothing
-      MatchPrefixSet mps = (MatchPrefixSet) expr;
-      mps.initSmtVariable(_ctx, configVarPrefix);
+      // TODO: check here and implement it when needed
+      // exclude the following routing policy
+      //   * BGP_COMMON_EXPORT_POLICY ~default
+      //   * BGP_PEER_EXPORT_POLICY ~default
+      //   * BGP_REDISTRIBUTION ~default
+      //   * OSPF_EXPORT_POLICY ~default
+      //   * AGGREGATE_ROUTE_GEN
 
+      if (!configVarPrefix.contains("default")) {
+        MatchPrefixSet mps = (MatchPrefixSet) expr;
+        mps.initSmtVariable(_ctx, configVarPrefix);
+      }
     } else if (expr instanceof MatchPrefix6Set) {
       // TODO: implement me
       {}  // do nothing
