@@ -1096,6 +1096,12 @@ public class Encoder {
         }
 
       } else if (stmt instanceof If) {
+        // IF
+        //   guard
+        // THEN
+        //   trueStatements
+        // ELSE
+        //   falseStatement
         If i = (If) stmt;
         initConfigurationConstants(i.getGuard(), configVarPrefix);
         initConfigurationConstants(i.getTrueStatements(), configVarPrefix);
@@ -1219,10 +1225,15 @@ public class Encoder {
       //   * OSPF_EXPORT_POLICY ~default
       //   * AGGREGATE_ROUTE_GEN
 
+      // include the following routing policy
+      //   * route-map as1_to_as2
+      //   * route-map as2_to_as1
+
       if (!configVarPrefix.contains("default")) {
         MatchPrefixSet mps = (MatchPrefixSet) expr;
         mps.initSmtVariable(_ctx, configVarPrefix);
       }
+
     } else if (expr instanceof MatchPrefix6Set) {
       // TODO: implement me
       {}  // do nothing

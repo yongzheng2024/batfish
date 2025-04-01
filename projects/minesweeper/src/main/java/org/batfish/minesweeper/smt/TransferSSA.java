@@ -297,6 +297,8 @@ class TransferSSA {
       return result.setReturnValue(acc);
 
     } else if (e instanceof NamedPrefixSet) {
+      // FIXME: implement relevant configuration constant -> SMT symbolic variable
+      //        annotated by yongzheng on 20250331
       NamedPrefixSet x = (NamedPrefixSet) e;
       String name = x.getName();
       RouteFilterList fl = conf.getRouteFilterLists().get(name);
@@ -375,15 +377,18 @@ class TransferSSA {
     // TODO: right now everything is IPV4
     if (expr instanceof MatchIpv4) {
       pCur.debug("MatchIpv4");
+      System.out.println("MatchIpv4");
       return fromExpr(_enc.mkTrue());
     }
     if (expr instanceof MatchIpv6) {
       pCur.debug("MatchIpv6");
+      System.out.println("MatchIpv6");
       return fromExpr(_enc.mkFalse());
     }
 
     if (expr instanceof Conjunction) {
       pCur.debug("Conjunction");
+      System.out.println("Conjunction");
       Conjunction c = (Conjunction) expr;
       BoolExpr acc = _enc.mkTrue();
       TransferResult<BoolExpr, BoolExpr> result = new TransferResult<>();
@@ -398,6 +403,7 @@ class TransferSSA {
 
     if (expr instanceof Disjunction) {
       pCur.debug("Disjunction");
+      System.out.println("Disjunction");
       Disjunction d = (Disjunction) expr;
       BoolExpr acc = _enc.mkFalse();
       TransferResult<BoolExpr, BoolExpr> result = new TransferResult<>();
@@ -412,6 +418,7 @@ class TransferSSA {
 
     if (expr instanceof ConjunctionChain) {
       pCur.debug("ConjunctionChain");
+      System.out.println("ConjunctionChain");
       ConjunctionChain d = (ConjunctionChain) expr;
       List<BooleanExpr> conjuncts = new ArrayList<>(d.getSubroutines());
       if (pCur.getDefaultPolicy() != null) {
@@ -438,6 +445,7 @@ class TransferSSA {
 
     if (expr instanceof FirstMatchChain) {
       pCur.debug("FirstMatchChain");
+      System.out.println("FirstMatchChain");
       FirstMatchChain chain = (FirstMatchChain) expr;
       List<BooleanExpr> chainPolicies = new ArrayList<>(chain.getSubroutines());
       if (pCur.getDefaultPolicy() != null) {
@@ -464,12 +472,14 @@ class TransferSSA {
 
     if (expr instanceof Not) {
       pCur.debug("mkNot");
+      System.out.println("mkNot");
       Not n = (Not) expr;
       TransferResult<BoolExpr, BoolExpr> result = compute(n.getExpr(), pCur);
       return result.setReturnValue(_enc.mkNot(result.getReturnValue()));
     }
 
     if (expr instanceof MatchProtocol) {
+      System.out.println("MatchProtocol");
       MatchProtocol mp = (MatchProtocol) expr;
       Set<RoutingProtocol> rps = mp.getProtocols();
       if (rps.size() > 1) {
@@ -496,6 +506,7 @@ class TransferSSA {
     if (expr instanceof MatchPrefixSet) {
       // TODO: added by yongzheng in 20250312
       pCur.debug("MatchPrefixSet");
+      System.out.println("MatchPrefixSet");
       MatchPrefixSet m = (MatchPrefixSet) expr;
       // For BGP, may change prefix length
       TransferResult<BoolExpr, BoolExpr> result =
@@ -505,10 +516,12 @@ class TransferSSA {
       // TODO: implement me
     } else if (expr instanceof MatchPrefix6Set) {
       pCur.debug("MatchPrefix6Set");
+      System.out.println("MatchPrefix6Set");
       return fromExpr(_enc.mkFalse());
 
     } else if (expr instanceof CallExpr) {
       pCur.debug("CallExpr");
+      System.out.println("CallExpr");
       // TODO: the call can modify certain fields, need to keep track of these variables
       CallExpr c = (CallExpr) expr;
       String name = c.getCalledPolicyName();
@@ -522,6 +535,7 @@ class TransferSSA {
 
     } else if (expr instanceof WithEnvironmentExpr) {
       pCur.debug("WithEnvironmentExpr");
+      System.out.println("WithEnvironmentExpr");
       // TODO: this is not correct
       WithEnvironmentExpr we = (WithEnvironmentExpr) expr;
       // TODO: postStatements() and preStatements()
@@ -529,6 +543,7 @@ class TransferSSA {
 
     } else if (expr instanceof MatchCommunitySet) {
       pCur.debug("MatchCommunitySet");
+      System.out.println("MatchCommunitySet");
       MatchCommunitySet mcs = (MatchCommunitySet) expr;
       return fromExpr(matchCommunitySet(_conf, mcs.getExpr(), pCur.getData()));
 
@@ -537,17 +552,21 @@ class TransferSSA {
       switch (b.getType()) {
         case CallExprContext:
           pCur.debug("CallExprContext");
+          System.out.println("CallExprContext");
           return fromExpr(
               _enc.mkBool(pCur.getCallContext() == TransferParam.CallContext.EXPR_CALL));
         case CallStatementContext:
           pCur.debug("CallStmtContext");
+          System.out.println("CallStmtContext");
           return fromExpr(
               _enc.mkBool(pCur.getCallContext() == TransferParam.CallContext.STMT_CALL));
         case True:
           pCur.debug("True");
+          System.out.println("True");
           return fromExpr(_enc.mkTrue());
         case False:
           pCur.debug("False");
+          System.out.println("False");
           return fromExpr(_enc.mkFalse());
         default:
           throw new BatfishException(
@@ -555,6 +574,7 @@ class TransferSSA {
       }
     } else if (expr instanceof MatchAsPath) {
       pCur.debug("MatchAsPath");
+      System.out.println("MatchAsPath");
       System.out.println("Warning: use of unimplemented feature MatchAsPath");
       return fromExpr(_enc.mkFalse());
     }
