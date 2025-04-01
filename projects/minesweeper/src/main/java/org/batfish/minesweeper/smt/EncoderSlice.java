@@ -532,6 +532,7 @@ class EncoderSlice {
    * Initializes the logical graph edges for the protocol-centric view
    */
   private void buildEdgeMap() {
+    // getProtocols() - call _optimizations.getProtocols()
     for (Entry<String, List<Protocol>> entry : getProtocols().entrySet()) {
       String router = entry.getKey();
       for (Protocol p : entry.getValue()) {
@@ -659,8 +660,8 @@ class EncoderSlice {
 
       for (Protocol proto : getProtocols().get(router)) {
         // Add redistribution variables
-        Set<Protocol> r = _logicalGraph.getRedistributedProtocols().get(router, proto);
-        assert (r != null);
+        // Set<Protocol> r = _logicalGraph.getRedistributedProtocols().get(router, proto);
+        // assert (r != null);
 
         Boolean useSingleExport = _optimizations.getSliceCanKeepSingleExportVar().get(router, proto);
         assert (useSingleExport != null);
@@ -764,11 +765,11 @@ class EncoderSlice {
           }
         }
 
-        // defined in the above line
-        // Set<Protocol> r = _logicalGraph.getRedistributedProtocols().get(router, proto);
+        // Add the ospf redistributed record if needed
+        Set<Protocol> r = _logicalGraph.getRedistributedProtocols().get(router, proto);
+        assert (r != null);
 
         if (proto.isOspf() && r.size() > 1 && !exportGraphEdgeMap.isEmpty()) {
-          // Add the ospf redistributed record if needed
           String rname =
               String.format(
                   "%d_%s%s_%s_%s",
@@ -788,9 +789,7 @@ class EncoderSlice {
         .forEach(
             (router, edgeLists) -> {
               for (Protocol proto : getProtocols().get(router)) {
-
                 for (ArrayList<LogicalEdge> edgeList : edgeLists.get(proto)) {
-
                   for (LogicalEdge e : edgeList) {
 
                     GraphEdge edge = e.getEdge();
@@ -801,7 +800,6 @@ class EncoderSlice {
                     // System.out.println("edge: " + edge + ", " + e.getEdgeType());
 
                     if (edge.getPeer() != null) {
-
                       if (e.getEdgeType() == EdgeType.IMPORT) {
                         m = exportInverseMap.get(edge.getPeer()).get(proto);
                       } else {
@@ -879,6 +877,7 @@ class EncoderSlice {
               if (e.getEdgeType() == EdgeType.IMPORT) {
                 GraphEdge ge = e.getEdge();
                 BgpActivePeerConfig n = getGraph().getEbgpNeighbors().get(ge);
+
                 if (n != null && ge.getEnd() == null) {
 
                   if (!isMainSlice()) {
@@ -919,35 +918,52 @@ class EncoderSlice {
    */
   private void initVariables() {
     // initialize LogicalGraph _logicalEdges (protocol-centric)
+    //                         ^^^^^^^^^^^^^ Table2<String, Protocol, List<ArrayList<LogicalEdge>>>
+    //   via call _optimizations.getProtocols()
     buildEdgeMap();
 
-    // initialize SymbolicDecisions _controlForwarding and _dataForwarding
-    // and storage this variables in _allVariables
+    // initialize SymbolicDecisions _controlForwarding
+    //                              ^^^^^^^^^^^^^^^^^^ Table2<String, GraphEdge, BoolExpr> 
+    // initialize SymbolicDecisions _dataForwarding
+    //                              ^^^^^^^^^^^^^^^ Table2<String, GraphEdge, BoolExpr> 
+    //   and storage all these variables in _allVariables
     addForwardingVariables();
 
-    // initialize SymbolicDecisions _bestNeighbor and _bestNeighborPerProtocol
-    // initialize SymbolicEnum (Protocol) and storage in _allVariables
-    // and add constraint (BoolExpr, < max value) to Encoder model
+    // initialize SymbolicDecisions _bestNeighbor            (OVERALL_BEST)
+    //                              ^^^^^^^^^^^^^ Map<String, SymbolicRoute>
+    // initialize SymbolicDecisions _bestNeighborPerProtocol (PROTOCOL_BEST)
+    //                              ^^^^^^^^^^^^^^^^^^^^^^^^ Map<String, Ptocol, SymbolicRoute>
+    // initialize SymbolicEnum protocolHistory (all protocols per router)
+    //   and storage SymbolicEnum protocolHistory in _allVariables
     // initialize SymbolicRoute for BestNeighbor and BestNeighborPerProtocol
+    //   and storage all SymbolicRoute variables in _allSymbolicRoutes
     addBestVariables();
 
-    // initialize _ospfRedistributed
-    // initialize LogicalGraph _logicalEdges that involving
-    //     Table2<String, Protocol, List<ArrayList<LogicalEdge>>>
-    //     all importEdgeList and exportEdgeList (per Protocol and GraphEdge)
-    // initialize LogicalGraph _otherEnd, i.e. Map<LogicalEdge, LogicalEdge>
-    // and storage all meaningful SymbolicRoute for 
-    //     all importEdgeList, exportEdgeList, and _ospfRedistributed
-    //     not involving the connected interfaces that aren't relevant
+    // initialize LogicalGraph _logicalEdges
+    //   * SINGLE-EXPORT and EXPORT for non-static and non-connected (i.e. BGP and OSPF)
+    //   * IMPORT for all protocol
+    //     via call _optimizations.getSliceCanCombineImportExportVars()
+    //     and exclude the connected interface that aren't relevant
+    //   and storage all the relevant LogicalEdge to LogicalGraph _logicalEdge
+    //   and storage all meaningful SymbolicRoute in _allSymbolicRoutes
+    // initialize _ospfRedistributed (redistributing other protocol's route)
+    //            ^^^^^^^^^^^^^^^^^^ Map<String, SymbolicRoute>
+    //   and storage relevant SymbolicRoute variable in _allSymbolicRoutes
+    // initialize LogicalGraph _otherEnd, i.e. LE1 <-> LE2 and LE2 <-> LE1
+    //                         ^^^^^^^^^ Map<LogicalEdge, LogicalEdge>
     addSymbolicRecords();
 
-    // initialize SymbolicDecisions _choiceVariables according to 
-    //     call collectAllImportLogicalEdges
-    // _choiceVariables is helper for encoding _controlForwarding
+    // initialize SymbolicDecisions _choiceVariables
+    //                              ^^^^^^^^^^^^^^^^ Table3<String, Protocol, LogicalEdge, BoolExpr>
+    //   _choiceVariables is helper for encoding _controlForwarding
+    //   and storage the relevant variable in _allVariables
     addChoiceVariables();
 
     // initialize LogicalGraph _environmentVars for main encoder slice
-    // and use the main encoder slice _environmentVars for other slice
+    //                         ^^^^^^^^^^^^^^^^ Map<LogicalEdge, SymbolicRoute>
+    //   focus on BGP IMPORT
+    //   use the main encoder slice _environmentVars for other slice
+    //   and storage relevant SymbolicRoute in _allSymbolicRoutes
     addEnvironmentVariables();
   }
 
@@ -1836,7 +1852,7 @@ class EncoderSlice {
     // this router's String (HostName) router
     // this router's GraphEdge         ge
     // this router's Interface         iface
-    // this router's Configuration     conf
+    // this router's Configuration     conf (updated)
     // this router's Protocol          proto
 
     SymbolicRoute vars = e.getSymbolicRecord();
@@ -2027,6 +2043,8 @@ class EncoderSlice {
               mkAnd(mkNot(loop), active, varsOther.getPermitted(), receiveMessage, notFailedNode);
 
           BoolExpr importFunction;
+          // NOTE: find a RoutingPolicy (check origianl or updated ?)
+          //       annoteated by yongzheng on 20250331
           // import routing policy in specific configuration
           RoutingPolicy pol = getGraph().findImportRoutingPolicy(router, proto, e.getEdge());
 
@@ -2048,6 +2066,8 @@ class EncoderSlice {
           // TODO: annotated by yongzheng on 20250325
           // call TransferSSA constructor method
           // call TransferSSA compute method
+          System.out.println();
+          System.out.println("IMPORT FUNCTION: " + router + " " + varsOther.getName());
           TransferSSA f =
               new TransferSSA(this, conf, varsOther, vars, proto, statements, cost, ge, false);
           importFunction = f.compute();
@@ -2183,6 +2203,8 @@ class EncoderSlice {
                   : pol.getStatements());
         }
 
+        System.out.println();
+        System.out.println("EXPORT FUNCTION: " + router + " " + varsOther.getName());
         TransferSSA f =
             new TransferSSA(this, conf, varsOther, vars, proto, statements, cost, ge, true);
         acc = f.compute();
