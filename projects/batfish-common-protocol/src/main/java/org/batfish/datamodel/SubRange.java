@@ -12,8 +12,9 @@ import javax.annotation.Nullable;
 import org.batfish.common.BatfishException;
 
 import com.microsoft.z3.Context;
+import com.microsoft.z3.Solver;
+import com.microsoft.z3.BoolExpr;
 import com.microsoft.z3.ArithExpr;
-// import com.microsoft.z3.BitVecExpr;
 
 /** A closed interval of integers. */
 public final class SubRange implements Serializable, Comparable<SubRange> {
@@ -162,12 +163,15 @@ public final class SubRange implements Serializable, Comparable<SubRange> {
   private transient ArithExpr _configVarStart;
   private transient ArithExpr _configVarEnd;
 
-  public void initSmtVariable(Context context, String configVarPrefix) {
-    String configVarNameStart = configVarPrefix + "prefix-length-start-" + _start;
-    String configVarNameEnd = configVarPrefix + "prefix-length-end-" + _end;
+  public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
+    _configVarStart = context.mkIntConst(configVarPrefix + "prefix_range_start");
+    _configVarEnd = context.mkIntConst(configVarPrefix + "prefix_range_end");
 
-    _configVarStart = context.mkIntConst(configVarNameStart);
-    _configVarEnd = context.mkIntConst(configVarNameEnd);
+    // add configuration constant constraints
+    BoolExpr configVarStartConstraint = context.mkEq(_configVarStart, context.mkInt(_start));
+    BoolExpr configVarEndConstraint = context.mkEq(_configVarEnd, context.mkInt(_end));
+    solver.add(configVarStartConstraint);
+    solver.add(configVarEndConstraint);
 
     // configure enable smt variable flag to true
     _enableSmtVariable = true;

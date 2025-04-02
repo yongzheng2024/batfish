@@ -13,6 +13,7 @@ import org.batfish.datamodel.routing_policy.Environment;
 import org.batfish.datamodel.routing_policy.Result;
 
 import com.microsoft.z3.Context;
+import com.microsoft.z3.Solver;
 
 /**
  * Boolean expression that tests whether an IPv4 prefix extracted from an {@link Environment} using
@@ -89,7 +90,7 @@ public final class MatchPrefixSet extends BooleanExpr {
   }
 
   /** Add configuration constant - SMT symbolic variable */
-  public final void initSmtVariable(Context context, String configVarPrefix) {
-    _prefixSet.initSmtVariable(context, configVarPrefix);
+  public final void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
+    _prefixSet.initSmtVariable(context, solver, configVarPrefix);
   }
 }

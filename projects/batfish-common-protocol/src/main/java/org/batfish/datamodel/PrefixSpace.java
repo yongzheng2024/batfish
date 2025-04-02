@@ -19,6 +19,7 @@ import java.util.concurrent.ConcurrentMap;
 import javax.annotation.Nullable;
 
 import com.microsoft.z3.Context;
+import com.microsoft.z3.Solver;
 
 /** Describes a collection of {@link Prefix}es and {@link PrefixRange}s */
 public class PrefixSpace implements Serializable {
@@ -345,9 +346,9 @@ public class PrefixSpace implements Serializable {
   }
 
   /** Add configuration constant - SMT symbolic variable */
-  public void initSmtVariable(Context context, String configVarPrefix) {
+  public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
     for (PrefixRange prefixRange : getPrefixRanges()) {
-      prefixRange.initSmtVariable(context, configVarPrefix);
+      prefixRange.initSmtVariable(context, solver, configVarPrefix);
     }
   }
 }

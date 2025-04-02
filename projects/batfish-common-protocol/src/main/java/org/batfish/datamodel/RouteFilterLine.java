@@ -5,6 +5,10 @@ import static com.google.common.base.Preconditions.checkArgument;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.MoreObjects;
+import com.microsoft.z3.Context;
+import com.microsoft.z3.Solver;
+import com.microsoft.z3.BoolExpr;
+
 import java.io.Serializable;
 import java.util.Objects;
 import javax.annotation.Nonnull;
@@ -42,6 +46,9 @@ public final class RouteFilterLine implements Serializable {
     _action = action;
     _ipWildcard = ipWildcard;
     _lengthRange = lengthRange;
+
+    // initialize enable smt variable flag to false
+    _enableSmtVariable = false;
   }
 
   public RouteFilterLine(LineAction action, Prefix prefix, SubRange lengthRange) {
@@ -99,5 +106,34 @@ public final class RouteFilterLine implements Serializable {
         .add("IpWildCard", _ipWildcard)
         .add("LengthRange", _lengthRange)
         .toString();
+  }
+
+  /** Add configuration constant - SMT symbolic variable */
+  private boolean _enableSmtVariable;
+
+  private transient BoolExpr _configVarAction;
+
+  public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
+    long prefixIp = _ipWildcard.getIp().asLong();
+    _configVarAction = context.mkBoolConst(configVarPrefix + prefixIp + "_action");
+
+    _ipWildcard.initSmtVariable(context, solver, configVarPrefix);
+    _lengthRange.initSmtVariable(context, solver, configVarPrefix + prefixIp + "_");
+
+    // add relevant configuration constant constraint
+    BoolExpr configVarActionConstraint = context.mkEq(
+            _configVarAction, context.mkBool(_action == LineAction.PERMIT));
+    solver.add(configVarActionConstraint);
+
+    // configure enable smt variable flag to true
+    _enableSmtVariable = true;
+  }
+
+  public boolean getEnableSmtVariable() {
+    return _enableSmtVariable;
+  }
+
+  public BoolExpr getConfigVarAction() {
+    return _configVarAction;
   }
 }

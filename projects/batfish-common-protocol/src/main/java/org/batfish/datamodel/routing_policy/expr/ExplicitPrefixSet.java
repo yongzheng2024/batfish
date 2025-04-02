@@ -3,6 +3,7 @@ package org.batfish.datamodel.routing_policy.expr;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.microsoft.z3.Context;
+import com.microsoft.z3.Solver;
 import org.batfish.datamodel.Prefix;
 import org.batfish.datamodel.PrefixSpace;
 import org.batfish.datamodel.routing_policy.Environment;
@@ -67,7 +68,7 @@ public class ExplicitPrefixSet extends PrefixSetExpr {
 
   /** Add configuration constant - SMT symbolic variable */
   @Override
-  public final void initSmtVariable(Context context, String configVarPrefix) {
-    _prefixSpace.initSmtVariable(context, configVarPrefix);
+  public final void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
+    _prefixSpace.initSmtVariable(context, solver, configVarPrefix);
   }
 }

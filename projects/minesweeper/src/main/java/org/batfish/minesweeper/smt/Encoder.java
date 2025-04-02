@@ -48,6 +48,8 @@ import java.util.stream.Collectors;
 import org.batfish.common.BatfishException;
 import org.batfish.datamodel.Configuration;
 import org.batfish.datamodel.RoutingProtocol;
+import org.batfish.datamodel.RouteFilterList;
+import org.batfish.datamodel.RouteFilterLine;
 import org.batfish.datamodel.routing_policy.RoutingPolicy;
 import org.batfish.datamodel.routing_policy.expr.AsPathListExpr;
 import org.batfish.datamodel.routing_policy.expr.BooleanExpr;
@@ -236,6 +238,8 @@ public class Encoder {
 
     // initialize configuration constant - SMT symbolic variable
     initConfigurationConstants();
+
+    System.out.println(_solver.toString());
 
     // initialize _symbolicFailures and _allVariables, which involving
     //   + all GraphEdge getPeer() == null according to _edgeMap  (_failedEdgeLinks)
@@ -1053,12 +1057,26 @@ public class Encoder {
         String policyName = routingPolicyEntry.getKey();
         RoutingPolicy routingPolicy = routingPolicyEntry.getValue();
         List<Statement> statements = routingPolicy.getStatements();
-        initConfigurationConstants(statements, "Config-" + hostName + "_" + policyName);
+        initConfigurationConstants(
+            statements, "Config_" + hostName + "_RoutingPolicy_" + policyName + "_");
+      }
+
+      for (Map.Entry<String, RouteFilterList> routeFilterListEntry : config.getRouteFilterLists().entrySet()) {
+        String routerFilterListName = routeFilterListEntry.getKey();
+        RouteFilterList routeFilterList = routeFilterListEntry.getValue();
+        List<RouteFilterLine> lines = routeFilterList.getLines();
+
+        for (RouteFilterLine line : lines) {
+          line.initSmtVariable(
+              _ctx, _solver,
+              "Config_" + hostName + "_RouteFilterList_" + routerFilterListName + "_");
+        }
       }
     }
   }
 
-  private void initConfigurationConstants(List<Statement> statements, String configVarPrefix) {
+  private void initConfigurationConstants(
+      List<Statement> statements, String configVarPrefix) {
     for (Statement stmt : statements) {
       if (stmt instanceof StaticStatement) {
         // TODO: check here and implement it when needed
@@ -1231,7 +1249,7 @@ public class Encoder {
 
       if (!configVarPrefix.contains("default")) {
         MatchPrefixSet mps = (MatchPrefixSet) expr;
-        mps.initSmtVariable(_ctx, configVarPrefix);
+        mps.initSmtVariable(_ctx, _solver, configVarPrefix);
       }
 
     } else if (expr instanceof MatchPrefix6Set) {

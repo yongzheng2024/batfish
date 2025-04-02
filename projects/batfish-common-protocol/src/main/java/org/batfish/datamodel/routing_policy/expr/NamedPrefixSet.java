@@ -9,6 +9,7 @@ import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 import com.microsoft.z3.Context;
+import com.microsoft.z3.Solver;
 import org.batfish.datamodel.Prefix;
 import org.batfish.datamodel.RouteFilterList;
 import org.batfish.datamodel.routing_policy.Environment;
@@ -65,7 +66,7 @@ public final class NamedPrefixSet extends PrefixSetExpr {
 
   /** Add configuration constant - SMT symbolic variable */
   @Override
-  public void initSmtVariable(Context context, String configVarPrefix) {
+  public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
     // TODO: implement me
     {}  // do nothing
   }

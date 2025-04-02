@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import java.util.Objects;
 
 import com.microsoft.z3.Context;
+import com.microsoft.z3.Solver;
 import org.batfish.datamodel.Prefix;
 import org.batfish.datamodel.routing_policy.Environment;
 import org.batfish.datamodel.routing_policy.expr.PrefixSetExpr;
@@ -69,7 +70,7 @@ public final class AbstractionPrefixSet extends PrefixSetExpr {
 
   /** Add configuration constant - SMT symbolic variable */
   @Override
-  public void initSmtVariable(Context context, String configVarPrefix) {
+  public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
     // TODO: implement me
     {}  // do nothing
   }

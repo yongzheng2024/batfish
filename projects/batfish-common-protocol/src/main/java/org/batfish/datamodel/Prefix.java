@@ -15,6 +15,8 @@ import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 import com.microsoft.z3.Context;
+import com.microsoft.z3.Solver;
+import com.microsoft.z3.BoolExpr;
 import com.microsoft.z3.ArithExpr;
 import com.microsoft.z3.BitVecExpr;
 
@@ -117,13 +119,48 @@ public final class Prefix implements Comparable<Prefix>, Serializable {
     _enableSmtVariable = false;
   }
 
+  private Prefix(
+      Ip ip, int prefixLength, BitVecExpr configVarIp, BitVecExpr configVarMask,
+      ArithExpr configVarLength) {
+    checkArgument(
+            prefixLength >= 0 && prefixLength <= MAX_PREFIX_LENGTH,
+            "Invalid prefix length %s",
+            prefixLength);
+    if (ip.valid()) {
+      // TODO: stop using Ip as a holder for invalid values.
+      _ip = ip.getNetworkAddress(prefixLength);
+    } else {
+      _ip = ip;
+    }
+    _prefixLength = prefixLength;
+
+    // copy configuration symbolic variables and relevant flag
+    _configVarIp = configVarIp;
+    _configVarMask = configVarMask;
+    _configVarLength = configVarLength;
+    _enableSmtVariable = true;
+  }
+
   public static Prefix create(Ip ip, int prefixLength) {
     Prefix p = new Prefix(ip, prefixLength);
     return CACHE.getUnchecked(p);
   }
 
+  public static Prefix create(
+      Ip ip, int prefixLength, BitVecExpr configVarIp, BitVecExpr configVarMask,
+      ArithExpr configVarLength) {
+    Prefix p = new Prefix(ip, prefixLength, configVarIp, configVarMask, configVarLength);
+    return CACHE.getUnchecked(p);
+  }
+
   public static Prefix create(Ip address, Ip mask) {
     return create(address, mask.numSubnetBits());
+  }
+
+  public static Prefix create(
+      Ip address, Ip mask, BitVecExpr configVarIp, BitVecExpr configVarMask,
+      ArithExpr configVarLength) {
+    return create(address, mask.numSubnetBits(), configVarIp, configVarMask, configVarLength);
   }
 
   /** Return the longest prefix that contains both input prefixes. */
@@ -264,7 +301,7 @@ public final class Prefix implements Comparable<Prefix>, Serializable {
   }
 
   /** Add configuration constant - SMT symbolic variable */
-  // private static final long serialVersionUID = -7242147700205250810L;
+  private static int BITVEC_EXPR_SIZE = 32;
 
   private boolean _enableSmtVariable;
 
@@ -272,18 +309,24 @@ public final class Prefix implements Comparable<Prefix>, Serializable {
   private transient BitVecExpr _configVarMask;
   private transient ArithExpr _configVarLength;
 
-  public void initSmtVariable(Context context, String configVarPrefix) {
+  public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
     // FIXME: if prefix length is 0, then the encoding of ip / mask / length ?
     long prefixIp = _ip.asLong();
-    String configVarNameIp = configVarPrefix + "prefix-ip-" + prefixIp;
-    String configVarNameMask = 
-        configVarPrefix + "prefix-mask-" + prefixIp + "-" + _prefixLength;
-    String configVarNameLength = 
-        configVarPrefix + "prefix-length-" + prefixIp + "-" + _prefixLength;
 
-    _configVarIp = context.mkBVConst(configVarNameIp, MAX_PREFIX_LENGTH);
-    _configVarMask = context.mkBVConst(configVarNameMask, MAX_PREFIX_LENGTH);
-    _configVarLength = context.mkIntConst(configVarNameLength);
+    _configVarIp = context.mkBVConst(configVarPrefix + prefixIp + "_ip", BITVEC_EXPR_SIZE);
+    _configVarMask = context.mkBVConst(configVarPrefix + prefixIp + "_mask", BITVEC_EXPR_SIZE);
+    _configVarLength = context.mkIntConst(configVarPrefix + prefixIp + "_length");
+
+    // add relevant configuration constant constraints
+    BoolExpr configVarIpConstraint = context.mkEq(
+        _configVarIp, context.mkBV(prefixIp, BITVEC_EXPR_SIZE));
+    BoolExpr configVarMaskConstraint = context.mkEq(
+        _configVarMask, context.mkBV(getPrefixWildcard().asLong(), BITVEC_EXPR_SIZE));
+    BoolExpr configVarLengthConstraint = context.mkEq(
+        _configVarLength, context.mkInt(_prefixLength));
+    solver.add(configVarIpConstraint);
+    solver.add(configVarMaskConstraint);
+    solver.add(configVarLengthConstraint);
 
     // config enable smt variable flag to true
     _enableSmtVariable = true;

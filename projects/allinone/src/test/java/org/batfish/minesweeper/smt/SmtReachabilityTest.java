@@ -46,18 +46,13 @@ public class SmtReachabilityTest {
         Batfish batfish = BatfishTestUtils.initBatfish(new TreeMap<>(), path);
 
         /** Replace network ID and snapshot ID with the actual ID at your local disk. */
-        // reachability scenario1
-        NetworkId networkId = new NetworkId("5e368f10-32db-4465-95fa-d9b4d75e419f");
+        // reachability scenario2
+        NetworkId networkId = new NetworkId("9ec8d069-f5bb-47af-a840-69de32778a74");
 
         // snapshot-reachability-0001: reachability true (without interface's access-list)
-        SnapshotId snapshotId = new SnapshotId("94a6ae45-b6a5-4946-a665-6756d9fb7517");
+        // SnapshotId snapshotId = new SnapshotId("0a84532f-9530-422d-aa2c-8cc825f05dae");
         // snapshot-reachability-0002: reachability false (without interface's access-list)
-        // SnapshotId snapshotId = new SnapshotId("dccc87a7-7b0f-4ccb-98b1-1747034bfc8d");
-
-        // snapshot-reachability-0003: reachability true（with interface's access-list)
-        // SnapshotId snapshotId = new SnapshotId("2eaa248d-8e42-4858-8a72-a402274ab7cd");
-        // snapshot-reachability-0004: reachability false (with interface's access-list)
-        // SnapshotId snapshotId = new SnapshotId("d4a14ef1-3149-4a82-baeb-37f65dd64f0e");
+        SnapshotId snapshotId = new SnapshotId("c26f721d-a03b-4fbc-bd9f-b7b99b35f5b4");
 
         NetworkSnapshot snapshot = new NetworkSnapshot(networkId, snapshotId);
         SortedMap<String, Configuration> configs = batfish.loadConfigurations(snapshot);

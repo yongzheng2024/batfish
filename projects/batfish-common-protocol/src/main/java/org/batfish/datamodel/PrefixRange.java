@@ -11,8 +11,7 @@ import org.batfish.common.BatfishException;
 // import com.google.common.base.Preconditions;
 
 import com.microsoft.z3.Context;
-// import com.microsoft.z3.ArithExpr;
-// import com.microsoft.z3.BitVecExpr;
+import com.microsoft.z3.Solver;
 
 public final class PrefixRange implements Serializable, Comparable<PrefixRange> {
 
@@ -125,10 +124,10 @@ public final class PrefixRange implements Serializable, Comparable<PrefixRange> 
   /** Add configuration constant - SMT symbolic variable */
   private boolean _enableSmtVariable;
 
-  public void initSmtVariable(Context context, String configVarPrefix) {
+  public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
     long prefixIp = _prefix.getStartIp().asLong();
-    _prefix.initSmtVariable(context, configVarPrefix);
-    _lengthRange.initSmtVariable(context, configVarPrefix + prefixIp + "-");
+    _prefix.initSmtVariable(context, solver, configVarPrefix);
+    _lengthRange.initSmtVariable(context, solver, configVarPrefix + prefixIp + "_");
 
     // configure enable smt variable flag to true
     _enableSmtVariable = true;
