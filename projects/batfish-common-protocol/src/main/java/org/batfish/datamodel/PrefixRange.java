@@ -8,7 +8,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.batfish.common.BatfishException;
 
-// import com.google.common.base.Preconditions;
+import com.google.common.base.Preconditions;
 
 import com.microsoft.z3.Context;
 import com.microsoft.z3.Solver;
@@ -31,8 +31,19 @@ public final class PrefixRange implements Serializable, Comparable<PrefixRange> 
     }
     _lengthRange = lengthRange;
 
-    // initialize enable smt variable flag to false
-    _enableSmtVariable = false;
+    // check the prefix and lengthRange enable SMT variable flags
+    // all flags are true or all flags are false
+    Preconditions.checkState(
+        (prefix.getEnableSmtVariable() == lengthRange.getEnableSmtVariable()), 
+        "ERROR: PrefixRange:PrefixRange Prefix and SubRange enable SMT Variable");
+
+    if (prefix.getEnableSmtVariable() && lengthRange.getEnableSmtVariable()) {
+      // configure enable smt variable flag to true according to Prefix and SubRange
+      _enableSmtVariable = true;
+    } else {
+      // initialize enable smt variable flag to false
+      _enableSmtVariable = false;
+    }
   }
 
   /** Returns a {@link PrefixRange} that contains exactly the specified {@link Prefix}. */

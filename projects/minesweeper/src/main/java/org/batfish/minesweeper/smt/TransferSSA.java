@@ -221,13 +221,25 @@ class TransferSSA {
       if (!line.getIpWildcard().isPrefix()) {
         throw new BatfishException("non-prefix IpWildcards are unsupported");
       }
-      Prefix p = line.getIpWildcard().toPrefix();
-      SubRange r = line.getLengthRange();
-      PrefixRange range = new PrefixRange(p, r);
-      BoolExpr matches = _enc.isRelevantFor(other.getPrefixLength(), range);
-      BoolExpr action = _enc.mkBool(line.getAction() == LineAction.PERMIT);
-      acc = _enc.mkIf(matches, action, acc);
+
+      if (line.getEnableSmtVariable())  {
+        Prefix p = line.getIpWildcard().toPrefixWithSymbolicVariables();
+        SubRange r = line.getLengthRange();
+        PrefixRange range = new PrefixRange(p, r);
+        BoolExpr matches = _enc.isRelevantFor(other.getPrefixLength(), range);
+        BoolExpr action = line.getConfigVarAction();
+        acc = _enc.mkIf(matches, action, acc);
+
+      } else {
+        Prefix p = line.getIpWildcard().toPrefix();
+        SubRange r = line.getLengthRange();
+        PrefixRange range = new PrefixRange(p, r);
+        BoolExpr matches = _enc.isRelevantFor(other.getPrefixLength(), range);
+        BoolExpr action = _enc.mkBool(line.getAction() == LineAction.PERMIT);
+        acc = _enc.mkIf(matches, action, acc);
+      }
     }
+
     return acc;
   }
 
@@ -258,9 +270,11 @@ class TransferSSA {
           int start = r.getLengthRange().getStart();
           int end = r.getLengthRange().getEnd();
           Prefix pfx = r.getPrefix();
+
           if (start == end && start == pfx.getPrefixLength()) {
             String router = _conf.getHostname();
             Set<Prefix> origin = _enc.getOriginatedNetworks().get(router, Protocol.BGP);
+
             if (origin != null && origin.contains(pfx)) {
               // Compute static and connected routes
               Set<Prefix> ostatic = _enc.getOriginatedNetworks().get(router, Protocol.STATIC);
@@ -268,6 +282,7 @@ class TransferSSA {
               boolean hasStatic = ostatic != null && ostatic.contains(pfx);
               boolean hasConnected = oconn != null && oconn.contains(pfx);
               ArithExpr originLength = _enc.mkInt(pfx.getPrefixLength());
+
               if (hasStatic || hasConnected) {
                 BoolExpr directRoute = _enc.isRelevantFor(originLength, r);
                 ArithExpr newLength = _enc.mkIf(directRoute, originLength, otherLen);

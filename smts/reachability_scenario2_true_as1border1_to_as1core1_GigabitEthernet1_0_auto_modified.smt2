@@ -1,3 +1,327 @@
+(declare-fun Config_as1border2_RouteFilterList_101_16777472_ip () (_ BitVec 32))
+(declare-fun Config_as1border2_RouteFilterList_101_16777472_mask
+             ()
+             (_ BitVec 32))
+(declare-fun Config_as1border2_RouteFilterList_101_16777472_length () Int)
+(declare-fun Config_as1border2_RouteFilterList_101_16777472_prefix_range_start
+             ()
+             Int)
+(declare-fun Config_as1border2_RouteFilterList_101_16777472_prefix_range_end
+             ()
+             Int)
+(declare-fun Config_as1border2_RouteFilterList_101_16777472_action () Bool)
+(declare-fun Config_as1border2_RouteFilterList_101_16777728_ip () (_ BitVec 32))
+(declare-fun Config_as1border2_RouteFilterList_101_16777728_mask
+             ()
+             (_ BitVec 32))
+(declare-fun Config_as1border2_RouteFilterList_101_16777728_length () Int)
+(declare-fun Config_as1border2_RouteFilterList_101_16777728_prefix_range_start
+             ()
+             Int)
+(declare-fun Config_as1border2_RouteFilterList_101_16777728_prefix_range_end
+             ()
+             Int)
+(declare-fun Config_as1border2_RouteFilterList_101_16777728_action () Bool)
+(declare-fun Config_as1border2_RouteFilterList_102_33554432_ip () (_ BitVec 32))
+(declare-fun Config_as1border2_RouteFilterList_102_33554432_mask
+             ()
+             (_ BitVec 32))
+(declare-fun Config_as1border2_RouteFilterList_102_33554432_length () Int)
+(declare-fun Config_as1border2_RouteFilterList_102_33554432_prefix_range_start
+             ()
+             Int)
+(declare-fun Config_as1border2_RouteFilterList_102_33554432_prefix_range_end
+             ()
+             Int)
+(declare-fun Config_as1border2_RouteFilterList_102_33554432_action () Bool)
+(declare-fun Config_as1border2_RouteFilterList_102_41943040_ip () (_ BitVec 32))
+(declare-fun Config_as1border2_RouteFilterList_102_41943040_mask
+             ()
+             (_ BitVec 32))
+(declare-fun Config_as1border2_RouteFilterList_102_41943040_length () Int)
+(declare-fun Config_as1border2_RouteFilterList_102_41943040_prefix_range_start
+             ()
+             Int)
+(declare-fun Config_as1border2_RouteFilterList_102_41943040_prefix_range_end
+             ()
+             Int)
+(declare-fun Config_as1border2_RouteFilterList_102_41943040_action () Bool)
+(declare-fun Config_as1border2_RouteFilterList_103_50331904_ip () (_ BitVec 32))
+(declare-fun Config_as1border2_RouteFilterList_103_50331904_mask
+             ()
+             (_ BitVec 32))
+(declare-fun Config_as1border2_RouteFilterList_103_50331904_length () Int)
+(declare-fun Config_as1border2_RouteFilterList_103_50331904_prefix_range_start
+             ()
+             Int)
+(declare-fun Config_as1border2_RouteFilterList_103_50331904_prefix_range_end
+             ()
+             Int)
+(declare-fun Config_as1border2_RouteFilterList_103_50331904_action () Bool)
+(declare-fun Config_as1border2_RouteFilterList_as4-prefixes_67108864_ip
+             ()
+             (_ BitVec 32))
+(declare-fun Config_as1border2_RouteFilterList_as4-prefixes_67108864_mask
+             ()
+             (_ BitVec 32))
+(declare-fun Config_as1border2_RouteFilterList_as4-prefixes_67108864_length
+             ()
+             Int)
+(declare-fun Config_as1border2_RouteFilterList_as4-prefixes_67108864_prefix_range_start
+             ()
+             Int)
+(declare-fun Config_as1border2_RouteFilterList_as4-prefixes_67108864_prefix_range_end
+             ()
+             Int)
+(declare-fun Config_as1border2_RouteFilterList_as4-prefixes_67108864_action
+             ()
+             Bool)
+(declare-fun Config_as1border2_RouteFilterList_inbound_route_filter_16777216_ip
+             ()
+             (_ BitVec 32))
+(declare-fun Config_as1border2_RouteFilterList_inbound_route_filter_16777216_mask
+             ()
+             (_ BitVec 32))
+(declare-fun Config_as1border2_RouteFilterList_inbound_route_filter_16777216_length
+             ()
+             Int)
+(declare-fun Config_as1border2_RouteFilterList_inbound_route_filter_16777216_prefix_range_start
+             ()
+             Int)
+(declare-fun Config_as1border2_RouteFilterList_inbound_route_filter_16777216_prefix_range_end
+             ()
+             Int)
+(declare-fun Config_as1border2_RouteFilterList_inbound_route_filter_16777216_action
+             ()
+             Bool)
+(declare-fun Config_as1border2_RouteFilterList_inbound_route_filter_0_ip
+             ()
+             (_ BitVec 32))
+(declare-fun Config_as1border2_RouteFilterList_inbound_route_filter_0_mask
+             ()
+             (_ BitVec 32))
+(declare-fun Config_as1border2_RouteFilterList_inbound_route_filter_0_length
+             ()
+             Int)
+(declare-fun Config_as1border2_RouteFilterList_inbound_route_filter_0_prefix_range_start
+             ()
+             Int)
+(declare-fun Config_as1border2_RouteFilterList_inbound_route_filter_0_prefix_range_end
+             ()
+             Int)
+(declare-fun Config_as1border2_RouteFilterList_inbound_route_filter_0_action
+             ()
+             Bool)
+(declare-fun Config_as1border1_RouteFilterList_101_16777472_ip () (_ BitVec 32))
+(declare-fun Config_as1border1_RouteFilterList_101_16777472_mask
+             ()
+             (_ BitVec 32))
+(declare-fun Config_as1border1_RouteFilterList_101_16777472_length () Int)
+(declare-fun Config_as1border1_RouteFilterList_101_16777472_prefix_range_start
+             ()
+             Int)
+(declare-fun Config_as1border1_RouteFilterList_101_16777472_prefix_range_end
+             ()
+             Int)
+(declare-fun Config_as1border1_RouteFilterList_101_16777472_action () Bool)
+(declare-fun Config_as1border1_RouteFilterList_101_16777728_ip () (_ BitVec 32))
+(declare-fun Config_as1border1_RouteFilterList_101_16777728_mask
+             ()
+             (_ BitVec 32))
+(declare-fun Config_as1border1_RouteFilterList_101_16777728_length () Int)
+(declare-fun Config_as1border1_RouteFilterList_101_16777728_prefix_range_start
+             ()
+             Int)
+(declare-fun Config_as1border1_RouteFilterList_101_16777728_prefix_range_end
+             ()
+             Int)
+(declare-fun Config_as1border1_RouteFilterList_101_16777728_action () Bool)
+(declare-fun Config_as1border1_RouteFilterList_102_33554432_ip () (_ BitVec 32))
+(declare-fun Config_as1border1_RouteFilterList_102_33554432_mask
+             ()
+             (_ BitVec 32))
+(declare-fun Config_as1border1_RouteFilterList_102_33554432_length () Int)
+(declare-fun Config_as1border1_RouteFilterList_102_33554432_prefix_range_start
+             ()
+             Int)
+(declare-fun Config_as1border1_RouteFilterList_102_33554432_prefix_range_end
+             ()
+             Int)
+(declare-fun Config_as1border1_RouteFilterList_102_33554432_action () Bool)
+(declare-fun Config_as1border1_RouteFilterList_102_41943040_ip () (_ BitVec 32))
+(declare-fun Config_as1border1_RouteFilterList_102_41943040_mask
+             ()
+             (_ BitVec 32))
+(declare-fun Config_as1border1_RouteFilterList_102_41943040_length () Int)
+(declare-fun Config_as1border1_RouteFilterList_102_41943040_prefix_range_start
+             ()
+             Int)
+(declare-fun Config_as1border1_RouteFilterList_102_41943040_prefix_range_end
+             ()
+             Int)
+(declare-fun Config_as1border1_RouteFilterList_102_41943040_action () Bool)
+(declare-fun Config_as1border1_RouteFilterList_103_50331904_ip () (_ BitVec 32))
+(declare-fun Config_as1border1_RouteFilterList_103_50331904_mask
+             ()
+             (_ BitVec 32))
+(declare-fun Config_as1border1_RouteFilterList_103_50331904_length () Int)
+(declare-fun Config_as1border1_RouteFilterList_103_50331904_prefix_range_start
+             ()
+             Int)
+(declare-fun Config_as1border1_RouteFilterList_103_50331904_prefix_range_end
+             ()
+             Int)
+(declare-fun Config_as1border1_RouteFilterList_103_50331904_action () Bool)
+(declare-fun Config_as1border1_RouteFilterList_103_50332160_ip () (_ BitVec 32))
+(declare-fun Config_as1border1_RouteFilterList_103_50332160_mask
+             ()
+             (_ BitVec 32))
+(declare-fun Config_as1border1_RouteFilterList_103_50332160_length () Int)
+(declare-fun Config_as1border1_RouteFilterList_103_50332160_prefix_range_start
+             ()
+             Int)
+(declare-fun Config_as1border1_RouteFilterList_103_50332160_prefix_range_end
+             ()
+             Int)
+(declare-fun Config_as1border1_RouteFilterList_103_50332160_action () Bool)
+(declare-fun Config_as1border1_RouteFilterList_inbound_route_filter_16777216_ip
+             ()
+             (_ BitVec 32))
+(declare-fun Config_as1border1_RouteFilterList_inbound_route_filter_16777216_mask
+             ()
+             (_ BitVec 32))
+(declare-fun Config_as1border1_RouteFilterList_inbound_route_filter_16777216_length
+             ()
+             Int)
+(declare-fun Config_as1border1_RouteFilterList_inbound_route_filter_16777216_prefix_range_start
+             ()
+             Int)
+(declare-fun Config_as1border1_RouteFilterList_inbound_route_filter_16777216_prefix_range_end
+             ()
+             Int)
+(declare-fun Config_as1border1_RouteFilterList_inbound_route_filter_16777216_action
+             ()
+             Bool)
+(declare-fun Config_as1border1_RouteFilterList_inbound_route_filter_0_ip
+             ()
+             (_ BitVec 32))
+(declare-fun Config_as1border1_RouteFilterList_inbound_route_filter_0_mask
+             ()
+             (_ BitVec 32))
+(declare-fun Config_as1border1_RouteFilterList_inbound_route_filter_0_length
+             ()
+             Int)
+(declare-fun Config_as1border1_RouteFilterList_inbound_route_filter_0_prefix_range_start
+             ()
+             Int)
+(declare-fun Config_as1border1_RouteFilterList_inbound_route_filter_0_prefix_range_end
+             ()
+             Int)
+(declare-fun Config_as1border1_RouteFilterList_inbound_route_filter_0_action
+             ()
+             Bool)
+(declare-fun Config_as2border1_RouteFilterList_101_16777472_ip () (_ BitVec 32))
+(declare-fun Config_as2border1_RouteFilterList_101_16777472_mask
+             ()
+             (_ BitVec 32))
+(declare-fun Config_as2border1_RouteFilterList_101_16777472_length () Int)
+(declare-fun Config_as2border1_RouteFilterList_101_16777472_prefix_range_start
+             ()
+             Int)
+(declare-fun Config_as2border1_RouteFilterList_101_16777472_prefix_range_end
+             ()
+             Int)
+(declare-fun Config_as2border1_RouteFilterList_101_16777472_action () Bool)
+(declare-fun Config_as2border1_RouteFilterList_101_16777728_ip () (_ BitVec 32))
+(declare-fun Config_as2border1_RouteFilterList_101_16777728_mask
+             ()
+             (_ BitVec 32))
+(declare-fun Config_as2border1_RouteFilterList_101_16777728_length () Int)
+(declare-fun Config_as2border1_RouteFilterList_101_16777728_prefix_range_start
+             ()
+             Int)
+(declare-fun Config_as2border1_RouteFilterList_101_16777728_prefix_range_end
+             ()
+             Int)
+(declare-fun Config_as2border1_RouteFilterList_101_16777728_action () Bool)
+(declare-fun Config_as2border1_RouteFilterList_103_50331904_ip () (_ BitVec 32))
+(declare-fun Config_as2border1_RouteFilterList_103_50331904_mask
+             ()
+             (_ BitVec 32))
+(declare-fun Config_as2border1_RouteFilterList_103_50331904_length () Int)
+(declare-fun Config_as2border1_RouteFilterList_103_50331904_prefix_range_start
+             ()
+             Int)
+(declare-fun Config_as2border1_RouteFilterList_103_50331904_prefix_range_end
+             ()
+             Int)
+(declare-fun Config_as2border1_RouteFilterList_103_50331904_action () Bool)
+(declare-fun Config_as2border1_RouteFilterList_103_50332160_ip () (_ BitVec 32))
+(declare-fun Config_as2border1_RouteFilterList_103_50332160_mask
+             ()
+             (_ BitVec 32))
+(declare-fun Config_as2border1_RouteFilterList_103_50332160_length () Int)
+(declare-fun Config_as2border1_RouteFilterList_103_50332160_prefix_range_start
+             ()
+             Int)
+(declare-fun Config_as2border1_RouteFilterList_103_50332160_prefix_range_end
+             ()
+             Int)
+(declare-fun Config_as2border1_RouteFilterList_103_50332160_action () Bool)
+(declare-fun Config_as2border1_RouteFilterList_inbound_route_filter_33554432_ip
+             ()
+             (_ BitVec 32))
+(declare-fun Config_as2border1_RouteFilterList_inbound_route_filter_33554432_mask
+             ()
+             (_ BitVec 32))
+(declare-fun Config_as2border1_RouteFilterList_inbound_route_filter_33554432_length
+             ()
+             Int)
+(declare-fun Config_as2border1_RouteFilterList_inbound_route_filter_33554432_prefix_range_start
+             ()
+             Int)
+(declare-fun Config_as2border1_RouteFilterList_inbound_route_filter_33554432_prefix_range_end
+             ()
+             Int)
+(declare-fun Config_as2border1_RouteFilterList_inbound_route_filter_33554432_action
+             ()
+             Bool)
+(declare-fun Config_as2border1_RouteFilterList_inbound_route_filter_0_ip
+             ()
+             (_ BitVec 32))
+(declare-fun Config_as2border1_RouteFilterList_inbound_route_filter_0_mask
+             ()
+             (_ BitVec 32))
+(declare-fun Config_as2border1_RouteFilterList_inbound_route_filter_0_length
+             ()
+             Int)
+(declare-fun Config_as2border1_RouteFilterList_inbound_route_filter_0_prefix_range_start
+             ()
+             Int)
+(declare-fun Config_as2border1_RouteFilterList_inbound_route_filter_0_prefix_range_end
+             ()
+             Int)
+(declare-fun Config_as2border1_RouteFilterList_inbound_route_filter_0_action
+             ()
+             Bool)
+(declare-fun Config_as2border1_RouteFilterList_outbound_routes_41943040_ip
+             ()
+             (_ BitVec 32))
+(declare-fun Config_as2border1_RouteFilterList_outbound_routes_41943040_mask
+             ()
+             (_ BitVec 32))
+(declare-fun Config_as2border1_RouteFilterList_outbound_routes_41943040_length
+             ()
+             Int)
+(declare-fun Config_as2border1_RouteFilterList_outbound_routes_41943040_prefix_range_start
+             ()
+             Int)
+(declare-fun Config_as2border1_RouteFilterList_outbound_routes_41943040_prefix_range_end
+             ()
+             Int)
+(declare-fun Config_as2border1_RouteFilterList_outbound_routes_41943040_action
+             ()
+             Bool)
 (declare-fun |0_SLICE-MAIN_as1core1_OVERALL_BEST_None_history| () (_ BitVec 2))
 (declare-fun |0_SLICE-MAIN_as1border1_OVERALL_BEST_None_history|
              ()
@@ -963,6 +1287,7 @@
 (declare-fun |0_SLICE-MAIN_as1border2_BGP_EXPORT_ENV-10.13.22.3_permitted|
              ()
              Bool)
+(declare-fun SSA_RETURN0 () Bool)
 (declare-fun |0_SLICE-MAIN_as1border2_BGP_EXPORT_GigabitEthernet0/0_permitted|
              ()
              Bool)
@@ -1112,6 +1437,7 @@
 (declare-fun |0_SLICE-MAIN_CONTROL-FORWARDING_as2border1_GigabitEthernet0/0|
              ()
              Bool)
+(declare-fun SSA_RETURN1 () Bool)
 (declare-fun |0_SLICE-MAIN_as1border1_BGP_EXPORT_GigabitEthernet1/0_permitted|
              ()
              Bool)
@@ -2118,6 +2444,161 @@
 (declare-fun |0_SLICE-MAIN__reachable_as1border1| () Bool)
 (declare-fun |0_SLICE-MAIN__reachable-id_as2border1| () Int)
 (declare-fun |0_SLICE-MAIN__reachable_as2border1| () Bool)
+(assert (= Config_as1border2_RouteFilterList_101_16777472_ip #x01000100))
+(assert (= Config_as1border2_RouteFilterList_101_16777472_mask #xffffff00))
+(assert (= Config_as1border2_RouteFilterList_101_16777472_length 24))
+(assert (= Config_as1border2_RouteFilterList_101_16777472_prefix_range_start 24))
+(assert (= Config_as1border2_RouteFilterList_101_16777472_prefix_range_end 24))
+(assert Config_as1border2_RouteFilterList_101_16777472_action)
+(assert (= Config_as1border2_RouteFilterList_101_16777728_ip #x01000200))
+(assert (= Config_as1border2_RouteFilterList_101_16777728_mask #xffffff00))
+(assert (= Config_as1border2_RouteFilterList_101_16777728_length 24))
+(assert (= Config_as1border2_RouteFilterList_101_16777728_prefix_range_start 24))
+(assert (= Config_as1border2_RouteFilterList_101_16777728_prefix_range_end 24))
+(assert Config_as1border2_RouteFilterList_101_16777728_action)
+(assert (= Config_as1border2_RouteFilterList_102_33554432_ip #x02000000))
+(assert (= Config_as1border2_RouteFilterList_102_33554432_mask #xff000000))
+(assert (= Config_as1border2_RouteFilterList_102_33554432_length 8))
+(assert (= Config_as1border2_RouteFilterList_102_33554432_prefix_range_start 8))
+(assert (= Config_as1border2_RouteFilterList_102_33554432_prefix_range_end 8))
+(assert Config_as1border2_RouteFilterList_102_33554432_action)
+(assert (= Config_as1border2_RouteFilterList_102_41943040_ip #x02800000))
+(assert (= Config_as1border2_RouteFilterList_102_41943040_mask #xffff0000))
+(assert (= Config_as1border2_RouteFilterList_102_41943040_length 16))
+(assert (= Config_as1border2_RouteFilterList_102_41943040_prefix_range_start 16))
+(assert (= Config_as1border2_RouteFilterList_102_41943040_prefix_range_end 16))
+(assert Config_as1border2_RouteFilterList_102_41943040_action)
+(assert (= Config_as1border2_RouteFilterList_103_50331904_ip #x03000100))
+(assert (= Config_as1border2_RouteFilterList_103_50331904_mask #xffffff00))
+(assert (= Config_as1border2_RouteFilterList_103_50331904_length 24))
+(assert (= Config_as1border2_RouteFilterList_103_50331904_prefix_range_start 24))
+(assert (= Config_as1border2_RouteFilterList_103_50331904_prefix_range_end 24))
+(assert Config_as1border2_RouteFilterList_103_50331904_action)
+(assert (= Config_as1border2_RouteFilterList_as4-prefixes_67108864_ip #x04000000))
+(assert (= Config_as1border2_RouteFilterList_as4-prefixes_67108864_mask #xff000000))
+(assert (= Config_as1border2_RouteFilterList_as4-prefixes_67108864_length 8))
+(assert (= Config_as1border2_RouteFilterList_as4-prefixes_67108864_prefix_range_start 8))
+(assert (= Config_as1border2_RouteFilterList_as4-prefixes_67108864_prefix_range_end 32))
+(assert Config_as1border2_RouteFilterList_as4-prefixes_67108864_action)
+(assert (= Config_as1border2_RouteFilterList_inbound_route_filter_16777216_ip
+   #x01000000))
+(assert (= Config_as1border2_RouteFilterList_inbound_route_filter_16777216_mask
+   #xff000000))
+(assert (= Config_as1border2_RouteFilterList_inbound_route_filter_16777216_length 8))
+(assert (= Config_as1border2_RouteFilterList_inbound_route_filter_16777216_prefix_range_start
+   8))
+(assert (= Config_as1border2_RouteFilterList_inbound_route_filter_16777216_prefix_range_end
+   32))
+(assert (not Config_as1border2_RouteFilterList_inbound_route_filter_16777216_action))
+(assert (= Config_as1border2_RouteFilterList_inbound_route_filter_0_ip #x00000000))
+(assert (= Config_as1border2_RouteFilterList_inbound_route_filter_0_mask #x00000000))
+(assert (= Config_as1border2_RouteFilterList_inbound_route_filter_0_length 0))
+(assert (= Config_as1border2_RouteFilterList_inbound_route_filter_0_prefix_range_start
+   0))
+(assert (= Config_as1border2_RouteFilterList_inbound_route_filter_0_prefix_range_end 32))
+(assert Config_as1border2_RouteFilterList_inbound_route_filter_0_action)
+(assert (= Config_as1border1_RouteFilterList_101_16777472_ip #x01000100))
+(assert (= Config_as1border1_RouteFilterList_101_16777472_mask #xffffff00))
+(assert (= Config_as1border1_RouteFilterList_101_16777472_length 24))
+(assert (= Config_as1border1_RouteFilterList_101_16777472_prefix_range_start 24))
+(assert (= Config_as1border1_RouteFilterList_101_16777472_prefix_range_end 24))
+(assert Config_as1border1_RouteFilterList_101_16777472_action)
+(assert (= Config_as1border1_RouteFilterList_101_16777728_ip #x01000200))
+(assert (= Config_as1border1_RouteFilterList_101_16777728_mask #xffffff00))
+(assert (= Config_as1border1_RouteFilterList_101_16777728_length 24))
+(assert (= Config_as1border1_RouteFilterList_101_16777728_prefix_range_start 24))
+(assert (= Config_as1border1_RouteFilterList_101_16777728_prefix_range_end 24))
+(assert Config_as1border1_RouteFilterList_101_16777728_action)
+(assert (= Config_as1border1_RouteFilterList_102_33554432_ip #x02000000))
+(assert (= Config_as1border1_RouteFilterList_102_33554432_mask #xff000000))
+(assert (= Config_as1border1_RouteFilterList_102_33554432_length 8))
+(assert (= Config_as1border1_RouteFilterList_102_33554432_prefix_range_start 8))
+(assert (= Config_as1border1_RouteFilterList_102_33554432_prefix_range_end 8))
+(assert Config_as1border1_RouteFilterList_102_33554432_action)
+(assert (= Config_as1border1_RouteFilterList_102_41943040_ip #x02800000))
+(assert (= Config_as1border1_RouteFilterList_102_41943040_mask #xffff0000))
+(assert (= Config_as1border1_RouteFilterList_102_41943040_length 16))
+(assert (= Config_as1border1_RouteFilterList_102_41943040_prefix_range_start 16))
+(assert (= Config_as1border1_RouteFilterList_102_41943040_prefix_range_end 16))
+(assert Config_as1border1_RouteFilterList_102_41943040_action)
+(assert (= Config_as1border1_RouteFilterList_103_50331904_ip #x03000100))
+(assert (= Config_as1border1_RouteFilterList_103_50331904_mask #xffffff00))
+(assert (= Config_as1border1_RouteFilterList_103_50331904_length 24))
+(assert (= Config_as1border1_RouteFilterList_103_50331904_prefix_range_start 24))
+(assert (= Config_as1border1_RouteFilterList_103_50331904_prefix_range_end 24))
+(assert Config_as1border1_RouteFilterList_103_50331904_action)
+(assert (= Config_as1border1_RouteFilterList_103_50332160_ip #x03000200))
+(assert (= Config_as1border1_RouteFilterList_103_50332160_mask #xffffff00))
+(assert (= Config_as1border1_RouteFilterList_103_50332160_length 24))
+(assert (= Config_as1border1_RouteFilterList_103_50332160_prefix_range_start 24))
+(assert (= Config_as1border1_RouteFilterList_103_50332160_prefix_range_end 24))
+(assert Config_as1border1_RouteFilterList_103_50332160_action)
+(assert (= Config_as1border1_RouteFilterList_inbound_route_filter_16777216_ip
+   #x01000000))
+(assert (= Config_as1border1_RouteFilterList_inbound_route_filter_16777216_mask
+   #xff000000))
+(assert (= Config_as1border1_RouteFilterList_inbound_route_filter_16777216_length 8))
+(assert (= Config_as1border1_RouteFilterList_inbound_route_filter_16777216_prefix_range_start
+   8))
+(assert (= Config_as1border1_RouteFilterList_inbound_route_filter_16777216_prefix_range_end
+   32))
+(assert (not Config_as1border1_RouteFilterList_inbound_route_filter_16777216_action))
+(assert (= Config_as1border1_RouteFilterList_inbound_route_filter_0_ip #x00000000))
+(assert (= Config_as1border1_RouteFilterList_inbound_route_filter_0_mask #x00000000))
+(assert (= Config_as1border1_RouteFilterList_inbound_route_filter_0_length 0))
+(assert (= Config_as1border1_RouteFilterList_inbound_route_filter_0_prefix_range_start
+   0))
+(assert (= Config_as1border1_RouteFilterList_inbound_route_filter_0_prefix_range_end 32))
+(assert Config_as1border1_RouteFilterList_inbound_route_filter_0_action)
+(assert (= Config_as2border1_RouteFilterList_101_16777472_ip #x01000100))
+(assert (= Config_as2border1_RouteFilterList_101_16777472_mask #xffffff00))
+(assert (= Config_as2border1_RouteFilterList_101_16777472_length 24))
+(assert (= Config_as2border1_RouteFilterList_101_16777472_prefix_range_start 24))
+(assert (= Config_as2border1_RouteFilterList_101_16777472_prefix_range_end 24))
+(assert Config_as2border1_RouteFilterList_101_16777472_action)
+(assert (= Config_as2border1_RouteFilterList_101_16777728_ip #x01000200))
+(assert (= Config_as2border1_RouteFilterList_101_16777728_mask #xffffff00))
+(assert (= Config_as2border1_RouteFilterList_101_16777728_length 24))
+(assert (= Config_as2border1_RouteFilterList_101_16777728_prefix_range_start 24))
+(assert (= Config_as2border1_RouteFilterList_101_16777728_prefix_range_end 24))
+(assert Config_as2border1_RouteFilterList_101_16777728_action)
+(assert (= Config_as2border1_RouteFilterList_103_50331904_ip #x03000100))
+(assert (= Config_as2border1_RouteFilterList_103_50331904_mask #xffffff00))
+(assert (= Config_as2border1_RouteFilterList_103_50331904_length 24))
+(assert (= Config_as2border1_RouteFilterList_103_50331904_prefix_range_start 24))
+(assert (= Config_as2border1_RouteFilterList_103_50331904_prefix_range_end 24))
+(assert Config_as2border1_RouteFilterList_103_50331904_action)
+(assert (= Config_as2border1_RouteFilterList_103_50332160_ip #x03000200))
+(assert (= Config_as2border1_RouteFilterList_103_50332160_mask #xffffff00))
+(assert (= Config_as2border1_RouteFilterList_103_50332160_length 24))
+(assert (= Config_as2border1_RouteFilterList_103_50332160_prefix_range_start 24))
+(assert (= Config_as2border1_RouteFilterList_103_50332160_prefix_range_end 24))
+(assert Config_as2border1_RouteFilterList_103_50332160_action)
+(assert (= Config_as2border1_RouteFilterList_inbound_route_filter_33554432_ip
+   #x02000000))
+(assert (= Config_as2border1_RouteFilterList_inbound_route_filter_33554432_mask
+   #xff000000))
+(assert (= Config_as2border1_RouteFilterList_inbound_route_filter_33554432_length 8))
+(assert (= Config_as2border1_RouteFilterList_inbound_route_filter_33554432_prefix_range_start
+   8))
+(assert (= Config_as2border1_RouteFilterList_inbound_route_filter_33554432_prefix_range_end
+   32))
+(assert (not Config_as2border1_RouteFilterList_inbound_route_filter_33554432_action))
+(assert (= Config_as2border1_RouteFilterList_inbound_route_filter_0_ip #x00000000))
+(assert (= Config_as2border1_RouteFilterList_inbound_route_filter_0_mask #x00000000))
+(assert (= Config_as2border1_RouteFilterList_inbound_route_filter_0_length 0))
+(assert (= Config_as2border1_RouteFilterList_inbound_route_filter_0_prefix_range_start
+   0))
+(assert (= Config_as2border1_RouteFilterList_inbound_route_filter_0_prefix_range_end 32))
+(assert Config_as2border1_RouteFilterList_inbound_route_filter_0_action)
+(assert (= Config_as2border1_RouteFilterList_outbound_routes_41943040_ip #x02800000))
+(assert (= Config_as2border1_RouteFilterList_outbound_routes_41943040_mask #xff800000))
+(assert (= Config_as2border1_RouteFilterList_outbound_routes_41943040_length 9))
+(assert (= Config_as2border1_RouteFilterList_outbound_routes_41943040_prefix_range_start
+   16))
+(assert (= Config_as2border1_RouteFilterList_outbound_routes_41943040_prefix_range_end
+   32))
+(assert Config_as2border1_RouteFilterList_outbound_routes_41943040_action)
 (assert (bvule |0_SLICE-MAIN_as1core1_OVERALL_BEST_None_history| #b10))
 (assert (bvule |0_SLICE-MAIN_as1border1_OVERALL_BEST_None_history| #b10))
 (assert (= |0_SLICE-as1core1__reachable_as1core1|
@@ -2933,13 +3414,18 @@
             (= |0_SLICE-MAIN_as1border2_OSPF_SINGLE-EXPORT__prefixLength| 24)
             (= |0_SLICE-MAIN_as1border2_OSPF_SINGLE-EXPORT__ospfType| #b00))
        a!1)))
-(assert (let ((a!1 (and |0_SLICE-MAIN_as1border2_BGP_EXPORT_ENV-10.14.22.4_community_(,\|\\{\|\\}\|^\|$\| )4:|
+(assert (let ((a!1 (= (bvnot (bvor (bvnot |0_SLICE-MAIN_dst-ip|)
+                           (bvnot Config_as1border2_RouteFilterList_as4-prefixes_67108864_mask)))
+              (bvnot (bvor (bvnot Config_as1border2_RouteFilterList_as4-prefixes_67108864_ip)
+                           (bvnot Config_as1border2_RouteFilterList_as4-prefixes_67108864_mask))))))
+(let ((a!2 (and |0_SLICE-MAIN_as1border2_BGP_EXPORT_ENV-10.14.22.4_community_(,\|\\{\|\\}\|^\|$\| )4:|
                 (>= |0_SLICE-MAIN_as1border2_BGP_EXPORT_ENV-10.14.22.4_prefixLength|
-                    8)
+                    Config_as1border2_RouteFilterList_as4-prefixes_67108864_prefix_range_start)
                 (<= |0_SLICE-MAIN_as1border2_BGP_EXPORT_ENV-10.14.22.4_prefixLength|
-                    32)
-                (= ((_ extract 31 24) |0_SLICE-MAIN_dst-ip|) #x04))))
-(let ((a!2 (ite a!1
+                    Config_as1border2_RouteFilterList_as4-prefixes_67108864_prefix_range_end)
+                a!1
+                Config_as1border2_RouteFilterList_as4-prefixes_67108864_action)))
+(let ((a!3 (ite a!2
                 (and (= |0_SLICE-MAIN_as1border2_BGP_IMPORT_GigabitEthernet2/0_permitted|
                         |0_SLICE-MAIN_as1border2_BGP_EXPORT_ENV-10.14.22.4_permitted|)
                      (= |0_SLICE-MAIN_as1border2_BGP_IMPORT_GigabitEthernet2/0_prefixLength|
@@ -2949,7 +3435,7 @@
                              200
                              20))
                      (= |0_SLICE-MAIN_as1border2_BGP_IMPORT_GigabitEthernet2/0_localPref|
-                        (ite a!1 350 100))
+                        (ite a!2 350 100))
                      (= |0_SLICE-MAIN_as1border2_BGP_IMPORT_GigabitEthernet2/0_metric|
                         |0_SLICE-MAIN_as1border2_BGP_EXPORT_ENV-10.14.22.4_metric|)
                      (ite (= |0_SLICE-MAIN_as1border2_BGP_EXPORT_ENV-10.14.22.4_clientId|
@@ -2981,8 +3467,8 @@
   (ite (and |0_SLICE-MAIN_as1border2_BGP_EXPORT_ENV-10.14.22.4_permitted|
             (= |0_FAILED-EDGE_as1border2_GigabitEthernet2/0| 0)
             (= |0_FAILED-NODE_as1border2| 0))
-       a!2
-       (not |0_SLICE-MAIN_as1border2_BGP_IMPORT_GigabitEthernet2/0_permitted|)))))
+       a!3
+       (not |0_SLICE-MAIN_as1border2_BGP_IMPORT_GigabitEthernet2/0_permitted|))))))
 (assert (let ((a!1 (or (= |0_SLICE-MAIN_as1border2_OVERALL_BEST_None_history| #b1)
                (and (= |0_SLICE-MAIN_as1border2_OSPF_BEST_None_prefixLength| 24)
                     (= ((_ extract 31 8) |0_SLICE-MAIN_dst-ip|) #x010001)
@@ -3086,42 +3572,86 @@
                     (= ((_ extract 31 8) |0_SLICE-MAIN_dst-ip|) #x010002)
                     (not (= |0_SLICE-MAIN_as1border2_OVERALL_BEST_None_history|
                             #b1)))))
-      (a!2 (or (= |0_SLICE-MAIN_as1border2_OVERALL_BEST_None_prefixLength| 24)
-               (and (= |0_SLICE-MAIN_as1border2_OSPF_BEST_None_prefixLength| 24)
-                    (= ((_ extract 31 8) |0_SLICE-MAIN_dst-ip|) #x010001))))
-      (a!3 (not (and (= |0_SLICE-MAIN_as1border2_OSPF_BEST_None_prefixLength|
-                        24)
-                     (= ((_ extract 31 8) |0_SLICE-MAIN_dst-ip|) #x010001))))
-      (a!5 (ite (and (= |0_SLICE-MAIN_as1border2_OSPF_BEST_None_prefixLength|
+      (a!2 (ite (and (= |0_SLICE-MAIN_as1border2_OSPF_BEST_None_prefixLength|
                         24)
                      (= ((_ extract 31 8) |0_SLICE-MAIN_dst-ip|) #x010001))
                 24
-                |0_SLICE-MAIN_as1border2_OVERALL_BEST_None_prefixLength|)))
-(let ((a!4 (or (and a!2 (= ((_ extract 31 8) |0_SLICE-MAIN_dst-ip|) #x010001))
-               (and a!2 (= ((_ extract 31 8) |0_SLICE-MAIN_dst-ip|) #x010002))
-               (and a!3
-                    (= |0_SLICE-MAIN_as1border2_OVERALL_BEST_None_prefixLength|
-                       8)
-                    (= ((_ extract 31 24) |0_SLICE-MAIN_dst-ip|) #x02))
-               (and a!3
-                    (= |0_SLICE-MAIN_as1border2_OVERALL_BEST_None_prefixLength|
-                       16)
-                    (= ((_ extract 31 16) |0_SLICE-MAIN_dst-ip|) #x0280))))
-      (a!6 (or |0_SLICE-MAIN_as1border2_OVERALL_BEST_None_community_1:3|
-               (and a!2 (= ((_ extract 31 8) |0_SLICE-MAIN_dst-ip|) #x010001))
-               (and a!2 (= ((_ extract 31 8) |0_SLICE-MAIN_dst-ip|) #x010002))
-               (and a!3
-                    (= |0_SLICE-MAIN_as1border2_OVERALL_BEST_None_prefixLength|
-                       8)
-                    (= ((_ extract 31 24) |0_SLICE-MAIN_dst-ip|) #x02))
-               (and a!3
-                    (= |0_SLICE-MAIN_as1border2_OVERALL_BEST_None_prefixLength|
-                       16)
-                    (= ((_ extract 31 16) |0_SLICE-MAIN_dst-ip|) #x0280)))))
+                |0_SLICE-MAIN_as1border2_OVERALL_BEST_None_prefixLength|))
+      (a!3 (= (bvnot (bvor (bvnot |0_SLICE-MAIN_dst-ip|)
+                           (bvnot Config_as2border1_RouteFilterList_101_16777472_mask)))
+              (bvnot (bvor (bvnot Config_as2border1_RouteFilterList_101_16777472_ip)
+                           (bvnot Config_as2border1_RouteFilterList_101_16777472_mask)))))
+      (a!4 (= (bvnot (bvor (bvnot |0_SLICE-MAIN_dst-ip|)
+                           (bvnot Config_as2border1_RouteFilterList_101_16777728_mask)))
+              (bvnot (bvor (bvnot Config_as2border1_RouteFilterList_101_16777728_ip)
+                           (bvnot Config_as2border1_RouteFilterList_101_16777728_mask)))))
+      (a!5 (= (bvnot (bvor (bvnot |0_SLICE-MAIN_dst-ip|)
+                           (bvnot Config_as2border1_RouteFilterList_inbound_route_filter_33554432_mask)))
+              (bvnot (bvor (bvnot Config_as2border1_RouteFilterList_inbound_route_filter_33554432_ip)
+                           (bvnot Config_as2border1_RouteFilterList_inbound_route_filter_33554432_mask)))))
+      (a!6 (= (bvnot (bvor (bvnot |0_SLICE-MAIN_dst-ip|)
+                           (bvnot Config_as1border1_RouteFilterList_102_41943040_mask)))
+              (bvnot (bvor (bvnot Config_as1border1_RouteFilterList_102_41943040_ip)
+                           (bvnot Config_as1border1_RouteFilterList_102_41943040_mask))))))
+(let ((a!7 (or (ite (and (= a!2
+                            Config_as1border2_RouteFilterList_101_16777472_prefix_range_start)
+                         a!3)
+                    Config_as1border2_RouteFilterList_101_16777472_action
+                    (and (= a!2
+                            Config_as1border2_RouteFilterList_101_16777728_prefix_range_start)
+                         a!4
+                         Config_as1border2_RouteFilterList_101_16777728_action))
+               (ite (and (= a!2
+                            Config_as1border2_RouteFilterList_102_33554432_prefix_range_start)
+                         a!5)
+                    Config_as1border2_RouteFilterList_102_33554432_action
+                    (and (= a!2
+                            Config_as1border2_RouteFilterList_102_41943040_prefix_range_start)
+                         a!6
+                         Config_as1border2_RouteFilterList_102_41943040_action)))))
+  (= SSA_RETURN0 (and a!1 a!7)))))
+(assert (let ((a!1 (ite (and (= |0_SLICE-MAIN_as1border2_OSPF_BEST_None_prefixLength|
+                        24)
+                     (= ((_ extract 31 8) |0_SLICE-MAIN_dst-ip|) #x010001))
+                24
+                |0_SLICE-MAIN_as1border2_OVERALL_BEST_None_prefixLength|))
+      (a!2 (= (bvnot (bvor (bvnot |0_SLICE-MAIN_dst-ip|)
+                           (bvnot Config_as2border1_RouteFilterList_101_16777472_mask)))
+              (bvnot (bvor (bvnot Config_as2border1_RouteFilterList_101_16777472_ip)
+                           (bvnot Config_as2border1_RouteFilterList_101_16777472_mask)))))
+      (a!3 (= (bvnot (bvor (bvnot |0_SLICE-MAIN_dst-ip|)
+                           (bvnot Config_as2border1_RouteFilterList_101_16777728_mask)))
+              (bvnot (bvor (bvnot Config_as2border1_RouteFilterList_101_16777728_ip)
+                           (bvnot Config_as2border1_RouteFilterList_101_16777728_mask)))))
+      (a!4 (= (bvnot (bvor (bvnot |0_SLICE-MAIN_dst-ip|)
+                           (bvnot Config_as2border1_RouteFilterList_inbound_route_filter_33554432_mask)))
+              (bvnot (bvor (bvnot Config_as2border1_RouteFilterList_inbound_route_filter_33554432_ip)
+                           (bvnot Config_as2border1_RouteFilterList_inbound_route_filter_33554432_mask)))))
+      (a!5 (= (bvnot (bvor (bvnot |0_SLICE-MAIN_dst-ip|)
+                           (bvnot Config_as1border1_RouteFilterList_102_41943040_mask)))
+              (bvnot (bvor (bvnot Config_as1border1_RouteFilterList_102_41943040_ip)
+                           (bvnot Config_as1border1_RouteFilterList_102_41943040_mask))))))
+(let ((a!6 (or |0_SLICE-MAIN_as1border2_OVERALL_BEST_None_community_1:3|
+               (ite (and (= a!1
+                            Config_as1border2_RouteFilterList_101_16777472_prefix_range_start)
+                         a!2)
+                    Config_as1border2_RouteFilterList_101_16777472_action
+                    (and (= a!1
+                            Config_as1border2_RouteFilterList_101_16777728_prefix_range_start)
+                         a!3
+                         Config_as1border2_RouteFilterList_101_16777728_action))
+               (ite (and (= a!1
+                            Config_as1border2_RouteFilterList_102_33554432_prefix_range_start)
+                         a!4)
+                    Config_as1border2_RouteFilterList_102_33554432_action
+                    (and (= a!1
+                            Config_as1border2_RouteFilterList_102_41943040_prefix_range_start)
+                         a!5
+                         Config_as1border2_RouteFilterList_102_41943040_action)))))
 (let ((a!7 (and (= |0_SLICE-MAIN_as1border2_BGP_EXPORT_GigabitEthernet0/0_permitted|
                    |0_SLICE-MAIN_as1border2_OVERALL_BEST_None_permitted|)
                 (= |0_SLICE-MAIN_as1border2_BGP_EXPORT_GigabitEthernet0/0_prefixLength|
-                   a!5)
+                   a!1)
                 (= |0_SLICE-MAIN_as1border2_BGP_EXPORT_GigabitEthernet0/0_adminDist|
                    |0_SLICE-MAIN_as1border2_OVERALL_BEST_None_adminDist|)
                 (= |0_SLICE-MAIN_as1border2_BGP_EXPORT_GigabitEthernet0/0_localPref|
@@ -3154,7 +3684,7 @@
                 (not |0_SLICE-MAIN_as1border2_BGP_EXPORT_GigabitEthernet0/0_bgpInternal|))))
   (ite (and |0_SLICE-MAIN_as1border2_OVERALL_BEST_None_permitted|
             (= |0_FAILED-EDGE_as1border2_GigabitEthernet0/0| 0))
-       (ite (and a!1 a!4)
+       (ite SSA_RETURN0
             a!7
             (not |0_SLICE-MAIN_as1border2_BGP_EXPORT_GigabitEthernet0/0_permitted|))
        (not |0_SLICE-MAIN_as1border2_BGP_EXPORT_GigabitEthernet0/0_permitted|))))))
@@ -3441,73 +3971,144 @@
                     (= ((_ extract 31 8) |0_SLICE-MAIN_dst-ip|) #x010002)
                     (not (= |0_SLICE-MAIN_as1border1_OVERALL_BEST_None_history|
                             #b01)))))
-      (a!2 (and (or (= ((_ extract 31 8) |0_SLICE-MAIN_dst-ip|) #x010001)
-                    (= |0_SLICE-MAIN_as1border1_OVERALL_BEST_None_prefixLength|
-                       24))
-                (= ((_ extract 31 8) |0_SLICE-MAIN_dst-ip|) #x010001)))
-      (a!3 (and (or (= ((_ extract 31 8) |0_SLICE-MAIN_dst-ip|) #x010001)
-                    (= |0_SLICE-MAIN_as1border1_OVERALL_BEST_None_prefixLength|
-                       24))
-                (= ((_ extract 31 8) |0_SLICE-MAIN_dst-ip|) #x010002)))
-      (a!4 (and (or (= ((_ extract 31 8) |0_SLICE-MAIN_dst-ip|) #x010001)
-                    (= |0_SLICE-MAIN_as1border1_OVERALL_BEST_None_prefixLength|
-                       24))
-                (= ((_ extract 31 8) |0_SLICE-MAIN_dst-ip|) #x030001)))
-      (a!5 (and (not (= ((_ extract 31 8) |0_SLICE-MAIN_dst-ip|) #x010001))
-                (= |0_SLICE-MAIN_as1border1_OVERALL_BEST_None_prefixLength| 0)))
-      (a!6 (and (or (= ((_ extract 31 8) |0_SLICE-MAIN_dst-ip|) #x010001)
-                    (= |0_SLICE-MAIN_as1border1_OVERALL_BEST_None_prefixLength|
-                       24))
-                (= ((_ extract 31 8) |0_SLICE-MAIN_dst-ip|) #x030002)))
-      (a!7 (= |0_SLICE-MAIN_as1border1_BGP_EXPORT_GigabitEthernet1/0_prefixLength|
+      (a!2 (= (ite (= ((_ extract 31 8) |0_SLICE-MAIN_dst-ip|) #x010001)
+                   24
+                   |0_SLICE-MAIN_as1border1_OVERALL_BEST_None_prefixLength|)
+              Config_as1border1_RouteFilterList_101_16777472_prefix_range_start))
+      (a!3 (= (bvnot (bvor (bvnot |0_SLICE-MAIN_dst-ip|)
+                           (bvnot Config_as2border1_RouteFilterList_101_16777472_mask)))
+              (bvnot (bvor (bvnot Config_as2border1_RouteFilterList_101_16777472_ip)
+                           (bvnot Config_as2border1_RouteFilterList_101_16777472_mask)))))
+      (a!4 (= (ite (= ((_ extract 31 8) |0_SLICE-MAIN_dst-ip|) #x010001)
+                   24
+                   |0_SLICE-MAIN_as1border1_OVERALL_BEST_None_prefixLength|)
+              Config_as1border1_RouteFilterList_101_16777728_prefix_range_start))
+      (a!5 (= (bvnot (bvor (bvnot |0_SLICE-MAIN_dst-ip|)
+                           (bvnot Config_as2border1_RouteFilterList_101_16777728_mask)))
+              (bvnot (bvor (bvnot Config_as2border1_RouteFilterList_101_16777728_ip)
+                           (bvnot Config_as2border1_RouteFilterList_101_16777728_mask)))))
+      (a!6 (= (ite (= ((_ extract 31 8) |0_SLICE-MAIN_dst-ip|) #x010001)
+                   24
+                   |0_SLICE-MAIN_as1border1_OVERALL_BEST_None_prefixLength|)
+              Config_as1border1_RouteFilterList_103_50331904_prefix_range_start))
+      (a!7 (= (bvnot (bvor (bvnot |0_SLICE-MAIN_dst-ip|)
+                           (bvnot Config_as2border1_RouteFilterList_103_50331904_mask)))
+              (bvnot (bvor (bvnot Config_as2border1_RouteFilterList_103_50331904_ip)
+                           (bvnot Config_as2border1_RouteFilterList_103_50331904_mask)))))
+      (a!8 (= (ite (= ((_ extract 31 8) |0_SLICE-MAIN_dst-ip|) #x010001)
+                   24
+                   |0_SLICE-MAIN_as1border1_OVERALL_BEST_None_prefixLength|)
+              Config_as1border1_RouteFilterList_103_50332160_prefix_range_start))
+      (a!9 (= (bvnot (bvor (bvnot |0_SLICE-MAIN_dst-ip|)
+                           (bvnot Config_as2border1_RouteFilterList_103_50332160_mask)))
+              (bvnot (bvor (bvnot Config_as2border1_RouteFilterList_103_50332160_ip)
+                           (bvnot Config_as2border1_RouteFilterList_103_50332160_mask)))))
+      (a!10 (and (not (= ((_ extract 31 8) |0_SLICE-MAIN_dst-ip|) #x010001))
+                 (= |0_SLICE-MAIN_as1border1_OVERALL_BEST_None_prefixLength| 0))))
+(let ((a!11 (and a!1
+                 (or (ite (and a!2 a!3)
+                          Config_as1border1_RouteFilterList_101_16777472_action
+                          (and a!4
+                               a!5
+                               Config_as1border1_RouteFilterList_101_16777728_action))
+                     (ite (and a!6 a!7)
+                          Config_as1border1_RouteFilterList_103_50331904_action
+                          (and a!8
+                               a!9
+                               Config_as1border1_RouteFilterList_103_50332160_action))
+                     a!10))))
+  (= SSA_RETURN1 a!11))))
+(assert (let ((a!1 (= |0_SLICE-MAIN_as1border1_BGP_EXPORT_GigabitEthernet1/0_prefixLength|
               (ite (= ((_ extract 31 8) |0_SLICE-MAIN_dst-ip|) #x010001)
                    24
-                   |0_SLICE-MAIN_as1border1_OVERALL_BEST_None_prefixLength|))))
-(let ((a!8 (and (= |0_SLICE-MAIN_as1border1_BGP_EXPORT_GigabitEthernet1/0_permitted|
-                   |0_SLICE-MAIN_as1border1_OVERALL_BEST_None_permitted|)
-                a!7
-                (= |0_SLICE-MAIN_as1border1_BGP_EXPORT_GigabitEthernet1/0_adminDist|
-                   |0_SLICE-MAIN_as1border1_OVERALL_BEST_None_adminDist|)
-                (= |0_SLICE-MAIN_as1border1_BGP_EXPORT_GigabitEthernet1/0_localPref|
-                   |0_SLICE-MAIN_as1border1_OVERALL_BEST_None_localPref|)
-                (= |0_SLICE-MAIN_as1border1_BGP_EXPORT_GigabitEthernet1/0_metric|
-                   (ite (= |0_SLICE-MAIN_as1border1_OVERALL_BEST_None_history|
-                           #b01)
-                        (+ 1 |0_SLICE-MAIN_as1border1_OVERALL_BEST_None_metric|)
-                        1))
-                (= |0_SLICE-MAIN_as1border1_BGP_EXPORT_GigabitEthernet1/0_clientId|
-                   #b00)
-                (= |0_SLICE-MAIN_as1border1_BGP_EXPORT_GigabitEthernet1/0_community_1:2|
-                   (or |0_SLICE-MAIN_as1border1_OVERALL_BEST_None_community_1:2|
-                       a!2
-                       a!3
-                       a!4
-                       a!5
-                       a!6))
-                (= |0_SLICE-MAIN_as1border1_BGP_EXPORT_GigabitEthernet1/0_community_1:3|
-                   |0_SLICE-MAIN_as1border1_OVERALL_BEST_None_community_1:3|)
-                (= |0_SLICE-MAIN_as1border1_BGP_EXPORT_GigabitEthernet1/0_community_1:4|
-                   |0_SLICE-MAIN_as1border1_OVERALL_BEST_None_community_1:4|)
-                (= |0_SLICE-MAIN_as1border1_BGP_EXPORT_GigabitEthernet1/0_community_(,\|\\{\|\\}\|^\|$\| )4:_OTHER|
-                   |0_SLICE-MAIN_as1border1_OVERALL_BEST_None_community_(,\|\\{\|\\}\|^\|$\| )4:_OTHER|)
-                (= |0_SLICE-MAIN_as1border1_BGP_EXPORT_GigabitEthernet1/0_community_(,\|\\{\|\\}\|^\|$\| )2:_OTHER|
-                   |0_SLICE-MAIN_as1border1_OVERALL_BEST_None_community_(,\|\\{\|\\}\|^\|$\| )2:_OTHER|)
-                (= |0_SLICE-MAIN_as1border1_BGP_EXPORT_GigabitEthernet1/0_community_(,\|\\{\|\\}\|^\|$\| )3:_OTHER|
-                   |0_SLICE-MAIN_as1border1_OVERALL_BEST_None_community_(,\|\\{\|\\}\|^\|$\| )3:_OTHER|)
-                (= |0_SLICE-MAIN_as1border1_BGP_EXPORT_GigabitEthernet1/0_community_2:1|
-                   |0_SLICE-MAIN_as1border1_OVERALL_BEST_None_community_2:1|)
-                (= |0_SLICE-MAIN_as1border1_BGP_EXPORT_GigabitEthernet1/0_community_2:3|
-                   |0_SLICE-MAIN_as1border1_OVERALL_BEST_None_community_2:3|)
-                (= |0_SLICE-MAIN_as1border1_BGP_EXPORT_GigabitEthernet1/0_community_3:2|
-                   |0_SLICE-MAIN_as1border1_OVERALL_BEST_None_community_3:2|)
-                (not |0_SLICE-MAIN_as1border1_BGP_EXPORT_GigabitEthernet1/0_bgpInternal|))))
+                   |0_SLICE-MAIN_as1border1_OVERALL_BEST_None_prefixLength|)))
+      (a!2 (= (ite (= ((_ extract 31 8) |0_SLICE-MAIN_dst-ip|) #x010001)
+                   24
+                   |0_SLICE-MAIN_as1border1_OVERALL_BEST_None_prefixLength|)
+              Config_as1border1_RouteFilterList_101_16777472_prefix_range_start))
+      (a!3 (= (bvnot (bvor (bvnot |0_SLICE-MAIN_dst-ip|)
+                           (bvnot Config_as2border1_RouteFilterList_101_16777472_mask)))
+              (bvnot (bvor (bvnot Config_as2border1_RouteFilterList_101_16777472_ip)
+                           (bvnot Config_as2border1_RouteFilterList_101_16777472_mask)))))
+      (a!4 (= (ite (= ((_ extract 31 8) |0_SLICE-MAIN_dst-ip|) #x010001)
+                   24
+                   |0_SLICE-MAIN_as1border1_OVERALL_BEST_None_prefixLength|)
+              Config_as1border1_RouteFilterList_101_16777728_prefix_range_start))
+      (a!5 (= (bvnot (bvor (bvnot |0_SLICE-MAIN_dst-ip|)
+                           (bvnot Config_as2border1_RouteFilterList_101_16777728_mask)))
+              (bvnot (bvor (bvnot Config_as2border1_RouteFilterList_101_16777728_ip)
+                           (bvnot Config_as2border1_RouteFilterList_101_16777728_mask)))))
+      (a!6 (= (ite (= ((_ extract 31 8) |0_SLICE-MAIN_dst-ip|) #x010001)
+                   24
+                   |0_SLICE-MAIN_as1border1_OVERALL_BEST_None_prefixLength|)
+              Config_as1border1_RouteFilterList_103_50331904_prefix_range_start))
+      (a!7 (= (bvnot (bvor (bvnot |0_SLICE-MAIN_dst-ip|)
+                           (bvnot Config_as2border1_RouteFilterList_103_50331904_mask)))
+              (bvnot (bvor (bvnot Config_as2border1_RouteFilterList_103_50331904_ip)
+                           (bvnot Config_as2border1_RouteFilterList_103_50331904_mask)))))
+      (a!8 (= (ite (= ((_ extract 31 8) |0_SLICE-MAIN_dst-ip|) #x010001)
+                   24
+                   |0_SLICE-MAIN_as1border1_OVERALL_BEST_None_prefixLength|)
+              Config_as1border1_RouteFilterList_103_50332160_prefix_range_start))
+      (a!9 (= (bvnot (bvor (bvnot |0_SLICE-MAIN_dst-ip|)
+                           (bvnot Config_as2border1_RouteFilterList_103_50332160_mask)))
+              (bvnot (bvor (bvnot Config_as2border1_RouteFilterList_103_50332160_ip)
+                           (bvnot Config_as2border1_RouteFilterList_103_50332160_mask)))))
+      (a!10 (and (not (= ((_ extract 31 8) |0_SLICE-MAIN_dst-ip|) #x010001))
+                 (= |0_SLICE-MAIN_as1border1_OVERALL_BEST_None_prefixLength| 0))))
+(let ((a!11 (= |0_SLICE-MAIN_as1border1_BGP_EXPORT_GigabitEthernet1/0_community_1:2|
+               (or |0_SLICE-MAIN_as1border1_OVERALL_BEST_None_community_1:2|
+                   (ite (and a!2 a!3)
+                        Config_as1border1_RouteFilterList_101_16777472_action
+                        (and a!4
+                             a!5
+                             Config_as1border1_RouteFilterList_101_16777728_action))
+                   (ite (and a!6 a!7)
+                        Config_as1border1_RouteFilterList_103_50331904_action
+                        (and a!8
+                             a!9
+                             Config_as1border1_RouteFilterList_103_50332160_action))
+                   a!10))))
+(let ((a!12 (and (= |0_SLICE-MAIN_as1border1_BGP_EXPORT_GigabitEthernet1/0_permitted|
+                    |0_SLICE-MAIN_as1border1_OVERALL_BEST_None_permitted|)
+                 a!1
+                 (= |0_SLICE-MAIN_as1border1_BGP_EXPORT_GigabitEthernet1/0_adminDist|
+                    |0_SLICE-MAIN_as1border1_OVERALL_BEST_None_adminDist|)
+                 (= |0_SLICE-MAIN_as1border1_BGP_EXPORT_GigabitEthernet1/0_localPref|
+                    |0_SLICE-MAIN_as1border1_OVERALL_BEST_None_localPref|)
+                 (= |0_SLICE-MAIN_as1border1_BGP_EXPORT_GigabitEthernet1/0_metric|
+                    (ite (= |0_SLICE-MAIN_as1border1_OVERALL_BEST_None_history|
+                            #b01)
+                         (+ 1
+                            |0_SLICE-MAIN_as1border1_OVERALL_BEST_None_metric|)
+                         1))
+                 (= |0_SLICE-MAIN_as1border1_BGP_EXPORT_GigabitEthernet1/0_clientId|
+                    #b00)
+                 a!11
+                 (= |0_SLICE-MAIN_as1border1_BGP_EXPORT_GigabitEthernet1/0_community_1:3|
+                    |0_SLICE-MAIN_as1border1_OVERALL_BEST_None_community_1:3|)
+                 (= |0_SLICE-MAIN_as1border1_BGP_EXPORT_GigabitEthernet1/0_community_1:4|
+                    |0_SLICE-MAIN_as1border1_OVERALL_BEST_None_community_1:4|)
+                 (= |0_SLICE-MAIN_as1border1_BGP_EXPORT_GigabitEthernet1/0_community_(,\|\\{\|\\}\|^\|$\| )4:_OTHER|
+                    |0_SLICE-MAIN_as1border1_OVERALL_BEST_None_community_(,\|\\{\|\\}\|^\|$\| )4:_OTHER|)
+                 (= |0_SLICE-MAIN_as1border1_BGP_EXPORT_GigabitEthernet1/0_community_(,\|\\{\|\\}\|^\|$\| )2:_OTHER|
+                    |0_SLICE-MAIN_as1border1_OVERALL_BEST_None_community_(,\|\\{\|\\}\|^\|$\| )2:_OTHER|)
+                 (= |0_SLICE-MAIN_as1border1_BGP_EXPORT_GigabitEthernet1/0_community_(,\|\\{\|\\}\|^\|$\| )3:_OTHER|
+                    |0_SLICE-MAIN_as1border1_OVERALL_BEST_None_community_(,\|\\{\|\\}\|^\|$\| )3:_OTHER|)
+                 (= |0_SLICE-MAIN_as1border1_BGP_EXPORT_GigabitEthernet1/0_community_2:1|
+                    |0_SLICE-MAIN_as1border1_OVERALL_BEST_None_community_2:1|)
+                 (= |0_SLICE-MAIN_as1border1_BGP_EXPORT_GigabitEthernet1/0_community_2:3|
+                    |0_SLICE-MAIN_as1border1_OVERALL_BEST_None_community_2:3|)
+                 (= |0_SLICE-MAIN_as1border1_BGP_EXPORT_GigabitEthernet1/0_community_3:2|
+                    |0_SLICE-MAIN_as1border1_OVERALL_BEST_None_community_3:2|)
+                 (not |0_SLICE-MAIN_as1border1_BGP_EXPORT_GigabitEthernet1/0_bgpInternal|))))
   (ite (and |0_SLICE-MAIN_as1border1_OVERALL_BEST_None_permitted|
             (= |0_FAILED-EDGE_as1border1_as2border1| 0)
             (= |0_FAILED-NODE_as2border1| 0))
-       (ite (and a!1 (or a!2 a!3 a!4 a!5 a!6))
-            a!8
+       (ite SSA_RETURN1
+            a!12
             (not |0_SLICE-MAIN_as1border1_BGP_EXPORT_GigabitEthernet1/0_permitted|))
-       (not |0_SLICE-MAIN_as1border1_BGP_EXPORT_GigabitEthernet1/0_permitted|)))))
+       (not |0_SLICE-MAIN_as1border1_BGP_EXPORT_GigabitEthernet1/0_permitted|))))))
 (assert (let ((a!1 (and (= |0_SLICE-MAIN_as1border1_BGP_IMPORT_iBGP-as1core1_permitted|
                    |0_SLICE-MAIN_as1core1_BGP_EXPORT_iBGP-as1border1_permitted|)
                 (= |0_SLICE-MAIN_as1border1_BGP_IMPORT_iBGP-as1core1_prefixLength|
@@ -3615,20 +4216,23 @@
              24))
      (not |0_SLICE-MAIN_as1border1_CONNECTED_IMPORT_GigabitEthernet0/0_permitted|)))
 (assert (not |0_SLICE-MAIN_as2border1_OSPF_BEST_None_permitted|))
-(assert (let ((a!1 (or (and (= |0_SLICE-MAIN_as1border1_BGP_EXPORT_GigabitEthernet1/0_prefixLength|
-                       24)
-                    (= ((_ extract 31 8) |0_SLICE-MAIN_dst-ip|) #x010001))
-               (and (= |0_SLICE-MAIN_as1border1_BGP_EXPORT_GigabitEthernet1/0_prefixLength|
-                       24)
-                    (= ((_ extract 31 8) |0_SLICE-MAIN_dst-ip|) #x010002))))
-      (a!2 (or |0_SLICE-MAIN_as1border1_BGP_EXPORT_GigabitEthernet1/0_community_1:2|
-               (and (= |0_SLICE-MAIN_as1border1_BGP_EXPORT_GigabitEthernet1/0_prefixLength|
-                       24)
-                    (= ((_ extract 31 8) |0_SLICE-MAIN_dst-ip|) #x010001))
-               (and (= |0_SLICE-MAIN_as1border1_BGP_EXPORT_GigabitEthernet1/0_prefixLength|
-                       24)
-                    (= ((_ extract 31 8) |0_SLICE-MAIN_dst-ip|) #x010002)))))
-(let ((a!3 (ite a!1
+(assert (let ((a!1 (= (bvnot (bvor (bvnot |0_SLICE-MAIN_dst-ip|)
+                           (bvnot Config_as2border1_RouteFilterList_101_16777472_mask)))
+              (bvnot (bvor (bvnot Config_as2border1_RouteFilterList_101_16777472_ip)
+                           (bvnot Config_as2border1_RouteFilterList_101_16777472_mask)))))
+      (a!2 (= (bvnot (bvor (bvnot |0_SLICE-MAIN_dst-ip|)
+                           (bvnot Config_as2border1_RouteFilterList_101_16777728_mask)))
+              (bvnot (bvor (bvnot Config_as2border1_RouteFilterList_101_16777728_ip)
+                           (bvnot Config_as2border1_RouteFilterList_101_16777728_mask))))))
+(let ((a!3 (ite (and (= |0_SLICE-MAIN_as1border1_BGP_EXPORT_GigabitEthernet1/0_prefixLength|
+                        Config_as2border1_RouteFilterList_101_16777472_prefix_range_start)
+                     a!1)
+                Config_as2border1_RouteFilterList_101_16777472_action
+                (and (= |0_SLICE-MAIN_as1border1_BGP_EXPORT_GigabitEthernet1/0_prefixLength|
+                        Config_as2border1_RouteFilterList_101_16777728_prefix_range_start)
+                     a!2
+                     Config_as2border1_RouteFilterList_101_16777728_action))))
+(let ((a!4 (ite a!3
                 (and (= |0_SLICE-MAIN_as2border1_BGP_IMPORT_GigabitEthernet0/0_permitted|
                         |0_SLICE-MAIN_as1border1_BGP_EXPORT_GigabitEthernet1/0_permitted|)
                      (= |0_SLICE-MAIN_as2border1_BGP_IMPORT_GigabitEthernet0/0_prefixLength|
@@ -3636,7 +4240,7 @@
                      (= |0_SLICE-MAIN_as2border1_BGP_IMPORT_GigabitEthernet0/0_adminDist|
                         |0_SLICE-MAIN_as1border1_BGP_EXPORT_GigabitEthernet1/0_adminDist|)
                      (= |0_SLICE-MAIN_as2border1_BGP_IMPORT_GigabitEthernet0/0_localPref|
-                        (ite a!1
+                        (ite a!3
                              350
                              |0_SLICE-MAIN_as1border1_BGP_EXPORT_GigabitEthernet1/0_localPref|))
                      (= |0_SLICE-MAIN_as2border1_BGP_IMPORT_GigabitEthernet0/0_metric|
@@ -3648,7 +4252,8 @@
                           (= |0_SLICE-MAIN_as2border1_BGP_IMPORT_GigabitEthernet0/0_clientId|
                              |0_SLICE-MAIN_as1border1_BGP_EXPORT_GigabitEthernet1/0_clientId|))
                      (= |0_SLICE-MAIN_as2border1_BGP_IMPORT_GigabitEthernet0/0_community_1:2|
-                        a!2)
+                        (or |0_SLICE-MAIN_as1border1_BGP_EXPORT_GigabitEthernet1/0_community_1:2|
+                            a!3))
                      (= |0_SLICE-MAIN_as2border1_BGP_IMPORT_GigabitEthernet0/0_community_1:3|
                         |0_SLICE-MAIN_as1border1_BGP_EXPORT_GigabitEthernet1/0_community_1:3|)
                      (= |0_SLICE-MAIN_as2border1_BGP_IMPORT_GigabitEthernet0/0_community_1:4|
@@ -3670,30 +4275,52 @@
             |0_SLICE-MAIN_as1border1_BGP_EXPORT_GigabitEthernet1/0_permitted|
             (= |0_FAILED-EDGE_as1border1_as2border1| 0)
             (= |0_FAILED-NODE_as2border1| 0))
-       a!3
-       (not |0_SLICE-MAIN_as2border1_BGP_IMPORT_GigabitEthernet0/0_permitted|)))))
+       a!4
+       (not |0_SLICE-MAIN_as2border1_BGP_IMPORT_GigabitEthernet0/0_permitted|))))))
 (assert (let ((a!1 (and (>= |0_SLICE-MAIN_as2border1_OVERALL_BEST_None_prefixLength| 17)
                 (<= |0_SLICE-MAIN_as2border1_OVERALL_BEST_None_prefixLength| 32)
                 (= ((_ extract 31 16) |0_SLICE-MAIN_dst-ip|) #x0280)))
-      (a!2 (and (>= |0_SLICE-MAIN_as2border1_OVERALL_BEST_None_prefixLength| 16)
-                (<= |0_SLICE-MAIN_as2border1_OVERALL_BEST_None_prefixLength| 32)
-                (= ((_ extract 31 23) |0_SLICE-MAIN_dst-ip|) #b000000101))))
-(let ((a!3 (or a!2
-               (and (= |0_SLICE-MAIN_as2border1_OVERALL_BEST_None_prefixLength|
-                       24)
-                    (= ((_ extract 31 8) |0_SLICE-MAIN_dst-ip|) #x030001))
-               (and (= |0_SLICE-MAIN_as2border1_OVERALL_BEST_None_prefixLength|
-                       24)
-                    (= ((_ extract 31 8) |0_SLICE-MAIN_dst-ip|) #x030002))))
-      (a!4 (or |0_SLICE-MAIN_as2border1_OVERALL_BEST_None_community_2:1|
-               a!2
-               (and (= |0_SLICE-MAIN_as2border1_OVERALL_BEST_None_prefixLength|
-                       24)
-                    (= ((_ extract 31 8) |0_SLICE-MAIN_dst-ip|) #x030001))
-               (and (= |0_SLICE-MAIN_as2border1_OVERALL_BEST_None_prefixLength|
-                       24)
-                    (= ((_ extract 31 8) |0_SLICE-MAIN_dst-ip|) #x030002)))))
-(let ((a!5 (and (= |0_SLICE-MAIN_as2border1_BGP_EXPORT_GigabitEthernet0/0_permitted|
+      (a!2 (= (bvnot (bvor (bvnot |0_SLICE-MAIN_dst-ip|)
+                           (bvnot Config_as2border1_RouteFilterList_outbound_routes_41943040_mask)))
+              (bvnot (bvor (bvnot Config_as2border1_RouteFilterList_outbound_routes_41943040_ip)
+                           (bvnot Config_as2border1_RouteFilterList_outbound_routes_41943040_mask)))))
+      (a!3 (= (bvnot (bvor (bvnot |0_SLICE-MAIN_dst-ip|)
+                           (bvnot Config_as2border1_RouteFilterList_103_50331904_mask)))
+              (bvnot (bvor (bvnot Config_as2border1_RouteFilterList_103_50331904_ip)
+                           (bvnot Config_as2border1_RouteFilterList_103_50331904_mask)))))
+      (a!4 (= (bvnot (bvor (bvnot |0_SLICE-MAIN_dst-ip|)
+                           (bvnot Config_as2border1_RouteFilterList_103_50332160_mask)))
+              (bvnot (bvor (bvnot Config_as2border1_RouteFilterList_103_50332160_ip)
+                           (bvnot Config_as2border1_RouteFilterList_103_50332160_mask))))))
+(let ((a!5 (ite (and (= |0_SLICE-MAIN_as2border1_OVERALL_BEST_None_prefixLength|
+                        Config_as2border1_RouteFilterList_103_50331904_prefix_range_start)
+                     a!3)
+                Config_as2border1_RouteFilterList_103_50331904_action
+                (and (= |0_SLICE-MAIN_as2border1_OVERALL_BEST_None_prefixLength|
+                        Config_as2border1_RouteFilterList_103_50332160_prefix_range_start)
+                     a!4
+                     Config_as2border1_RouteFilterList_103_50332160_action))))
+(let ((a!6 (and (or (= |0_SLICE-MAIN_as2border1_OVERALL_BEST_None_history| #b1)
+                    a!1)
+                (not a!1)
+                (= |0_SLICE-MAIN_as2border1_OVERALL_BEST_None_history| #b1)
+                (or (and (>= |0_SLICE-MAIN_as2border1_OVERALL_BEST_None_prefixLength|
+                             Config_as2border1_RouteFilterList_outbound_routes_41943040_prefix_range_start)
+                         (<= |0_SLICE-MAIN_as2border1_OVERALL_BEST_None_prefixLength|
+                             Config_as2border1_RouteFilterList_outbound_routes_41943040_prefix_range_end)
+                         a!2
+                         Config_as2border1_RouteFilterList_outbound_routes_41943040_action)
+                    a!5)))
+      (a!7 (= |0_SLICE-MAIN_as2border1_BGP_EXPORT_GigabitEthernet0/0_community_2:1|
+              (or |0_SLICE-MAIN_as2border1_OVERALL_BEST_None_community_2:1|
+                  (and (>= |0_SLICE-MAIN_as2border1_OVERALL_BEST_None_prefixLength|
+                           Config_as2border1_RouteFilterList_outbound_routes_41943040_prefix_range_start)
+                       (<= |0_SLICE-MAIN_as2border1_OVERALL_BEST_None_prefixLength|
+                           Config_as2border1_RouteFilterList_outbound_routes_41943040_prefix_range_end)
+                       a!2
+                       Config_as2border1_RouteFilterList_outbound_routes_41943040_action)
+                  a!5))))
+(let ((a!8 (and (= |0_SLICE-MAIN_as2border1_BGP_EXPORT_GigabitEthernet0/0_permitted|
                    |0_SLICE-MAIN_as2border1_OVERALL_BEST_None_permitted|)
                 (= |0_SLICE-MAIN_as2border1_BGP_EXPORT_GigabitEthernet0/0_prefixLength|
                    |0_SLICE-MAIN_as2border1_OVERALL_BEST_None_prefixLength|)
@@ -3720,24 +4347,17 @@
                    |0_SLICE-MAIN_as2border1_OVERALL_BEST_None_community_(,\|\\{\|\\}\|^\|$\| )2:_OTHER|)
                 (= |0_SLICE-MAIN_as2border1_BGP_EXPORT_GigabitEthernet0/0_community_(,\|\\{\|\\}\|^\|$\| )3:_OTHER|
                    |0_SLICE-MAIN_as2border1_OVERALL_BEST_None_community_(,\|\\{\|\\}\|^\|$\| )3:_OTHER|)
-                (= |0_SLICE-MAIN_as2border1_BGP_EXPORT_GigabitEthernet0/0_community_2:1|
-                   a!4)
+                a!7
                 (= |0_SLICE-MAIN_as2border1_BGP_EXPORT_GigabitEthernet0/0_community_2:3|
                    |0_SLICE-MAIN_as2border1_OVERALL_BEST_None_community_2:3|)
                 (= |0_SLICE-MAIN_as2border1_BGP_EXPORT_GigabitEthernet0/0_community_3:2|
                    |0_SLICE-MAIN_as2border1_OVERALL_BEST_None_community_3:2|))))
-(let ((a!6 (ite (and (or (= |0_SLICE-MAIN_as2border1_OVERALL_BEST_None_history|
-                            #b1)
-                         a!1)
-                     (not a!1)
-                     (= |0_SLICE-MAIN_as2border1_OVERALL_BEST_None_history| #b1)
-                     a!3)
-                a!5
-                (not |0_SLICE-MAIN_as2border1_BGP_EXPORT_GigabitEthernet0/0_permitted|))))
   (ite (and |0_SLICE-MAIN_as2border1_OVERALL_BEST_None_permitted|
             (= |0_FAILED-EDGE_as1border1_as2border1| 0)
             (= |0_FAILED-NODE_as1border1| 0))
-       a!6
+       (ite a!6
+            a!8
+            (not |0_SLICE-MAIN_as2border1_BGP_EXPORT_GigabitEthernet0/0_permitted|))
        (not |0_SLICE-MAIN_as2border1_BGP_EXPORT_GigabitEthernet0/0_permitted|)))))))
 (assert (let ((a!1 (and (= |0_SLICE-MAIN_as1core1_OSPF_BEST_None_metric|
                    |0_SLICE-MAIN_as1core1_OSPF_IMPORT_GigabitEthernet0/0_metric|)
@@ -3747,18 +4367,18 @@
                                 |0_SLICE-MAIN_as1core1_OSPF_BEST_None_ospfType|))))))
 (let ((a!2 (and (= |0_SLICE-MAIN_as1core1_OSPF_BEST_None_adminDist|
                    |0_SLICE-MAIN_as1core1_OSPF_IMPORT_GigabitEthernet0/0_adminDist|)
-                (or a!1
-                    (not (<= |0_SLICE-MAIN_as1core1_OSPF_IMPORT_GigabitEthernet0/0_metric|
-                             |0_SLICE-MAIN_as1core1_OSPF_BEST_None_metric|))))))
+                (or (not (<= |0_SLICE-MAIN_as1core1_OSPF_IMPORT_GigabitEthernet0/0_metric|
+                             |0_SLICE-MAIN_as1core1_OSPF_BEST_None_metric|))
+                    a!1))))
 (let ((a!3 (and (= |0_SLICE-MAIN_as1core1_OSPF_BEST_None_prefixLength|
                    |0_SLICE-MAIN_as1core1_OSPF_IMPORT_GigabitEthernet0/0_prefixLength|)
                 (or (not (<= |0_SLICE-MAIN_as1core1_OSPF_IMPORT_GigabitEthernet0/0_adminDist|
                              |0_SLICE-MAIN_as1core1_OSPF_BEST_None_adminDist|))
                     a!2))))
   (or (not |0_SLICE-MAIN_as1core1_OSPF_IMPORT_GigabitEthernet0/0_permitted|)
-      a!3
       (not (<= |0_SLICE-MAIN_as1core1_OSPF_BEST_None_prefixLength|
-               |0_SLICE-MAIN_as1core1_OSPF_IMPORT_GigabitEthernet0/0_prefixLength|)))))))
+               |0_SLICE-MAIN_as1core1_OSPF_IMPORT_GigabitEthernet0/0_prefixLength|))
+      a!3)))))
 (assert (let ((a!1 (and (= |0_SLICE-MAIN_as1core1_OSPF_BEST_None_metric|
                    |0_SLICE-MAIN_as1core1_OSPF_IMPORT_GigabitEthernet1/0_metric|)
                 (or (= |0_SLICE-MAIN_as1core1_OSPF_BEST_None_ospfType|

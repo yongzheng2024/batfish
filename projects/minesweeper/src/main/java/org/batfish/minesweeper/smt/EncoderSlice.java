@@ -452,19 +452,14 @@ class EncoderSlice {
           _symbolicPacket.getDstIp(), configVarIp, configVarMask, pfx, len);
       if (lower == upper) {
         ArithExpr configVarRangeStart = r.getConfigVarStart();
-        BoolExpr configEqualLen = mkEq(configVarRangeStart, mkInt(lower));
         BoolExpr equalLen = mkEq(prefixLen, configVarRangeStart);
-        return mkAnd(equalLen, configEqualLen, lowerBitsMatch);
+        return mkAnd(equalLen, lowerBitsMatch);
       } else {
         ArithExpr configVarRangeStart = r.getConfigVarStart();
         ArithExpr configVarRangeEnd = r.getConfigVarEnd();
-        BoolExpr configEqualLower = mkEq(configVarRangeStart, mkInt(lower));
-        BoolExpr configEqualUpper = mkEq(configVarRangeEnd, mkInt(upper));
         BoolExpr lengthLowerBound = mkGe(prefixLen, configVarRangeStart);
         BoolExpr lengthUpperBound = mkLe(prefixLen, configVarRangeEnd);
-        return mkAnd(
-                configEqualLower, configEqualUpper, lengthLowerBound, lengthUpperBound,
-                lowerBitsMatch);
+        return mkAnd(lengthLowerBound, lengthUpperBound, lowerBitsMatch);
       }
     } else {
       // TODO: check here, i.e. p.getEnableSmtVariable and r.getEnableSmtVariable
@@ -507,11 +502,7 @@ class EncoderSlice {
       m |= (1 << (31 - i));
     }
 
-    BoolExpr configEqualIp = mkEq(configVarIp, getCtx().mkBV(y, 32));
-    BoolExpr configEqualMask = mkEq(configVarMask, getCtx().mkBV(m, 32));
-    BoolExpr equalPrefix =
-        mkEq(getCtx().mkBVAND(x, configVarMask), getCtx().mkBVAND(configVarIp, configVarMask));
-    return mkAnd(configEqualIp, configEqualMask, equalPrefix);
+    return mkEq(getCtx().mkBVAND(x, configVarMask), getCtx().mkBVAND(configVarIp, configVarMask));
   }
 
   BoolExpr isRelevantFor(Prefix p, BitVecExpr be) {
@@ -1856,13 +1847,13 @@ class EncoderSlice {
     // this router's Protocol          proto
 
     SymbolicRoute vars = e.getSymbolicRecord();
-
     Interface iface = ge.getStart();
 
     // check failed edge (abstract / edge link / internal link)
     ArithExpr failed = getSymbolicFailures().getFailedVariable(e.getEdge());
     assert (failed != null);
     BoolExpr notFailed = mkEq(failed, mkInt(0));
+
     // check failed node
     ArithExpr failedNode = getSymbolicFailures().getFailedStartVariable(e.getEdge());
     assert (failed != null);
@@ -1875,7 +1866,7 @@ class EncoderSlice {
         Prefix p = iface.getConcreteAddress().getPrefix();
         // IF
         //   interface active (ospf enabled if protocol is ospf) /\
-        //   prefix include the symbolicRoute's dstIp /\
+        //   prefix include the SymbolicPacket's dstIp /\
         //   no failed link /\
         //   no failed node
         // THEN
@@ -1910,7 +1901,7 @@ class EncoderSlice {
 
         // IF   <--------------------------------------------------------------------------+
         //   interface active (ospf enabled if protocol is ospf) /\                        |
-        //   static route's network include the symbolicRoute's dstIp /\                   |
+        //   static route's network include the SymbolicPacket's dstIp /\                  |
         //   no failed link /\                                                             |
         //   no failed node                                                                |
         // THEN                                                                            |
@@ -1986,10 +1977,11 @@ class EncoderSlice {
                 mkAnd(srcPort, srcIp, tcpAck,
                     tcpCwr, tcpEce, tcpFin, tcpPsh, tcpRst, tcpSyn, tcpUrg, icmpCode, icmpType);
             receiveMessage = mkImplies(all, receiveMessage); */
+
+            // iBGP peer reachability
             receiveMessage = _encoder.getSliceReachability().get(currentRouter).get(peerRouter);
 
           } else if (_encoder.getModelIgp() && isClient) {
-            // TODO: annotated by yongzheng on 20250325
             // Lookup reachability based on client id tag to find next hop
             BoolExpr acc = mkTrue();
 
@@ -2015,8 +2007,9 @@ class EncoderSlice {
                     mkAnd(srcPort, srcIp, tcpAck,
                         tcpCwr, tcpEce, tcpFin, tcpPsh, tcpRst, tcpSyn, tcpUrg, icmpCode, icmpType);
                 reach = mkImplies(all, reach); */
-                // TODO: I have not understand the code `checkIfValue(id)`.
-                //       annotated by yongzheng on 20250325
+
+                // TODO: I have not understand the following code.
+                //       annotated by yongzheng on 20250404
                 BoolExpr reach = _encoder.getSliceReachability().get(currentRouter).get(r);
                 acc = mkAnd(acc, mkImplies(varsOther.getClientId().checkIfValue(id), reach));
               }
@@ -2081,7 +2074,7 @@ class EncoderSlice {
           // THEN
           //   importFunction via call TransferSSA compute()
           // ELSE
-          //   set the symbolicRoute's permitted is false
+          //   set the SymbolicRoute's permitted to false
           BoolExpr acc = mkIf(usable, importFunction, val);
 
           if (Encoder.ENABLE_DEBUGGING) {

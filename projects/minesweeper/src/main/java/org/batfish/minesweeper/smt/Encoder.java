@@ -237,7 +237,7 @@ public class Encoder {
     _unsatCore = new UnsatCore(ENABLE_UNSAT_CORE);
 
     // initialize configuration constant - SMT symbolic variable
-    initConfigurationConstants();
+    // initConfigurationConstants();
 
     System.out.println(_solver.toString());
 
@@ -319,6 +319,7 @@ public class Encoder {
       for (Entry<GraphEdge, BgpActivePeerConfig> entry : g.getIbgpNeighbors().entrySet()) {
         GraphEdge ge = entry.getKey();
         BgpPeerConfig n = entry.getValue();
+
         String router = ge.getRouter();
         Ip ip = n.getLocalIp();
         MsPair<String, Ip> pair = new MsPair<>(router, ip);
@@ -915,8 +916,10 @@ public class Encoder {
       throw new BatfishException(
           "Cannot encode a network that has a static route with a dynamic next hop");
     }
+
     addFailedLinkConstraints(_question.getFailures());
     addFailedNodeConstraints(_question.getNodeFailures());
+
     // addEnvironmentVariables
     getMainSlice().computeEncoding();
 
@@ -927,12 +930,6 @@ public class Encoder {
         slice.computeEncoding();
       }
     }
-
-    // print _unsatCore _trackingVars BoolExpr expression
-    // Map<String, BoolExpr> trackingVars = _unsatCore.getTrackingVars();
-    // for (BoolExpr boolexprVar : trackingVars.values()) {
-    //   System.out.println(boolexprVar);
-    // }
   }
 
   public static void writeStringToFile(String content) {
@@ -1056,6 +1053,11 @@ public class Encoder {
       for (Map.Entry<String, RoutingPolicy> routingPolicyEntry : config.getRoutingPolicies().entrySet()) {
         String policyName = routingPolicyEntry.getKey();
         RoutingPolicy routingPolicy = routingPolicyEntry.getValue();
+
+        if (policyName.contains("default")) {
+          continue;
+        }
+
         List<Statement> statements = routingPolicy.getStatements();
         initConfigurationConstants(
             statements, "Config_" + hostName + "_RoutingPolicy_" + policyName + "_");
@@ -1065,6 +1067,10 @@ public class Encoder {
         String routerFilterListName = routeFilterListEntry.getKey();
         RouteFilterList routeFilterList = routeFilterListEntry.getValue();
         List<RouteFilterLine> lines = routeFilterList.getLines();
+
+        if (routerFilterListName.contains("default")) {
+          continue;
+        }
 
         for (RouteFilterLine line : lines) {
           line.initSmtVariable(
@@ -1247,10 +1253,8 @@ public class Encoder {
       //   * route-map as1_to_as2
       //   * route-map as2_to_as1
 
-      if (!configVarPrefix.contains("default")) {
-        MatchPrefixSet mps = (MatchPrefixSet) expr;
-        mps.initSmtVariable(_ctx, _solver, configVarPrefix);
-      }
+      MatchPrefixSet mps = (MatchPrefixSet) expr;
+      mps.initSmtVariable(_ctx, _solver, configVarPrefix);
 
     } else if (expr instanceof MatchPrefix6Set) {
       // TODO: implement me

@@ -150,7 +150,10 @@ public final class Prefix implements Comparable<Prefix>, Serializable {
       Ip ip, int prefixLength, BitVecExpr configVarIp, BitVecExpr configVarMask,
       ArithExpr configVarLength) {
     Prefix p = new Prefix(ip, prefixLength, configVarIp, configVarMask, configVarLength);
-    return CACHE.getUnchecked(p);
+
+    // TODO: annotated by yongzheng on 20250405
+    // return CACHE.getUnchecked(p);
+    return p;
   }
 
   public static Prefix create(Ip address, Ip mask) {
@@ -318,10 +321,12 @@ public final class Prefix implements Comparable<Prefix>, Serializable {
     _configVarLength = context.mkIntConst(configVarPrefix + prefixIp + "_length");
 
     // add relevant configuration constant constraints
+    // original wildcardMask is 0b000011111111
+    // modified subnetMask is   0b111100000000
     BoolExpr configVarIpConstraint = context.mkEq(
         _configVarIp, context.mkBV(prefixIp, BITVEC_EXPR_SIZE));
     BoolExpr configVarMaskConstraint = context.mkEq(
-        _configVarMask, context.mkBV(getPrefixWildcard().asLong(), BITVEC_EXPR_SIZE));
+        _configVarMask, context.mkBV(~(getPrefixWildcard().asLong()), BITVEC_EXPR_SIZE));
     BoolExpr configVarLengthConstraint = context.mkEq(
         _configVarLength, context.mkInt(_prefixLength));
     solver.add(configVarIpConstraint);

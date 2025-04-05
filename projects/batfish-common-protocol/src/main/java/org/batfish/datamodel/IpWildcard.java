@@ -265,10 +265,12 @@ public final class IpWildcard implements Serializable, Comparable<IpWildcard> {
     _configVarLength = context.mkIntConst(configVarPrefix + prefixIp + "_length");
 
     // add relevant configuration constant constraints
+    // original wildcardMask is 0b000011111111
+    // modified subnetMask is   0b111100000000
     BoolExpr configVarIpConstraint = context.mkEq(
         _configVarIp, context.mkBV(prefixIp, BITVEC_EXPR_SIZE));
     BoolExpr configVarMaskConstraint = context.mkEq(
-        _configVarMask, context.mkBV(_wildcardMask, BITVEC_EXPR_SIZE));
+        _configVarMask, context.mkBV((~_wildcardMask), BITVEC_EXPR_SIZE));
     BoolExpr configVarLengthConstraint = context.mkEq(
         _configVarLength, context.mkInt(Prefix.MAX_PREFIX_LENGTH - Long.bitCount(_wildcardMask)));
     solver.add(configVarIpConstraint);
