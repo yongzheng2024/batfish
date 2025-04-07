@@ -494,7 +494,8 @@ class EncoderSlice {
       BitVecExpr x, BitVecExpr configVarIp, BitVecExpr configVarMask, long y, int n) {
     assert (n >= 0 && n <= 32);
     if (n == 0) {
-      // TODO: check here and implement it when needed
+      // FIXME: check here and implement it when needed
+      //        annotated by yongzheng on 20250407
       return mkTrue();
     }
     int m = 0;
@@ -2181,6 +2182,7 @@ class EncoderSlice {
         // We have to wrap this with the right thing for some reason
         List<Statement> statements;
         if (proto.isOspf()) {
+          // TODO: check pol.getStatements and i
           If i =
               new If(
                   new MatchProtocol(RoutingProtocol.OSPF),
@@ -2198,6 +2200,10 @@ class EncoderSlice {
 
         System.out.println();
         System.out.println("EXPORT FUNCTION: " + router + " " + varsOther.getName());
+        for (Statement stmt : statements) {
+          System.out.println(stmt.toString());
+        }
+
         TransferSSA f =
             new TransferSSA(this, conf, varsOther, vars, proto, statements, cost, ge, true);
         acc = f.compute();
@@ -2324,6 +2330,7 @@ class EncoderSlice {
                 // or another OSPF route. We always take the direct OSPF
                 SymbolicRoute ospfRedistribVars = null;
                 SymbolicRoute overallBest = null;
+
                 if (proto.isOspf()) {
                   varsOther = getBestNeighborPerProtocol(router, proto);
                   if (_ospfRedistributed.containsKey(router)) {

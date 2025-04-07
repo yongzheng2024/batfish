@@ -239,8 +239,6 @@ public class Encoder {
     // initialize configuration constant - SMT symbolic variable
     // initConfigurationConstants();
 
-    System.out.println(_solver.toString());
-
     // initialize _symbolicFailures and _allVariables, which involving
     //   + all GraphEdge getPeer() == null according to _edgeMap  (_failedEdgeLinks)
     //   + all neighbor node pair according to _neighbors         (_failedInternalLinks)
@@ -1054,9 +1052,10 @@ public class Encoder {
         String policyName = routingPolicyEntry.getKey();
         RoutingPolicy routingPolicy = routingPolicyEntry.getValue();
 
-        if (policyName.contains("default")) {
-          continue;
-        }
+        // exclude other routing policy with configuration constants -> SMT symbolic variables
+        // if (policyName.contains("default")) {
+        //   continue;
+        // }
 
         List<Statement> statements = routingPolicy.getStatements();
         initConfigurationConstants(
@@ -1068,9 +1067,10 @@ public class Encoder {
         RouteFilterList routeFilterList = routeFilterListEntry.getValue();
         List<RouteFilterLine> lines = routeFilterList.getLines();
 
-        if (routerFilterListName.contains("default")) {
-          continue;
-        }
+        // exclude other router filter list with configuration constants -> SMT symbolic variables
+        // if (routerFilterListName.contains("default")) {
+        //   continue;
+        // }
 
         for (RouteFilterLine line : lines) {
           line.initSmtVariable(

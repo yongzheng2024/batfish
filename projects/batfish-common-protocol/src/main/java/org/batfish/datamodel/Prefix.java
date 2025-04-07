@@ -313,16 +313,21 @@ public final class Prefix implements Comparable<Prefix>, Serializable {
   private transient ArithExpr _configVarLength;
 
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
+    if (_enableSmtVariable) {
+      return;
+    }
+
     // FIXME: if prefix length is 0, then the encoding of ip / mask / length ?
     long prefixIp = _ip.asLong();
+    // String prefixIp = Long.toBinaryString(_ip.asLong());
 
     _configVarIp = context.mkBVConst(configVarPrefix + prefixIp + "_ip", BITVEC_EXPR_SIZE);
     _configVarMask = context.mkBVConst(configVarPrefix + prefixIp + "_mask", BITVEC_EXPR_SIZE);
     _configVarLength = context.mkIntConst(configVarPrefix + prefixIp + "_length");
 
     // add relevant configuration constant constraints
-    // original wildcardMask is 0b000011111111
-    // modified subnetMask is   0b111100000000
+    // original wildcardMask is 0b0000111111111111 (0x0FFF)
+    // modified subnetMask is   0b1111000000000000 (0xF000)
     BoolExpr configVarIpConstraint = context.mkEq(
         _configVarIp, context.mkBV(prefixIp, BITVEC_EXPR_SIZE));
     BoolExpr configVarMaskConstraint = context.mkEq(

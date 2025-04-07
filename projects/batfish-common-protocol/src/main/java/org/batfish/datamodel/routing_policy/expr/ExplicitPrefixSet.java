@@ -18,6 +18,9 @@ public class ExplicitPrefixSet extends PrefixSetExpr {
 
   public ExplicitPrefixSet(PrefixSpace prefixSpace) {
     _prefixSpace = prefixSpace;
+
+    // initialize enable smt variable flag to false
+    _enableSmtVariable = false;
   }
 
   @Override
@@ -67,8 +70,21 @@ public class ExplicitPrefixSet extends PrefixSetExpr {
   }
 
   /** Add configuration constant - SMT symbolic variable */
+  private boolean _enableSmtVariable;
+
   @Override
   public final void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
+    if (_enableSmtVariable) {
+      return;
+    }
+
     _prefixSpace.initSmtVariable(context, solver, configVarPrefix);
+
+    // configure the enable smt variable flag to true
+    _enableSmtVariable = true;
+  }
+
+  boolean getEnableSmtVariable() {
+    return _enableSmtVariable;
   }
 }

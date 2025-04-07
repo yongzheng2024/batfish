@@ -26,18 +26,27 @@ public final class PrefixRange implements Serializable, Comparable<PrefixRange> 
     if (realPrefixLength == prefixLength) {
       _prefix = prefix;
     } else {
+      // FIXME: if prefix or lengthRange have enableSmtVariable flag set to true,
+      //        then we should keep same _prefix and _lengthRange with SMT symbolic variable
+      //        (maybe we should modify _prefix length and mask SMT symbolic variables)
+      //        annotated by yongzheng on 20250407
+      Preconditions.checkState(
+          false,
+          "ERROR: PrefixRange:PrefixRange() " +
+          "Prefix and SubRange enabling SMT symbolic variable are not supported");
       Ip realPrefixAddress = prefix.getStartIp().getNetworkAddress(realPrefixLength);
       _prefix = Prefix.create(realPrefixAddress, prefixLength);
     }
     _lengthRange = lengthRange;
 
-    // check the prefix and lengthRange enable SMT variable flags
+    // check Prefix(prefix) and SubRange(lengthRange) enabling SMT symbolic variable flags
     // all flags are true or all flags are false
     Preconditions.checkState(
         (prefix.getEnableSmtVariable() == lengthRange.getEnableSmtVariable()), 
-        "ERROR: PrefixRange:PrefixRange Prefix and SubRange enable SMT Variable");
+        "ERROR: PrefixRange:PrefixRange() " +
+        "Prefix and SubRange enabling SMT symbolic variable are inconsistent");
 
-    if (prefix.getEnableSmtVariable() && lengthRange.getEnableSmtVariable()) {
+    if (_prefix.getEnableSmtVariable() && _lengthRange.getEnableSmtVariable()) {
       // configure enable smt variable flag to true according to Prefix and SubRange
       _enableSmtVariable = true;
     } else {
@@ -136,6 +145,10 @@ public final class PrefixRange implements Serializable, Comparable<PrefixRange> 
   private boolean _enableSmtVariable;
 
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
+    if (_enableSmtVariable) {
+      return;
+    }
+
     long prefixIp = _prefix.getStartIp().asLong();
     _prefix.initSmtVariable(context, solver, configVarPrefix);
     _lengthRange.initSmtVariable(context, solver, configVarPrefix + prefixIp + "_");

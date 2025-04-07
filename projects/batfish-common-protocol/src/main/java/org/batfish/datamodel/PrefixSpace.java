@@ -197,6 +197,9 @@ public class PrefixSpace implements Serializable {
   public PrefixSpace() {
     _trie = new BitTrie();
     _cache = new ConcurrentHashMap<>();
+
+    // initialize enable smt variable flag to false
+    _enableSmtVariable = false;
   }
 
   @JsonCreator
@@ -346,9 +349,22 @@ public class PrefixSpace implements Serializable {
   }
 
   /** Add configuration constant - SMT symbolic variable */
+  private boolean _enableSmtVariable;
+
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
+    if (_enableSmtVariable) {
+      return;
+    }
+
     for (PrefixRange prefixRange : getPrefixRanges()) {
       prefixRange.initSmtVariable(context, solver, configVarPrefix);
     }
+
+    // configure enable smt variable flag to true
+    _enableSmtVariable = true;
+  }
+
+  public boolean getEnableSmtVariable() {
+    return _enableSmtVariable;
   }
 }

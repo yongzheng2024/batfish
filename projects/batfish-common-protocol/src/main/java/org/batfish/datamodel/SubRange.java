@@ -156,14 +156,16 @@ public final class SubRange implements Serializable, Comparable<SubRange> {
   }
 
   /** Add configuration constant - SMT symbolic variable */
-  // private static final long serialVersionUID = -6470930317597088503L;
-
   private boolean _enableSmtVariable;
 
   private transient ArithExpr _configVarStart;
   private transient ArithExpr _configVarEnd;
 
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
+    if (_enableSmtVariable) {
+      return;
+    }
+
     _configVarStart = context.mkIntConst(configVarPrefix + "prefix_range_start");
     _configVarEnd = context.mkIntConst(configVarPrefix + "prefix_range_end");
 
