@@ -97,6 +97,8 @@ import org.batfish.datamodel.routing_policy.statement.SetOspfMetricType;
 import org.batfish.datamodel.routing_policy.statement.Statement;
 import org.batfish.datamodel.routing_policy.statement.Statements.StaticStatement;
 
+import org.batfish.datamodel.PrefixRange;
+
 /**
  * A class responsible for building a symbolic encoding of the entire network. The encoder does this
  * by maintaining a collection of encoding slices, where each slice encodes the forwarding behavior
@@ -141,6 +143,11 @@ public class Encoder {
   private Solver _solver;
 
   private UnsatCore _unsatCore;
+
+  // the output directory name and relevant print writer
+  private String _outputDirectoryName;
+  PrintWriter _smtWriter;
+  PrintWriter _configWriter;
 
   /**
    * Create an encoder object that will consider all packets in the provided headerspace.
@@ -235,6 +242,9 @@ public class Encoder {
     }
 
     _unsatCore = new UnsatCore(ENABLE_UNSAT_CORE);
+
+    // initialize output directory and relevant file print writer
+    initOutput();
 
     // initialize configuration constant - SMT symbolic variable
     // initConfigurationConstants();
@@ -831,10 +841,13 @@ public class Encoder {
       simplifiedSolver.add(simplifiedAssertion);
     }
 
-    // System.out.println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
+    // System.out.println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
     // System.out.println(simplifiedSolver.toString());
-    writeStringToFile(simplifiedSolver.toString());
-    // System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+    _smtWriter.println(simplifiedSolver.toString());
+    _smtWriter.println("(check-sat)");
+    _smtWriter.println("(get-model)");
+    _smtWriter.close();
+    // System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
 
     long start = System.currentTimeMillis();
     Status status = _solver.check();
@@ -930,36 +943,51 @@ public class Encoder {
     }
   }
 
-  public static void writeStringToFile(String content) {
+  private void initOutput() {
+    _outputDirectoryName = createOutputDirectory();
+
+    String outputSmtFileName = _outputDirectoryName + "/smt_encoding.smt";
+    String outputConfigFileName = _outputDirectoryName + "/configs_to_varaibles.txt";
+
+    File outputSmtFile = new File(outputSmtFileName);
+    File outputConfigFile = new File(outputConfigFileName);
+
+    try {
+      _smtWriter = new PrintWriter(new FileWriter(outputSmtFile, true));
+      _configWriter = new PrintWriter(new FileWriter(outputConfigFile, true));
+    } catch (IOException e) {
+      System.err.println("Error: Unable to create file: " + e.getMessage());
+    }
+  }
+
+  private static String createOutputDirectory() {
+    // SMT_DIRECTORY_PREFIX = "/PATH-TO/batfish/smts"
     final String DIRECTORY_PREFIX = System.getenv("SMT_DIRECTORY_PREFIX");
-    final String FILE_PREFIX = "smt_encoding_";
-    final String FILE_EXTENSION = ".smt2";
-    final int MAX_FILES = 9999;
+    final String DIRECTORY_NAME = DIRECTORY_PREFIX + "/smt_output_";
+    final int DIRECTORY_INDEX_LIMIT = 9999;
 
-    for (int i = 1; i <= MAX_FILES; i++) {
-      String smtEncodingFileName = String.format("%s%04d%s", FILE_PREFIX, i, FILE_EXTENSION);
-      File smtEncodingFile = new File(DIRECTORY_PREFIX, smtEncodingFileName);
+    String outputDirectoryName = null;
 
-      if (smtEncodingFile.exists()) {
+    for (int i = 1; i <= DIRECTORY_INDEX_LIMIT; ++i) {
+      // outputDirectoryName = "/PATH-TO/batfish/smts/smt_output_xxxx"
+      // output directory range from 0001 to 9999
+      outputDirectoryName = String.format("%s%04d", DIRECTORY_NAME, i);
+      File outputDirectory = new File(outputDirectoryName);
+
+      if (outputDirectory.exists()) {
         continue;
       }
 
-      PrintWriter smtWriter = null;
       try {
-        smtWriter = new PrintWriter(new FileWriter(smtEncodingFile, true));
-        smtWriter.println(content);
-        smtWriter.println("(check-sat)");
-        smtWriter.println("(get-model)");
-        System.out.println("SMT encoding written to " + smtEncodingFileName);
-      } catch (IOException e) {
-        e.printStackTrace();
-      } finally {
-        if (null != smtWriter) {
-          smtWriter.close();
-        }
+        outputDirectory.mkdir();
+      } catch (SecurityException e) {
+        System.err.println("Error: Unable to create directory: " + e.getMessage());
       }
+
       break;
     }
+
+    return outputDirectoryName;
   }
 
   /*
@@ -1023,6 +1051,10 @@ public class Encoder {
     return _question;
   }
 
+  public String getDirectoryName() {
+    return _outputDirectoryName;
+  }
+
   public void setQuestion(HeaderQuestion question) {
     _question = question;
   }
@@ -1043,24 +1075,23 @@ public class Encoder {
     return _ctx.mkBVConst(name, size);
   }
 
+  private static String longToIpString(long ip) {
+    return String.format(
+        "%d.%d.%d.%d",
+        (ip >> 24) & 0xFF,
+        (ip >> 16) & 0xFF,
+        (ip >> 8) & 0xFF,
+        ip & 0xFF
+    );
+  }
+
   private void initConfigurationConstants() {
     for (Map.Entry<String, Configuration> configEntry : _graph.getConfigurations().entrySet()) {
       String hostName = configEntry.getKey();
       Configuration config = configEntry.getValue();
 
-      for (Map.Entry<String, RoutingPolicy> routingPolicyEntry : config.getRoutingPolicies().entrySet()) {
-        String policyName = routingPolicyEntry.getKey();
-        RoutingPolicy routingPolicy = routingPolicyEntry.getValue();
-
-        // exclude other routing policy with configuration constants -> SMT symbolic variables
-        // if (policyName.contains("default")) {
-        //   continue;
-        // }
-
-        List<Statement> statements = routingPolicy.getStatements();
-        initConfigurationConstants(
-            statements, "Config_" + hostName + "_RoutingPolicy_" + policyName + "_");
-      }
+      // write host name to configs_to_variables file
+      _configWriter.println(hostName);
 
       for (Map.Entry<String, RouteFilterList> routeFilterListEntry : config.getRouteFilterLists().entrySet()) {
         String routerFilterListName = routeFilterListEntry.getKey();
@@ -1072,13 +1103,50 @@ public class Encoder {
         //   continue;
         // }
 
+        // write route filter list name to configs_to_variables file
+        _configWriter.println("  * " + "ip prefix-list / access-list: " + routerFilterListName);
+
         for (RouteFilterLine line : lines) {
-          line.initSmtVariable(
-              _ctx, _solver,
-              "Config_" + hostName + "_RouteFilterList_" + routerFilterListName + "_");
+          String configVarPrefix = "Config_" + hostName + "_RouteFilterList_" + routerFilterListName + "_";
+          line.initSmtVariable(_ctx, _solver, configVarPrefix);
+
+          // write (ipLongFormat -> ipStringFormat) to configs_to_variables file
+          long prefixIp = line.getIpWildcard().getIp().asLong();
+          String prefixIpStr = longToIpString(prefixIp);
+          _configWriter.println("    (" + prefixIp + " -> " + prefixIpStr + ")");
+          // write smt symbolic variable name to configs_to_variables file
+          // RouteFilterList
+          _configWriter.println("    + " + configVarPrefix + prefixIp + "_action");
+          // IpWildcard
+          _configWriter.println("    + " + configVarPrefix + prefixIp + "_ip");
+          _configWriter.println("    + " + configVarPrefix + prefixIp + "_mask");
+          _configWriter.println("    + " + configVarPrefix + prefixIp + "_length");
+          // SubRange
+          _configWriter.println("    + " + configVarPrefix + prefixIp + "_prefix_range_start");
+          _configWriter.println("    + " + configVarPrefix + prefixIp + "_prefix_range_end");
         }
       }
+
+      for (Map.Entry<String, RoutingPolicy> routingPolicyEntry : config.getRoutingPolicies().entrySet()) {
+        String policyName = routingPolicyEntry.getKey();
+        RoutingPolicy routingPolicy = routingPolicyEntry.getValue();
+
+        // exclude other routing policy with configuration constants -> SMT symbolic variables
+        // if (policyName.contains("default")) {
+        //   continue;
+        // }
+
+        // TODO: write smt symbolic variable name to configs_to_variables file
+        //       annotated by yongzheng on 20250407
+        _configWriter.println("  * " + "routing policy (todo): " + policyName);
+
+        List<Statement> statements = routingPolicy.getStatements();
+        initConfigurationConstants(
+            statements, "Config_" + hostName + "_RoutingPolicy_" + policyName + "_");
+      }
     }
+
+    _configWriter.close();
   }
 
   private void initConfigurationConstants(
@@ -1242,19 +1310,28 @@ public class Encoder {
 
     if (expr instanceof MatchPrefixSet) {
       // TODO: check here and implement it when needed
-      // exclude the following routing policy
-      //   * BGP_COMMON_EXPORT_POLICY ~default
-      //   * BGP_PEER_EXPORT_POLICY ~default
-      //   * BGP_REDISTRIBUTION ~default
-      //   * OSPF_EXPORT_POLICY ~default
-      //   * AGGREGATE_ROUTE_GEN
-
-      // include the following routing policy
-      //   * route-map as1_to_as2
-      //   * route-map as2_to_as1
-
       MatchPrefixSet mps = (MatchPrefixSet) expr;
       mps.initSmtVariable(_ctx, _solver, configVarPrefix);
+
+      // write smt symbolic variables name to configs_to_variables file
+      PrefixSetExpr prefixSetExpr = mps.getPrefixSet();
+      if (prefixSetExpr instanceof ExplicitPrefixSet) {
+        ExplicitPrefixSet eps = (ExplicitPrefixSet) prefixSetExpr;
+        for (PrefixRange prefixRange : eps.getPrefixSpace().getPrefixRanges()) {
+          // write (ipLongFormat -> ipStringFormat) to configs_to_variables file
+          long prefixIp = prefixRange.getPrefix().getStartIp().asLong();
+          String prefixIpStr = longToIpString(prefixIp);
+          _configWriter.println("    (" + prefixIp + " -> " + prefixIpStr + ")");
+          // write smt symbolic variable name to configs_to_variables file
+          _configWriter.println("    + " + configVarPrefix + prefixIp + "_ip");
+          _configWriter.println("    + " + configVarPrefix + prefixIp + "_mask");
+          _configWriter.println("    + " + configVarPrefix + prefixIp + "_length");
+          _configWriter.println("    + " + configVarPrefix + prefixIp + "_prefix_range_start");
+          _configWriter.println("    + " + configVarPrefix + prefixIp + "_prefix_range_end");
+        }
+      } else if (prefixSetExpr instanceof NamedPrefixSet) {
+        // call ip prefix-list / access-list
+      }
 
     } else if (expr instanceof MatchPrefix6Set) {
       // TODO: implement me
@@ -1262,7 +1339,8 @@ public class Encoder {
 
     } else if (expr instanceof CallExpr) {
       // TODO: check here and implement it when needed
-      {}  // do nothing
+      CallExpr ce = (CallExpr) expr;
+      _configWriter.println("    + " + "call " + ce.getCalledPolicyName());
 
     } else if (expr instanceof WithEnvironmentExpr) {
       WithEnvironmentExpr we = (WithEnvironmentExpr) expr;
