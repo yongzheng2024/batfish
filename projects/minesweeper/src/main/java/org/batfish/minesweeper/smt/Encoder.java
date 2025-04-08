@@ -1110,6 +1110,21 @@ public class Encoder {
     return formatedStr;
   }
 
+  public static String incrementLineSuffix(String routingPolicyLineName) {
+    // match end with "_LineN" (N is integer number)
+    String pattern = "(.+)__Line(\\d+)__$";
+    java.util.regex.Pattern r = java.util.regex.Pattern.compile(pattern);
+    java.util.regex.Matcher m = r.matcher(routingPolicyLineName);
+
+    if (m.matches()) {
+      String prefix = m.group(1);
+      int number = Integer.parseInt(m.group(2));
+      return prefix + "__Line" + (number + 1) + "__";
+    } else {
+      return routingPolicyLineName + "_Line1__";
+    }
+  }
+
   private static String longToIpString(long ip) {
     return String.format(
         "%d.%d.%d.%d",
@@ -1238,6 +1253,7 @@ public class Encoder {
         // ELSE
         //   falseStatement
         If i = (If) stmt;
+        configVarPrefix = incrementLineSuffix(configVarPrefix);
         initConfigurationConstants(i.getGuard(), configVarPrefix);
         initConfigurationConstants(i.getTrueStatements(), configVarPrefix);
         initConfigurationConstants(i.getFalseStatements(), configVarPrefix);
