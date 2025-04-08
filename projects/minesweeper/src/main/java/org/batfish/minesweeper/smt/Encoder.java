@@ -248,7 +248,7 @@ public class Encoder {
     initOutput();
 
     // initialize configuration constant - SMT symbolic variable
-    initConfigurationConstants();
+    // initConfigurationConstants();
 
     // initialize _symbolicFailures and _allVariables, which involving
     //   + all GraphEdge getPeer() == null according to _edgeMap  (_failedEdgeLinks)
@@ -1263,17 +1263,16 @@ public class Encoder {
         {}  // do nothing
 
       } else if (stmt instanceof SetMetric) {
-        // TODO: implement me
-        {}  // do nothing
+        SetMetric sm = (SetMetric) stmt;
+        sm.initSmtVariable(_ctx, _solver, configVarPrefix + "set_metric");
 
       } else if (stmt instanceof SetOspfMetricType) {
         // TODO: implement me
         {}  // do nothing
 
       } else if (stmt instanceof SetLocalPreference) {
-        // TODO: implement me
         SetLocalPreference slp = (SetLocalPreference) stmt;
-        slp.initSmtVariable(_ctx, _solver, configVarPrefix + "localpreference");
+        slp.initSmtVariable(_ctx, _solver, configVarPrefix + "set_localpreference");
 
       } else if (stmt instanceof AddCommunity) {
         // TODO: implement me

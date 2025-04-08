@@ -7,6 +7,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+
+import com.microsoft.z3.Context;
+import com.microsoft.z3.Solver;
 import org.batfish.datamodel.routing_policy.Environment;
 import org.batfish.datamodel.routing_policy.Result;
 import org.batfish.datamodel.routing_policy.expr.LongExpr;
@@ -66,5 +69,10 @@ public final class SetMetric extends Statement {
     int result = 1;
     result = prime * result + _metric.hashCode();
     return result;
+  }
+
+  /** Add configuration constant - SMT symbolic variable */
+  public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
+    _metric.initSmtVariable(context, solver, configVarPrefix);
   }
 }
