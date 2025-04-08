@@ -147,6 +147,7 @@ public class Encoder {
   // the output directory name and relevant print writer
   private String _outputDirectoryName;
   PrintWriter _smtWriter;
+  PrintWriter _constWriter;
   PrintWriter _configWriter;
 
   /**
@@ -247,7 +248,7 @@ public class Encoder {
     initOutput();
 
     // initialize configuration constant - SMT symbolic variable
-    // initConfigurationConstants();
+    initConfigurationConstants();
 
     // initialize _symbolicFailures and _allVariables, which involving
     //   + all GraphEdge getPeer() == null according to _edgeMap  (_failedEdgeLinks)
@@ -946,14 +947,17 @@ public class Encoder {
   private void initOutput() {
     _outputDirectoryName = createOutputDirectory();
 
-    String outputSmtFileName = _outputDirectoryName + "/smt_encoding.smt";
-    String outputConfigFileName = _outputDirectoryName + "/configs_to_varaibles.txt";
+    String outputSmtFileName = _outputDirectoryName + "/smt_encoding.smt2";
+    String outputConstFileName = _outputDirectoryName + "/config_constraints.smt2";
+    String outputConfigFileName = _outputDirectoryName + "/configs_to_variables.txt";
 
     File outputSmtFile = new File(outputSmtFileName);
+    File outputConstFile = new File(outputConstFileName);
     File outputConfigFile = new File(outputConfigFileName);
 
     try {
       _smtWriter = new PrintWriter(new FileWriter(outputSmtFile, true));
+      _constWriter = new PrintWriter(new FileWriter(outputConstFile, true));
       _configWriter = new PrintWriter(new FileWriter(outputConfigFile, true));
     } catch (IOException e) {
       System.err.println("Error: Unable to create file: " + e.getMessage());
@@ -1075,6 +1079,37 @@ public class Encoder {
     return _ctx.mkBVConst(name, size);
   }
 
+  private static String format(String str) {
+    String formatedStr = "";
+
+    // replace some characters with '_'
+    for (char c : str.toCharArray()) {
+      switch (c) {
+        case '~':
+        case '-':
+        case ':':
+        case '.':
+        case '/':
+          formatedStr += '_';
+          break;
+        default:
+          formatedStr += c;
+          break;
+      }
+    }
+
+    // remove the start with '_'
+    if (formatedStr.startsWith("_")) {
+      formatedStr = formatedStr.substring(1);
+    }
+    // remove the end with '_'
+    if (formatedStr.endsWith("_")) {
+      formatedStr = formatedStr.substring(0, formatedStr.length() - 1);
+    }
+
+    return formatedStr;
+  }
+
   private static String longToIpString(long ip) {
     return String.format(
         "%d.%d.%d.%d",
@@ -1107,23 +1142,25 @@ public class Encoder {
         _configWriter.println("  * " + "ip prefix-list / access-list: " + routerFilterListName);
 
         for (RouteFilterLine line : lines) {
-          String configVarPrefix = "Config_" + hostName + "_RouteFilterList_" + routerFilterListName + "_";
+          long prefixIp = line.getIpWildcard().getIp().asLong();
+          String prefixIpStr = longToIpString(prefixIp);
+          String configVarPrefix =
+              "Config_" + hostName + "_RouteFilterList_" + format(routerFilterListName) +
+              "__" + format(prefixIpStr) + "__";
           line.initSmtVariable(_ctx, _solver, configVarPrefix);
 
           // write (ipLongFormat -> ipStringFormat) to configs_to_variables file
-          long prefixIp = line.getIpWildcard().getIp().asLong();
-          String prefixIpStr = longToIpString(prefixIp);
           _configWriter.println("    (" + prefixIp + " -> " + prefixIpStr + ")");
           // write smt symbolic variable name to configs_to_variables file
           // RouteFilterList
-          _configWriter.println("    + " + configVarPrefix + prefixIp + "_action");
+          _configWriter.println("    + " + configVarPrefix + "action");
           // IpWildcard
-          _configWriter.println("    + " + configVarPrefix + prefixIp + "_ip");
-          _configWriter.println("    + " + configVarPrefix + prefixIp + "_mask");
-          _configWriter.println("    + " + configVarPrefix + prefixIp + "_length");
+          _configWriter.println("    + " + configVarPrefix + "ip");
+          _configWriter.println("    + " + configVarPrefix + "mask");
+          _configWriter.println("    + " + configVarPrefix + "length");
           // SubRange
-          _configWriter.println("    + " + configVarPrefix + prefixIp + "_prefix_range_start");
-          _configWriter.println("    + " + configVarPrefix + prefixIp + "_prefix_range_end");
+          _configWriter.println("    + " + configVarPrefix + "prefix_range_start");
+          _configWriter.println("    + " + configVarPrefix + "prefix_range_end");
         }
       }
 
@@ -1142,10 +1179,16 @@ public class Encoder {
 
         List<Statement> statements = routingPolicy.getStatements();
         initConfigurationConstants(
-            statements, "Config_" + hostName + "_RoutingPolicy_" + policyName + "_");
+            statements, "Config_" + hostName + "_RoutingPolicy_" + format(policyName) + "_");
       }
     }
 
+
+    // System.out.println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
+    // System.out.println(_solver.toString());
+    _constWriter.println(_solver.toString());
+    _constWriter.close();
+    // System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
     _configWriter.close();
   }
 
@@ -1323,11 +1366,14 @@ public class Encoder {
           String prefixIpStr = longToIpString(prefixIp);
           _configWriter.println("    (" + prefixIp + " -> " + prefixIpStr + ")");
           // write smt symbolic variable name to configs_to_variables file
-          _configWriter.println("    + " + configVarPrefix + prefixIp + "_ip");
-          _configWriter.println("    + " + configVarPrefix + prefixIp + "_mask");
-          _configWriter.println("    + " + configVarPrefix + prefixIp + "_length");
-          _configWriter.println("    + " + configVarPrefix + prefixIp + "_prefix_range_start");
-          _configWriter.println("    + " + configVarPrefix + prefixIp + "_prefix_range_end");
+          _configWriter.println("    + " + configVarPrefix + "_" + format(prefixIpStr) + "__ip");
+          _configWriter.println("    + " + configVarPrefix + "_" + format(prefixIpStr) + "__mask");
+          _configWriter.println(
+              "    + " + configVarPrefix + "_" + format(prefixIpStr) + "__length");
+          _configWriter.println(
+              "    + " + configVarPrefix + "_" + format(prefixIpStr) + "__prefix_range_start");
+          _configWriter.println(
+              "    + " + configVarPrefix + "_" + format(prefixIpStr) + "__prefix_range_end");
         }
       } else if (prefixSetExpr instanceof NamedPrefixSet) {
         // call ip prefix-list / access-list

@@ -114,11 +114,10 @@ public final class RouteFilterLine implements Serializable {
   private transient BoolExpr _configVarAction;
 
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
-    long prefixIp = _ipWildcard.getIp().asLong();
-    _configVarAction = context.mkBoolConst(configVarPrefix + prefixIp + "_action");
+    _configVarAction = context.mkBoolConst(configVarPrefix + "action");
 
     _ipWildcard.initSmtVariable(context, solver, configVarPrefix);
-    _lengthRange.initSmtVariable(context, solver, configVarPrefix + prefixIp + "_");
+    _lengthRange.initSmtVariable(context, solver, configVarPrefix);
 
     // add relevant configuration constant constraint
     BoolExpr configVarActionConstraint = context.mkEq(

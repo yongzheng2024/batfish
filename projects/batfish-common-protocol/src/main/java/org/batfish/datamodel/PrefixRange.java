@@ -144,14 +144,41 @@ public final class PrefixRange implements Serializable, Comparable<PrefixRange> 
   /** Add configuration constant - SMT symbolic variable */
   private boolean _enableSmtVariable;
 
+  private static String format(String str) {
+    String formatedStr = "";
+    for (char c : str.toCharArray()) {
+      switch (c) {
+        case '.':
+          formatedStr += '_';
+          break;
+        default:
+          formatedStr += c;
+          break;
+      }
+    }
+    return formatedStr;
+  }
+
+  private static String longToIpString(long ip) {
+    return String.format(
+        "%d.%d.%d.%d",
+        (ip >> 24) & 0xFF,
+        (ip >> 16) & 0xFF,
+        (ip >> 8) & 0xFF,
+        ip & 0xFF
+    );
+  }
+
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
     if (_enableSmtVariable) {
       return;
     }
 
     long prefixIp = _prefix.getStartIp().asLong();
-    _prefix.initSmtVariable(context, solver, configVarPrefix);
-    _lengthRange.initSmtVariable(context, solver, configVarPrefix + prefixIp + "_");
+    String prefixIpStr = longToIpString(prefixIp);
+    _prefix.initSmtVariable(context, solver, configVarPrefix + "_" + format(prefixIpStr) + "__");
+    _lengthRange.initSmtVariable(
+        context, solver, configVarPrefix + "_" + format(prefixIpStr) + "__");
 
     // configure enable smt variable flag to true
     _enableSmtVariable = true;

@@ -519,7 +519,6 @@ class TransferSSA {
     }
 
     if (expr instanceof MatchPrefixSet) {
-      // TODO: added by yongzheng in 20250312
       pCur.debug("MatchPrefixSet");
       System.out.println("MatchPrefixSet");
       MatchPrefixSet m = (MatchPrefixSet) expr;
@@ -1111,6 +1110,8 @@ class TransferSSA {
         }
 
       } else if (stmt instanceof If) {
+        // TODO: I have not understand this code
+        //       annotated by yongzheng on 20250408
         curP.debug("If");
         If i = (If) stmt;
         TransferResult<BoolExpr, BoolExpr> r = compute(i.getGuard(), curP);
@@ -1223,6 +1224,7 @@ class TransferSSA {
         curP.debug("SetLocalPreference");
         SetLocalPreference slp = (SetLocalPreference) stmt;
         LongExpr ie = slp.getLocalPreference();
+        // FIXME: add configuration constant -> SMT symbolic variable
         ArithExpr newValue = applyLongExprModification(curP.getData().getLocalPref(), ie);
         newValue =
             _enc.mkIf(curResult.getReturnAssignedValue(), curP.getData().getLocalPref(), newValue);

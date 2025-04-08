@@ -1048,6 +1048,7 @@ class EncoderSlice {
       for (Entry<CommunityVar, BoolExpr> entry : r.getCommunities().entrySet()) {
         CommunityVar cvar = entry.getKey();
         BoolExpr e = entry.getValue();
+
         if (cvar.getType() == CommunityVar.Type.REGEX) {
           BoolExpr acc = mkFalse();
           List<CommunityVar> deps = getGraph().getCommunityDependencies().get(cvar);

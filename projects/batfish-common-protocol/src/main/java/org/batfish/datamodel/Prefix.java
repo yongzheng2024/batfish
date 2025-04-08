@@ -319,11 +319,10 @@ public final class Prefix implements Comparable<Prefix>, Serializable {
 
     // FIXME: if prefix length is 0, then the encoding of ip / mask / length ?
     long prefixIp = _ip.asLong();
-    // String prefixIp = Long.toBinaryString(_ip.asLong());
 
-    _configVarIp = context.mkBVConst(configVarPrefix + prefixIp + "_ip", BITVEC_EXPR_SIZE);
-    _configVarMask = context.mkBVConst(configVarPrefix + prefixIp + "_mask", BITVEC_EXPR_SIZE);
-    _configVarLength = context.mkIntConst(configVarPrefix + prefixIp + "_length");
+    _configVarIp = context.mkBVConst(configVarPrefix + "ip", BITVEC_EXPR_SIZE);
+    _configVarMask = context.mkBVConst(configVarPrefix + "mask", BITVEC_EXPR_SIZE);
+    _configVarLength = context.mkIntConst(configVarPrefix + "length");
 
     // add relevant configuration constant constraints
     // original wildcardMask is 0b0000111111111111 (0x0FFF)
