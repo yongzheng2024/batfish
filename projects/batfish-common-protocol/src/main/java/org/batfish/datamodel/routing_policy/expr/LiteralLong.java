@@ -2,6 +2,10 @@ package org.batfish.datamodel.routing_policy.expr;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.microsoft.z3.Context;
+import com.microsoft.z3.Solver;
+import com.microsoft.z3.BoolExpr;
+import com.microsoft.z3.ArithExpr;
 import org.batfish.datamodel.routing_policy.Environment;
 
 public class LiteralLong extends LongExpr {
@@ -14,6 +18,9 @@ public class LiteralLong extends LongExpr {
 
   public LiteralLong(long value) {
     _value = value;
+
+    // initialize enable smt variable flag to false
+    _enableSmtVariable = false;
   }
 
   @Override
@@ -60,5 +67,34 @@ public class LiteralLong extends LongExpr {
   @JsonProperty(PROP_VALUE)
   public void setValue(long value) {
     _value = value;
+  }
+
+  /** Add configuration constant - SMT symbolic variable */
+  private boolean _enableSmtVariable;
+
+  private transient ArithExpr _configVarLocalpreference;
+
+  public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
+    if (_enableSmtVariable) {
+      return;
+    }
+
+    _configVarLocalpreference = context.mkIntConst(configVarPrefix + "localpreference");
+
+    // add relevant configuration constant constraints
+    BoolExpr configVarLpConstraint = context.mkEq(
+        _configVarLocalpreference, context.mkInt(_value));
+    solver.add(configVarLpConstraint);
+
+    // config enable smt variable flag to true
+    _enableSmtVariable = true;
+  }
+
+  public boolean getEnableSmtVariable() {
+    return _enableSmtVariable;
+  }
+
+  public ArithExpr getConfigVarLocalpreference() {
+    return _configVarLocalpreference;
   }
 }

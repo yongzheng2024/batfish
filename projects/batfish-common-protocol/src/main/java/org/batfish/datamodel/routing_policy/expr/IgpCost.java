@@ -1,5 +1,7 @@
 package org.batfish.datamodel.routing_policy.expr;
 
+import com.microsoft.z3.Context;
+import com.microsoft.z3.Solver;
 import org.batfish.datamodel.routing_policy.Environment;
 
 public class IgpCost extends LongExpr {
@@ -34,5 +36,11 @@ public class IgpCost extends LongExpr {
     int result = 1;
     result = prime * result + 0x12345678;
     return result;
+  }
+
+  /** Add configuration constant - SMT symbolic variable */
+  public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
+    // TODO: implement me when needed
+    {}  // do nothing
   }
 }

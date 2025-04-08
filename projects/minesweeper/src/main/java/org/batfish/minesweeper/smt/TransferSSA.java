@@ -618,23 +618,43 @@ class TransferSSA {
   private ArithExpr applyLongExprModification(ArithExpr x, LongExpr e) {
     if (e instanceof LiteralLong) {
       LiteralLong z = (LiteralLong) e;
-      return _enc.mkInt(z.getValue());
+      if (z.getEnableSmtVariable()) {
+        return z.getConfigVarLocalpreference();
+      } else {
+        return _enc.mkInt(z.getValue());
+      }
     }
     if (e instanceof DecrementMetric) {
       DecrementMetric z = (DecrementMetric) e;
-      return _enc.mkSub(x, _enc.mkInt(z.getSubtrahend()));
+      if (z.getEnableSmtVariable()) {
+        return z.getConfigVarLocalpreference();
+      } else {
+        return _enc.mkSub(x, _enc.mkInt(z.getSubtrahend()));
+      }
     }
     if (e instanceof IncrementMetric) {
       IncrementMetric z = (IncrementMetric) e;
-      return _enc.mkSum(x, _enc.mkInt(z.getAddend()));
+      if (z.getEnableSmtVariable()) {
+        return z.getConfigVarLocalpreference();
+      } else {
+        return _enc.mkSum(x, _enc.mkInt(z.getAddend()));
+      }
     }
     if (e instanceof IncrementLocalPreference) {
       IncrementLocalPreference z = (IncrementLocalPreference) e;
-      return _enc.mkSum(x, _enc.mkInt(z.getAddend()));
+      if (z.getEnableSmtVariable()) {
+        return z.getConfigVarLocalpreference();
+      } else {
+        return _enc.mkSum(x, _enc.mkInt(z.getAddend()));
+      }
     }
     if (e instanceof DecrementLocalPreference) {
       DecrementLocalPreference z = (DecrementLocalPreference) e;
-      return _enc.mkSub(x, _enc.mkInt(z.getSubtrahend()));
+      if (z.getEnableSmtVariable()) {
+        return z.getConfigVarLocalpreference();
+      } else {
+        return _enc.mkSub(x, _enc.mkInt(z.getSubtrahend()));
+      }
     }
     throw new BatfishException("int expr transfer function: " + e);
   }

@@ -10,6 +10,9 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.batfish.datamodel.routing_policy.Environment;
 
+import com.microsoft.z3.Context;
+import com.microsoft.z3.Solver;
+
 /** Evaluates to the value of the given ASN. */
 public final class AsnValue extends LongExpr {
   public static AsnValue of(@Nonnull AsExpr asExpr) {
@@ -58,4 +61,10 @@ public final class AsnValue extends LongExpr {
 
   private static final String PROP_AS = "as";
   private final @Nonnull AsExpr _asExpr;
+
+  /** Add configuration constant - SMT symbolic variable */
+  public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
+    // TODO: implement me when needed
+    {}  // do nothing
+  }
 }

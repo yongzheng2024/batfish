@@ -8,7 +8,13 @@ import java.util.Objects;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+
+import com.microsoft.z3.Context;
+import com.microsoft.z3.Solver;
 import org.batfish.datamodel.routing_policy.Environment;
+
+import com.microsoft.z3.Context;
+import com.microsoft.z3.Solver;
 
 /**
  * An expression for an unsigned 32-bit integer given by a pair of expressions for its high and low
@@ -74,4 +80,10 @@ public final class Uint32HighLowExpr extends LongExpr {
 
   private final @Nonnull IntExpr _highExpr;
   private final @Nonnull IntExpr _lowExpr;
+
+  /** Add configuration constant - SMT symbolic variable */
+  public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
+    // TODO: implement me when needed
+    {}  // do nothing
+  }
 }

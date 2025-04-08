@@ -1,6 +1,8 @@
 package org.batfish.datamodel.routing_policy.expr;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.microsoft.z3.Context;
+import com.microsoft.z3.Solver;
 import org.batfish.datamodel.routing_policy.Environment;
 
 public class VarLong extends LongExpr {
@@ -60,5 +62,11 @@ public class VarLong extends LongExpr {
 
   public void setVar(String var) {
     _var = var;
+  }
+
+  /** Add configuration constant - SMT symbolic variable */
+  public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
+    // TODO: implement me when needed
+    {}  // do nothing
   }
 }

@@ -90,7 +90,7 @@ public final class MatchPrefixSet extends BooleanExpr {
   }
 
   /** Add configuration constant - SMT symbolic variable */
-  public final void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
+  public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
     _prefixSet.initSmtVariable(context, solver, configVarPrefix);
   }
 }

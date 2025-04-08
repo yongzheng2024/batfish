@@ -3,6 +3,9 @@ package org.batfish.datamodel.routing_policy.statement;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import javax.annotation.ParametersAreNonnullByDefault;
+
+import com.microsoft.z3.Context;
+import com.microsoft.z3.Solver;
 import org.batfish.datamodel.HasWritableLocalPreference;
 import org.batfish.datamodel.routing_policy.Environment;
 import org.batfish.datamodel.routing_policy.Result;
@@ -66,5 +69,10 @@ public final class SetLocalPreference extends Statement {
   @JsonProperty(PROP_LOCAL_PREFERENCE)
   public void setLocalPreference(LongExpr localPreference) {
     _localPreference = localPreference;
+  }
+
+  /** Add configuration constant - SMT symbolic variable */
+  public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
+    _localPreference.initSmtVariable(context, solver, configVarPrefix);
   }
 }
