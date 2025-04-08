@@ -1257,7 +1257,7 @@ public class Encoder {
       } else if (stmt instanceof SetLocalPreference) {
         // TODO: implement me
         SetLocalPreference slp = (SetLocalPreference) stmt;
-        slp.initSmtVariable(_ctx, _solver, configVarPrefix);
+        slp.initSmtVariable(_ctx, _solver, configVarPrefix + "localpreference");
 
       } else if (stmt instanceof AddCommunity) {
         // TODO: implement me

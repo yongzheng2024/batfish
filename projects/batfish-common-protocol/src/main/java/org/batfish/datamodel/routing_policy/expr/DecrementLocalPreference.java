@@ -86,7 +86,7 @@ public final class DecrementLocalPreference extends LongExpr {
       return;
     }
 
-    _configVarLocalpreference = context.mkIntConst(configVarPrefix + "localpreference");
+    _configVarLocalpreference = context.mkIntConst(configVarPrefix);
 
     // add relevant configuration constant constraints
     BoolExpr configVarLpConstraint = context.mkEq(
