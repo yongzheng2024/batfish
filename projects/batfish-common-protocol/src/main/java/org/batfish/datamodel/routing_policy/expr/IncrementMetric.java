@@ -72,11 +72,15 @@ public final class IncrementMetric extends LongExpr {
 
   /** Add configuration constant - SMT symbolic variable */
   private boolean _enableSmtVariable;
+  private String _configVarPrefix;
 
   private transient ArithExpr _configVarLocalpreference;
 
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
     if (_enableSmtVariable) {
+      System.out.println("ERROR IncrementMetric:initSmtVariable");
+      System.out.println("Previous configVarPrefix: " + _configVarPrefix);
+      System.out.println("Current  configVarPrefix: " + configVarPrefix);
       return;
     }
 
@@ -89,10 +93,15 @@ public final class IncrementMetric extends LongExpr {
 
     // config enable smt variable flag to true
     _enableSmtVariable = true;
+    _configVarPrefix = configVarPrefix;
   }
 
   public boolean getEnableSmtVariable() {
     return _enableSmtVariable;
+  }
+
+  public String getConfigVarPrefix() {
+    return _configVarPrefix;
   }
 
   public ArithExpr getConfigVarLocalpreference() {

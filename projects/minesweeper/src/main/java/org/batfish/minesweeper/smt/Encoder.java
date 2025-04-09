@@ -1266,6 +1266,9 @@ public class Encoder {
         SetMetric sm = (SetMetric) stmt;
         sm.initSmtVariable(_ctx, _solver, configVarPrefix + "set_metric");
 
+        // write smt symbolic variable name to configs_to_variables file
+        _configWriter.println("    + " + configVarPrefix + "set_metric");
+
       } else if (stmt instanceof SetOspfMetricType) {
         // TODO: implement me
         {}  // do nothing
@@ -1273,6 +1276,9 @@ public class Encoder {
       } else if (stmt instanceof SetLocalPreference) {
         SetLocalPreference slp = (SetLocalPreference) stmt;
         slp.initSmtVariable(_ctx, _solver, configVarPrefix + "set_localpreference");
+
+        // write smt symbolic variable name to configs_to_variables file
+        _configWriter.println("    + " + configVarPrefix + "set_localpreference");
 
       } else if (stmt instanceof AddCommunity) {
         // TODO: implement me

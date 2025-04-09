@@ -73,7 +73,9 @@ public final class IpWildcard implements Serializable, Comparable<IpWildcard> {
    */
   public static IpWildcard ipWithWildcardMask(Ip address, long wildcardMask) {
     IpWildcard wildcard = new IpWildcard(address, wildcardMask);
-    return CACHE.getUnchecked(wildcard);
+    // NOTE: commented CACHE by yongzheng on 20250409
+    // return CACHE.getUnchecked(wildcard);
+    return wildcard;
   }
 
   /**
@@ -252,12 +254,20 @@ public final class IpWildcard implements Serializable, Comparable<IpWildcard> {
   private static int BITVEC_EXPR_SIZE = 32;
 
   private boolean _enableSmtVariable;
+  private String _configVarPrefix;
 
   private transient BitVecExpr _configVarIp;
   private transient BitVecExpr _configVarMask;
   private transient ArithExpr _configVarLength;
 
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
+    if (_enableSmtVariable) {
+      System.out.println("ERROR IpWildcard:initSmtVariable");
+      System.out.println("Previous configVarPrefix: " + _configVarPrefix);
+      System.out.println("Current  configVarPrefix: " + configVarPrefix);
+      return;
+    }
+
     long prefixIp = _ip.asLong();
 
     _configVarIp = context.mkBVConst(configVarPrefix + "ip", BITVEC_EXPR_SIZE);
@@ -279,10 +289,15 @@ public final class IpWildcard implements Serializable, Comparable<IpWildcard> {
 
     // configure enable smt variable flag to true
     _enableSmtVariable = true;
+    _configVarPrefix = configVarPrefix;
   }
 
   public boolean getEnableSmtVariable() {
     return _enableSmtVariable;
+  }
+
+  public String getConfigVarPrefix() {
+    return _configVarPrefix;
   }
 
   public BitVecExpr getConfigVarIp() {

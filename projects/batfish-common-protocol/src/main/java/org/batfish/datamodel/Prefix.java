@@ -143,7 +143,9 @@ public final class Prefix implements Comparable<Prefix>, Serializable {
 
   public static Prefix create(Ip ip, int prefixLength) {
     Prefix p = new Prefix(ip, prefixLength);
-    return CACHE.getUnchecked(p);
+    // NOTE: commented CACHE by yongzheng on 20250409
+    // return CACHE.getUnchecked(p);
+    return p;
   }
 
   public static Prefix create(
@@ -307,6 +309,7 @@ public final class Prefix implements Comparable<Prefix>, Serializable {
   private static int BITVEC_EXPR_SIZE = 32;
 
   private boolean _enableSmtVariable;
+  private String _configVarPrefix;
 
   private transient BitVecExpr _configVarIp;
   private transient BitVecExpr _configVarMask;
@@ -314,6 +317,9 @@ public final class Prefix implements Comparable<Prefix>, Serializable {
 
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
     if (_enableSmtVariable) {
+      System.out.println("ERROR Prefix:initSmtVariable");
+      System.out.println("Previous configVarPrefix: " + _configVarPrefix);
+      System.out.println("Current  configVarPrefix: " + configVarPrefix);
       return;
     }
 
@@ -339,10 +345,15 @@ public final class Prefix implements Comparable<Prefix>, Serializable {
 
     // config enable smt variable flag to true
     _enableSmtVariable = true;
+    _configVarPrefix = configVarPrefix;
   }
 
   public boolean getEnableSmtVariable() {
     return _enableSmtVariable;
+  }
+
+  public String getConfigVarPrefix() {
+    return _configVarPrefix;
   }
 
   public BitVecExpr getConfigVarIp() {

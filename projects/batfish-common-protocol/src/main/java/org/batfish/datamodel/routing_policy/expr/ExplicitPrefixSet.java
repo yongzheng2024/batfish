@@ -74,10 +74,6 @@ public class ExplicitPrefixSet extends PrefixSetExpr {
 
   @Override
   public final void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
-    if (_enableSmtVariable) {
-      return;
-    }
-
     _prefixSpace.initSmtVariable(context, solver, configVarPrefix);
 
     // configure the enable smt variable flag to true

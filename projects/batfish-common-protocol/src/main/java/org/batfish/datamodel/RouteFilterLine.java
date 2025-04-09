@@ -1,6 +1,7 @@
 package org.batfish.datamodel;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static org.batfish.datamodel.IpWildcard.ipWithWildcardMask;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -23,8 +24,8 @@ public final class RouteFilterLine implements Serializable {
   private static final String PROP_IP_WILDCARD = "ipWildcard";
 
   private final @Nonnull LineAction _action;
-  private final @Nonnull IpWildcard _ipWildcard;
-  private final @Nonnull SubRange _lengthRange;
+  private /*final*/ @Nonnull IpWildcard _ipWildcard;
+  private /*final*/ @Nonnull SubRange _lengthRange;
 
   /** Route filter line that permits all routes */
   public static final RouteFilterLine PERMIT_ALL =
@@ -110,10 +111,27 @@ public final class RouteFilterLine implements Serializable {
 
   /** Add configuration constant - SMT symbolic variable */
   private boolean _enableSmtVariable;
+  private String _configVarPrefix;
 
   private transient BoolExpr _configVarAction;
 
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
+    if (_enableSmtVariable) {
+      System.out.println("ERROR RouteFilterLine:initSmtVariable");
+      System.out.println("Previous configVarPrefix: " + _configVarPrefix);
+      System.out.println("Current  configVarPrefix: " + configVarPrefix);
+      return;
+    }
+
+    if (_ipWildcard.getEnableSmtVariable()) {
+      _ipWildcard =
+          IpWildcard.ipWithWildcardMask(_ipWildcard.getIp(), _ipWildcard.getWildcardMask());
+    }
+
+    if (_lengthRange.getEnableSmtVariable()) {
+      _lengthRange = new SubRange(_lengthRange.getStart(), _lengthRange.getEnd());
+    }
+
     _configVarAction = context.mkBoolConst(configVarPrefix + "action");
 
     _ipWildcard.initSmtVariable(context, solver, configVarPrefix);
@@ -126,10 +144,15 @@ public final class RouteFilterLine implements Serializable {
 
     // configure enable smt variable flag to true
     _enableSmtVariable = true;
+    _configVarPrefix = configVarPrefix;
   }
 
   public boolean getEnableSmtVariable() {
     return _enableSmtVariable;
+  }
+
+  public String getConfigVarPrefix() {
+    return _configVarPrefix;
   }
 
   public BoolExpr getConfigVarAction() {

@@ -1,5 +1,7 @@
 package org.batfish.datamodel;
 
+import static org.batfish.datamodel.Prefix.create;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import java.io.Serializable;
@@ -138,8 +140,8 @@ public final class PrefixRange implements Serializable, Comparable<PrefixRange> 
     return _prefix.equals(o._prefix) && _lengthRange.equals(o._lengthRange);
   }
 
-  private final Prefix _prefix;
-  private final SubRange _lengthRange;
+  private /*final*/ Prefix _prefix;
+  private /*final*/ SubRange _lengthRange;
   
   /** Add configuration constant - SMT symbolic variable */
   private boolean _enableSmtVariable;
@@ -170,8 +172,12 @@ public final class PrefixRange implements Serializable, Comparable<PrefixRange> 
   }
 
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
-    if (_enableSmtVariable) {
-      return;
+    if (_prefix.getEnableSmtVariable()) {
+      _prefix = Prefix.create(_prefix.getStartIp(), _prefix.getPrefixLength());
+    }
+
+    if (_lengthRange.getEnableSmtVariable()) {
+      _lengthRange = new SubRange(_lengthRange.getStart(), _lengthRange.getEnd());
     }
 
     long prefixIp = _prefix.getStartIp().asLong();

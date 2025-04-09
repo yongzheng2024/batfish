@@ -352,10 +352,6 @@ public class PrefixSpace implements Serializable {
   private boolean _enableSmtVariable;
 
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
-    if (_enableSmtVariable) {
-      return;
-    }
-
     for (PrefixRange prefixRange : getPrefixRanges()) {
       prefixRange.initSmtVariable(context, solver, configVarPrefix);
     }

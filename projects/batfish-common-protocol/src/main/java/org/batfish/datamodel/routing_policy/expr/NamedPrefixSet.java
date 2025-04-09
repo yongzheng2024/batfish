@@ -72,10 +72,6 @@ public final class NamedPrefixSet extends PrefixSetExpr {
 
   @Override
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
-    if (_enableSmtVariable) {
-      return;
-    }
-
     // do nothing, just refer to the RouteFilterList object according to _name
 
     // configure the enable smt variable flag to true
