@@ -15,6 +15,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.batfish.common.BatfishException;
 import org.batfish.datamodel.BgpPeerConfig;
@@ -324,6 +325,84 @@ class TransferSSA {
     }
   }
 
+  private String regexToString(String r) {
+    char first = r.charAt(0);
+    int len = r.length();
+    char last = r.charAt(len - 1);
+    if ((first == '^') && (last == '$')) {
+      return r.substring(1,len-1);
+    }
+    return r;
+  }
+
+  private BoolExpr matchCommunity(Map<CommunityVar, BoolExpr> comms, CommunityVar c) {
+   /* System.out.println("CommunityVarRegex of type: " + c.getType().toString() + " " + c.getRegex().toString());
+    for (Map.Entry<CommunityVar, BoolExpr> e : comms.entrySet()) {
+      System.out.println("CommunityVarOther of type: " + e.getKey().getType().toString() + " " + regexToString(e.getKey().getRegex().toString()));
+    } */
+    Type commType = c.getType();
+    String cstring = c.getRegex().toString();
+    /* Equality check between exact matches. */
+    BoolExpr cbool = comms.get(c);
+    if (cbool != null) {
+      return cbool;
+    }
+    // Regexp checking, if it's a regexp try to match it with a regexp or an exact.
+    Map<CommunityVar, BoolExpr> exact = new HashMap<>();
+    Map<CommunityVar, BoolExpr> regex = new HashMap<>();
+    Map<CommunityVar, BoolExpr> other = new HashMap<>();
+    for (Map.Entry<CommunityVar, BoolExpr> e : comms.entrySet()) {
+      switch (e.getKey().getType()) {
+        case EXACT:
+          exact.put(e.getKey(), e.getValue());
+          break;
+        case REGEX:
+          regex.put(e.getKey(), e.getValue());
+          break;
+        case OTHER:
+          other.put(e.getKey(), e.getValue());
+          break;
+      }
+    }
+
+    if (commType.equals(Type.EXACT)) {
+      // No point in checking the exact list, cbool would have caught it.
+      for (Map.Entry<CommunityVar, BoolExpr> e : regex.entrySet()) {
+        String ostring = regexToString(e.getKey().getRegex().toString());
+        if (Pattern.matches(ostring, cstring)) {
+          return e.getValue();
+        }
+      }
+      for (Map.Entry<CommunityVar, BoolExpr> e : other.entrySet()) {
+        String ostring = regexToString(e.getKey().getRegex().toString());
+        if (Pattern.matches(ostring, cstring)) {
+          return e.getValue();
+        }
+      }
+    } else {
+      // Other checking
+      for (Map.Entry<CommunityVar, BoolExpr> e : exact.entrySet()) {
+        String ostring = regexToString(e.getKey().getRegex().toString());
+        if (Pattern.matches(cstring, ostring)) {
+          return e.getValue();
+        }
+      }
+      for (Map.Entry<CommunityVar, BoolExpr> e : regex.entrySet()) {
+        String ostring = regexToString(e.getKey().getRegex().toString());
+        if (cstring.equals(ostring)) {
+          return e.getValue();
+        }
+      }
+      for (Map.Entry<CommunityVar, BoolExpr> e : other.entrySet()) {
+        String ostring = regexToString(e.getKey().getRegex().toString());
+        if (cstring.equals(ostring)) {
+          return e.getValue();
+        }
+      }
+    }
+    return null;
+  }
+
   /*
    * Converts a community list to a boolean expression.
    */
@@ -331,12 +410,25 @@ class TransferSSA {
     List<CommunityListLine> lines = new ArrayList<>(cl.getLines());
     Collections.reverse(lines);
     BoolExpr acc = _enc.mkFalse();
+
     for (CommunityListLine line : lines) {
       boolean action = (line.getAction() == LineAction.PERMIT);
       CommunityVar cvar = toCommunityVar(line.getMatchCondition());
-      BoolExpr c = other.getCommunities().get(cvar);
+
+      /*other.getCommunities().forEach((commName,b) ->
+          System.out.println("DEBUG: " + commName.toString() + "-> " + b.toString()));
+      System.out.println("cvar: " + cvar.toString());*/
+
+      // NOTE: This is wrong, we need to actually match on the cvar.
+      //       refer to https://github.com/batfish minesweeper-ibgp-new branch
+      // BoolExpr c = other.getCommunities().get(cvar);
+      BoolExpr c = matchCommunity(other.getCommunities(), cvar);
+      if (c == null) {
+        throw new BatfishException("matchCommunityList: should not be null");
+      }
       acc = _enc.mkIf(c, _enc.mkBool(action), acc);
     }
+
     return acc;
   }
 
