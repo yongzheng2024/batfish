@@ -10,6 +10,10 @@ import java.io.Serializable;
 import java.util.Set;
 import java.util.regex.Pattern;
 import javax.annotation.Nonnull;
+
+import com.microsoft.z3.BoolExpr;
+import com.microsoft.z3.Context;
+import com.microsoft.z3.Solver;
 import org.batfish.datamodel.bgp.community.Community;
 import org.batfish.datamodel.routing_policy.Environment;
 import org.batfish.datamodel.routing_policy.expr.CommunitySetExpr;
@@ -45,6 +49,9 @@ public final class RegexCommunitySet extends CommunitySetExpr {
   public RegexCommunitySet(@Nonnull String regex) {
     _regex = regex;
     _pattern = Suppliers.memoize(new PatternSupplier());
+
+    // initialize enable smt variable flag to false
+    _enableSmtVariable = false;
   }
 
   @Override
@@ -104,5 +111,58 @@ public final class RegexCommunitySet extends CommunitySetExpr {
   @Override
   public boolean reducible() {
     return true;
+  }
+
+  /** Add configuration constant - SMT symbolic variable */
+  private boolean _enableSmtVariable;
+  private String _configVarPrefix;
+
+  private transient BoolExpr _configVarCommunity;
+
+  @Override
+  public void initSmtVariable(
+      Context context, Solver solver, String configVarPrefix, boolean isTrue) {
+    if (_enableSmtVariable) {
+      System.out.println("ERROR RegexCommunitySet:initSmtVariable");
+      System.out.println("Previous configVarPrefix: " + _configVarPrefix);
+      System.out.println("Current  configVarPrefix: " + configVarPrefix);
+      return;
+    }
+
+    _configVarCommunity = context.mkBoolConst(configVarPrefix + "community");
+
+    // add relevant configuration constant constraint
+    // for community (regex / exact), add boolean constraint which equal true
+    BoolExpr configVarRegexCommConstraint =
+        context.mkEq(_configVarCommunity, context.mkBool(isTrue));
+    solver.add(configVarRegexCommConstraint);
+
+    // configure enable smt variable flag to true
+    _enableSmtVariable = true;
+    _configVarPrefix = configVarPrefix;
+  }
+
+  @Override
+  public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
+    initSmtVariable(context, solver, configVarPrefix, true);
+  }
+
+  public boolean getEnableSmtVariable() {
+    return _enableSmtVariable;
+  }
+
+  public String getConfigVarPrefix() {
+    return _configVarPrefix;
+  }
+
+  public BoolExpr getConfigVarCommunity() {
+    return _configVarCommunity;
+  }
+
+  /** Add get community expression string for configVarPrefix */
+  @Override
+  public String getCommunityExprString() {
+    // TODO: format regex community expression
+    return _regex;
   }
 }

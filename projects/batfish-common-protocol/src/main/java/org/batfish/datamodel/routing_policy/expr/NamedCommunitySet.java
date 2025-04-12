@@ -6,6 +6,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Set;
 import javax.annotation.Nonnull;
+
+import com.microsoft.z3.Context;
+import com.microsoft.z3.Solver;
 import org.batfish.datamodel.bgp.community.Community;
 import org.batfish.datamodel.routing_policy.Environment;
 import org.batfish.datamodel.visitors.CommunitySetExprVisitor;
@@ -95,5 +98,23 @@ public class NamedCommunitySet extends CommunitySetExpr {
 
   private @Nonnull CommunitySetExpr resolve(@Nonnull Environment environment) {
     return requireNonNull(environment.getCommunityLists().get(_name));
+  }
+
+  /** Add configuration constant - SMT symbolic variable */
+  @Override
+  public void initSmtVariable(Context context, Solver solver, String configVarPrefix, boolean isTrue) {
+    // TODO: implement me
+    {}  // do nothing
+  }
+
+  @Override
+  public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
+    initSmtVariable(context, solver, configVarPrefix, true);
+  }
+
+  /** Add get community expression string for configVarPrefix */
+  @Override
+  public String getCommunityExprString() {
+    return _name;
   }
 }

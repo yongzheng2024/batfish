@@ -8,6 +8,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Objects;
 import java.util.Set;
 import javax.annotation.Nonnull;
+
+import com.microsoft.z3.Context;
+import com.microsoft.z3.Solver;
 import org.batfish.datamodel.bgp.community.Community;
 import org.batfish.datamodel.bgp.community.StandardCommunity;
 import org.batfish.datamodel.routing_policy.Environment;
@@ -110,5 +113,24 @@ public class CommunityHalvesExpr extends CommunitySetExpr {
   @Override
   public String toString() {
     return toStringHelper(getClass()).add(PROP_LEFT, _left).add(PROP_RIGHT, _right).toString();
+  }
+
+  /** Add configuration constant - SMT symbolic variable */
+  @Override
+  public void initSmtVariable(Context context, Solver solver, String configVarPrefix, boolean isTrue) {
+    // TODO: implement me
+    {}  // do nothing
+  }
+
+  @Override
+  public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
+    initSmtVariable(context, solver, configVarPrefix, true);
+  }
+
+  /** Add get community expression string for configVarPrefix */
+  @Override
+  public String getCommunityExprString() {
+    // TODO: implement me when needed
+    return "";
   }
 }

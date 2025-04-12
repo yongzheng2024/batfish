@@ -8,7 +8,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.io.Serializable;
 import java.util.Objects;
 import javax.annotation.Nonnull;
+
+import com.microsoft.z3.BoolExpr;
+import com.microsoft.z3.Context;
+import com.microsoft.z3.Solver;
 import org.batfish.datamodel.routing_policy.expr.CommunitySetExpr;
+import org.batfish.datamodel.routing_policy.expr.LiteralCommunity;
+import org.batfish.datamodel.routing_policy.expr.LiteralCommunitySet;
 
 /** A line in a CommunityList */
 public class CommunityListLine implements Serializable {
@@ -26,6 +32,9 @@ public class CommunityListLine implements Serializable {
   public CommunityListLine(@Nonnull LineAction action, @Nonnull CommunitySetExpr matchCondition) {
     _action = action;
     _matchCondition = matchCondition;
+
+    // initialize enable smt variable flag to false
+    _enableSmtVariable = false;
   }
 
   @JsonCreator
@@ -68,5 +77,62 @@ public class CommunityListLine implements Serializable {
         .add(PROP_ACTION, _action)
         .add(PROP_MATCH_CONDITION, _matchCondition)
         .toString();
+  }
+
+  /** Add configuration constant - SMT symbolic variable */
+  private boolean _enableSmtVariable;
+  private String _configVarPrefix;
+
+  private transient BoolExpr _configVarAction;
+
+  public void initSmtVariable(
+      Context context, Solver solver, String configVarPrefix, boolean isTrue) {
+    if (_enableSmtVariable) {
+      System.out.println("ERROR CommunityListLine:initSmtVariable");
+      System.out.println("Previous configVarPrefix: " + _configVarPrefix);
+      System.out.println("Current  configVarPrefix: " + configVarPrefix);
+      return;
+    }
+
+    // if (_matchCondition instanceof RegexCommunitySet) {
+    //   RegexCommunitySet rcs = (RegexCommunitySet) _matchCondition;
+    //   String regexCommunity = rcs.getRegex();
+    //   configVarPrefix = configVarPrefix + "_" + regexCommunity + "__";
+    // } else if (_matchCondition instanceof LiteralCommunity) {
+    //   LiteralCommunity lc = (LiteralCommunity) _matchCondition;
+    //   String community = lc.getCommunity().toString();
+    //   configVarPrefix = configVarPrefix + "_" + community + "__";
+    // } else {
+    //   throw new IllegalArgumentException("Unimplemented community condition: " + _matchCondition);
+    // }
+
+    _configVarAction = context.mkBoolConst(configVarPrefix + "action");
+
+    // add relevant configuration constant constraint
+    BoolExpr configVarActionConstraint = context.mkEq(
+        _configVarAction, context.mkBool(_action == LineAction.PERMIT));
+    solver.add(configVarActionConstraint);
+
+    _matchCondition.initSmtVariable(context, solver, configVarPrefix, isTrue);
+
+    // configure enable smt variable flag to true
+    _enableSmtVariable = true;
+    _configVarPrefix = configVarPrefix;
+  }
+
+  public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
+    initSmtVariable(context, solver, configVarPrefix, true);
+  }
+
+  public boolean getEnableSmtVariable() {
+    return _enableSmtVariable;
+  }
+
+  public String getConfigVarPrefix() {
+    return _configVarPrefix;
+  }
+
+  public BoolExpr getConfigVarAction() {
+    return _configVarAction;
   }
 }

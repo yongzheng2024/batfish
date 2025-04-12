@@ -11,6 +11,9 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.SortedSet;
 import javax.annotation.Nonnull;
+
+import com.microsoft.z3.Context;
+import com.microsoft.z3.Solver;
 import org.batfish.datamodel.bgp.community.Community;
 import org.batfish.datamodel.routing_policy.Environment;
 import org.batfish.datamodel.visitors.CommunitySetExprVisitor;
@@ -103,5 +106,64 @@ public class LiteralCommunitySet extends CommunitySetExpr {
   @JsonProperty(PROP_COMMUNITIES)
   private @Nonnull SortedSet<Community> getJsonCommunities() {
     return ImmutableSortedSet.copyOf(_communities);
+  }
+
+  /** Add configuration constant - SMT symbolic variable */
+  private boolean _enableSmtVariable;
+  private String _configVarPrefix;
+
+  private static String format(String str) {
+    String formatedStr = "";
+    for (char c : str.toCharArray()) {
+      switch (c) {
+        case ':':
+          formatedStr += "_";
+          break;
+        default:
+          formatedStr += c;
+          break;
+      }
+    }
+    return formatedStr;
+  }
+
+  @Override
+  public void initSmtVariable(Context context, Solver solver, String configVarPrefix, boolean isTrue) {
+    if (_enableSmtVariable) {
+      System.out.println("ERROR LiteralCommunitySet:initSmtVariable");
+      System.out.println("Previous configVarPrefix: " + _configVarPrefix);
+      System.out.println("Current  configVarPrefix: " + configVarPrefix);
+      return;
+    }
+
+    for (Community community : _communities) {
+      String communityString = format(community.getCommunityString());
+      configVarPrefix += communityString + "_";
+      community.initSmtVariable(context, solver, configVarPrefix, isTrue);
+    }
+
+    // configure enable smt variable flag to true
+    _enableSmtVariable = true;
+    _configVarPrefix = configVarPrefix;
+  }
+
+  @Override
+  public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
+    initSmtVariable(context, solver, configVarPrefix, true);
+  }
+
+  public boolean getEnableSmtVariable() {
+    return _enableSmtVariable;
+  }
+
+  public String getConfigVarPrefix() {
+    return _configVarPrefix;
+  }
+
+  /** Add get community expression string for configVarPrefix */
+  @Override
+  public String getCommunityExprString() {
+    // TODO: implement me when needed
+    return "";
   }
 }

@@ -18,19 +18,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.batfish.common.BatfishException;
-import org.batfish.datamodel.BgpPeerConfig;
-import org.batfish.datamodel.CommunityList;
-import org.batfish.datamodel.CommunityListLine;
-import org.batfish.datamodel.Configuration;
-import org.batfish.datamodel.GeneratedRoute;
-import org.batfish.datamodel.Interface;
-import org.batfish.datamodel.LineAction;
-import org.batfish.datamodel.Prefix;
-import org.batfish.datamodel.PrefixRange;
-import org.batfish.datamodel.RouteFilterLine;
-import org.batfish.datamodel.RouteFilterList;
-import org.batfish.datamodel.RoutingProtocol;
-import org.batfish.datamodel.SubRange;
+import org.batfish.datamodel.*;
 import org.batfish.datamodel.ospf.OspfMetricType;
 import org.batfish.datamodel.routing_policy.RoutingPolicy;
 import org.batfish.datamodel.routing_policy.expr.AsPathListExpr;
@@ -411,22 +399,47 @@ class TransferSSA {
     Collections.reverse(lines);
     BoolExpr acc = _enc.mkFalse();
 
+    // TODO: check all CommunityListLine enable smt variable flag or not
+    //       annotated by yongzheng on 20250412
+
     for (CommunityListLine line : lines) {
-      boolean action = (line.getAction() == LineAction.PERMIT);
-      CommunityVar cvar = toCommunityVar(line.getMatchCondition());
+      if (line.getEnableSmtVariable()) {
+        BoolExpr action = line.getConfigVarAction();
+        BoolExpr community;
+        CommunitySetExpr communitySetExpr = line.getMatchCondition();
+        if (communitySetExpr instanceof RegexCommunitySet) {
+          RegexCommunitySet rcs = (RegexCommunitySet) communitySetExpr;
+          community = rcs.getConfigVarCommunity();
+        } else {
+          throw new BatfishException("Unimplemented community condition: " + communitySetExpr);
+        }
 
-      /*other.getCommunities().forEach((commName,b) ->
-          System.out.println("DEBUG: " + commName.toString() + "-> " + b.toString()));
-      System.out.println("cvar: " + cvar.toString());*/
+        CommunityVar cvar = toCommunityVar(line.getMatchCondition());
+        BoolExpr c = matchCommunity(other.getCommunities(), cvar);
+        if (c == null) {
+          throw new BatfishException("matchCommunityList: should not be null");
+        }
 
-      // NOTE: This is wrong, we need to actually match on the cvar.
-      //       refer to https://github.com/batfish minesweeper-ibgp-new branch
-      // BoolExpr c = other.getCommunities().get(cvar);
-      BoolExpr c = matchCommunity(other.getCommunities(), cvar);
-      if (c == null) {
-        throw new BatfishException("matchCommunityList: should not be null");
+        BoolExpr matchCommunityLine = _enc.mkEq(community, c);
+        acc = _enc.mkIf(matchCommunityLine, action, acc);
+
+      } else {
+        boolean action = (line.getAction() == LineAction.PERMIT);
+        CommunityVar cvar = toCommunityVar(line.getMatchCondition());
+
+        /* other.getCommunities().forEach((commName, b) ->
+            System.out.println("DEBUG: " + commName.toString() + "-> " + b.toString()));
+        System.out.println("cvar: " + cvar.toString()); */
+
+        // NOTE: This is wrong, we need to actually match on the cvar.
+        //       refer to https://github.com/batfish minesweeper-ibgp-new branch
+        // BoolExpr c = other.getCommunities().get(cvar);
+        BoolExpr c = matchCommunity(other.getCommunities(), cvar);
+        if (c == null) {
+          throw new BatfishException("matchCommunityList: should not be null");
+        }
+        acc = _enc.mkIf(c, _enc.mkBool(action), acc);
       }
-      acc = _enc.mkIf(c, _enc.mkBool(action), acc);
     }
 
     return acc;
@@ -1346,14 +1359,31 @@ class TransferSSA {
 
       } else if (stmt instanceof AddCommunity) {
         curP.debug("AddCommunity");
+        System.out.println("AddCommunity");
         AddCommunity ac = (AddCommunity) stmt;
         Set<CommunityVar> comms = collectCommunityVars(_conf, ac.getExpr());
+
+        // NOTE: check all community enable smt variable or not
+
         for (CommunityVar cvar : comms) {
-          BoolExpr newValue =
-              _enc.mkIf(
-                  curResult.getReturnAssignedValue(),
-                  curP.getData().getCommunities().get(cvar),
-                  _enc.mkTrue());
+          BoolExpr newValue = null;
+          if (cvar.getLiteralValue().getEnableSmtVariable()) {
+            BoolExpr community = cvar.getLiteralValue().getConfigVarCommunity();
+            BoolExpr community_origin = curP.getData().getCommunities().get(cvar);
+            BoolExpr communityEqual = _enc.mkEq(community, community_origin);
+            newValue =
+                _enc.mkIf(
+                    curResult.getReturnAssignedValue(),
+                    communityEqual,
+                    // _enc.mkTrue());
+                    community);
+          } else {
+            newValue =
+                _enc.mkIf(
+                    curResult.getReturnAssignedValue(),
+                    curP.getData().getCommunities().get(cvar),
+                    _enc.mkTrue());
+          }
           BoolExpr x = createBoolVariableWith(curP, cvar.getRegex(), newValue);
           curP.getData().getCommunities().put(cvar, x);
           curResult = curResult.addChangedVariable(cvar.getRegex(), x);
@@ -1364,11 +1394,24 @@ class TransferSSA {
         SetCommunity sc = (SetCommunity) stmt;
         Set<CommunityVar> comms = collectCommunityVars(_conf, sc.getExpr());
         for (CommunityVar cvar : comms) {
-          BoolExpr newValue =
-              _enc.mkIf(
-                  curResult.getReturnAssignedValue(),
-                  curP.getData().getCommunities().get(cvar),
-                  _enc.mkTrue());
+          BoolExpr newValue = null;
+          if (cvar.getLiteralValue().getEnableSmtVariable()) {
+            BoolExpr community = cvar.getLiteralValue().getConfigVarCommunity();
+            BoolExpr community_origin = curP.getData().getCommunities().get(cvar);
+            BoolExpr communityEqual = _enc.mkEq(community, community_origin);
+            newValue =
+                _enc.mkIf(
+                    curResult.getReturnAssignedValue(),
+                    communityEqual,
+                    // _enc.mkTrue());
+                    community);
+          } else {
+            newValue =
+                _enc.mkIf(
+                    curResult.getReturnAssignedValue(),
+                    curP.getData().getCommunities().get(cvar),
+                    _enc.mkTrue());
+          }
           BoolExpr x = createBoolVariableWith(curP, cvar.getRegex(), newValue);
           curP.getData().getCommunities().put(cvar, x);
           curResult = curResult.addChangedVariable(cvar.getRegex(), x);
@@ -1376,10 +1419,11 @@ class TransferSSA {
 
       } else if (stmt instanceof DeleteCommunity) {
         curP.debug("DeleteCommunity");
-        DeleteCommunity ac = (DeleteCommunity) stmt;
-        Set<CommunityVar> comms = collectCommunityVars(_conf, ac.getExpr());
+        DeleteCommunity dc = (DeleteCommunity) stmt;
+        Set<CommunityVar> comms = collectCommunityVars(_conf, dc.getExpr());
         Set<CommunityVar> toDelete = new HashSet<>();
-        // Find comms to delete
+
+        // Find communities to delete
         for (CommunityVar cvar : comms) {
           if (cvar.getType() == Type.REGEX) {
             toDelete.addAll(_enc.getCommunityDependencies().get(cvar));
@@ -1387,16 +1431,31 @@ class TransferSSA {
             toDelete.add(cvar);
           }
         }
+
+        // NOTE: check all community enable smt variable or not
+
         // Delete each community
         for (CommunityVar cvar : toDelete) {
-          BoolExpr newValue =
-              _enc.mkIf(
-                  curResult.getReturnAssignedValue(),
-                  curP.getData().getCommunities().get(cvar),
-                  _enc.mkFalse());
-          BoolExpr x = createBoolVariableWith(curP, cvar.getRegex(), newValue);
-          curP.getData().getCommunities().put(cvar, x);
-          curResult = curResult.addChangedVariable(cvar.getRegex(), x);
+          BoolExpr newValue = null;
+          if (cvar.getLiteralValue().getEnableSmtVariable()) {
+            BoolExpr community = cvar.getLiteralValue().getConfigVarCommunity();
+            BoolExpr community_origin = curP.getData().getCommunities().get(cvar);
+            BoolExpr communityEqual = _enc.mkEq(community, community_origin);
+            newValue =
+                _enc.mkIf(
+                    curResult.getReturnAssignedValue(),
+                    communityEqual,
+                    community);
+          } else {
+            newValue =
+                _enc.mkIf(
+                    curResult.getReturnAssignedValue(),
+                    curP.getData().getCommunities().get(cvar),
+                    _enc.mkFalse());
+            BoolExpr x = createBoolVariableWith(curP, cvar.getRegex(), newValue);
+            curP.getData().getCommunities().put(cvar, x);
+            curResult = curResult.addChangedVariable(cvar.getRegex(), x);
+          }
         }
 
       } else if (stmt instanceof PrependAsPath) {

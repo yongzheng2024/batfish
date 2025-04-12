@@ -10,6 +10,10 @@ import java.util.Set;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+
+import com.microsoft.z3.Context;
+import com.microsoft.z3.Solver;
+import com.microsoft.z3.BoolExpr;
 import org.batfish.datamodel.bgp.community.Community;
 import org.batfish.datamodel.routing_policy.Environment;
 import org.batfish.datamodel.visitors.CommunitySetExprVisitor;
@@ -34,6 +38,9 @@ public class LiteralCommunity extends CommunitySetExpr {
 
   public LiteralCommunity(Community community) {
     _community = community;
+
+    // initialize enable smt variable flag to false
+    _enableSmtVariable = false;
   }
 
   @Override
@@ -100,5 +107,48 @@ public class LiteralCommunity extends CommunitySetExpr {
   @Override
   public String toString() {
     return toStringHelper(getClass()).add(PROP_COMMUNITY, _community).toString();
+  }
+
+  /** Add configuration constant - SMT symbolic variable */
+  private boolean _enableSmtVariable;
+  private String _configVarPrefix;
+
+  public void initSmtVariable(
+      Context context, Solver solver, String configVarPrefix, boolean isTrue) {
+    if (_enableSmtVariable) {
+      System.out.println("ERROR LiteralCommunity:initSmtVariable");
+      System.out.println("Previous configVarPrefix: " + _configVarPrefix);
+      System.out.println("Current  configVarPrefix: " + configVarPrefix);
+      return;
+    }
+
+    _community.initSmtVariable(context, solver, configVarPrefix, isTrue);
+
+    // configure enable smt variable flag to true
+    _enableSmtVariable = true;
+    _configVarPrefix = configVarPrefix;
+  }
+
+  @Override
+  public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
+    initSmtVariable(context, solver, configVarPrefix, true);
+  }
+
+  public boolean getEnableSmtVariable() {
+    return _enableSmtVariable;
+  }
+
+  public String getConfigVarPrefix() {
+    return _configVarPrefix;
+  }
+
+  public BoolExpr getConfigVarCommunity() {
+    return _community.getConfigVarCommunity();
+  }
+
+  /** Add get community expression string for configVarPrefix */
+  @Override
+  public String getCommunityExprString() {
+    return _community.getCommunityString();
   }
 }

@@ -11,6 +11,9 @@ import org.batfish.datamodel.routing_policy.Environment;
 import org.batfish.datamodel.visitors.CommunitySetExprVisitor;
 import org.batfish.datamodel.visitors.VoidCommunitySetExprVisitor;
 
+import com.microsoft.z3.Context;
+import com.microsoft.z3.Solver;
+
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "class")
 public abstract class CommunitySetExpr implements Serializable {
 
@@ -84,4 +87,12 @@ public abstract class CommunitySetExpr implements Serializable {
    * community-sets with at least two elements.
    */
   public abstract boolean reducible();
+
+  /** Add configuration constant - SMT symbolic variable */
+  public abstract void initSmtVariable(
+      Context context, Solver solver, String configVarPrefix, boolean isTrue);
+  public abstract void initSmtVariable(Context context, Solver solver, String configVarPrefix);
+
+  /** Add get community expression string for configVarPrefix */
+  public abstract String getCommunityExprString();
 }

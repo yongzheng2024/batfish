@@ -7,6 +7,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Set;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
+import com.microsoft.z3.Context;
+import com.microsoft.z3.Solver;
 import org.batfish.datamodel.BgpRoute;
 import org.batfish.datamodel.bgp.community.Community;
 import org.batfish.datamodel.routing_policy.Environment;
@@ -76,5 +79,11 @@ public final class SetCommunity extends Statement {
 
   public void setExpr(@Nonnull CommunitySetExpr expr) {
     _expr = expr;
+  }
+
+  /** Add configuration constant - SMT symbolic variable */
+  public void initSmtVariable(
+      Context context, Solver solver, String configVarPrefix, boolean isTrue) {
+    _expr.initSmtVariable(context, solver, configVarPrefix, isTrue);
   }
 }

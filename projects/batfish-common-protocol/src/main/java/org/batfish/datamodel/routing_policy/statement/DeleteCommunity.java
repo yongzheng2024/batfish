@@ -8,6 +8,9 @@ import java.util.Set;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+
+import com.microsoft.z3.Context;
+import com.microsoft.z3.Solver;
 import org.batfish.datamodel.BgpRoute;
 import org.batfish.datamodel.bgp.community.Community;
 import org.batfish.datamodel.routing_policy.Environment;
@@ -70,5 +73,11 @@ public final class DeleteCommunity extends Statement {
     int result = 1;
     result = prime * result + _expr.hashCode();
     return result;
+  }
+
+  /** Add configuration constant - SMT symbolic variable */
+  public void initSmtVariable(
+      Context context, Solver solver, String configVarPrefix, boolean isTrue) {
+    _expr.initSmtVariable(context, solver, configVarPrefix, isTrue);
   }
 }

@@ -11,6 +11,10 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
+import com.microsoft.z3.Context;
+import com.microsoft.z3.Solver;
+import com.microsoft.z3.BoolExpr;
+
 /**
  * Represents a BGP community value, which could be <a
  * href="https://tools.ietf.org/html/rfc1997">standard</a>, <a
@@ -100,4 +104,16 @@ public abstract class Community implements Serializable, Comparable<Community> {
   public int compareTo(Community o) {
     return asBigInt().compareTo(o.asBigInt());
   }
+
+  /** Add configuration constant - SMT symbolic variable */
+  public abstract void initSmtVariable(
+      Context context, Solver solver, String configVarPrefix, boolean isTrue);
+  public abstract void initSmtVariable(Context context, Solver solver, String configVarPrefix);
+
+  public abstract boolean getEnableSmtVariable();
+  public abstract String getConfigVarPrefix();
+  public abstract BoolExpr getConfigVarCommunity();
+
+  /** Add get community string for configVarPrefix */
+  public abstract String getCommunityString();
 }

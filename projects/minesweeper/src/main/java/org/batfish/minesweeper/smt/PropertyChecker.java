@@ -538,6 +538,8 @@ public class PropertyChecker {
                     }
                     allProp = enc.mkAnd(allProp, r);
                   }
+                  // NOTE: set negated network property
+                  //       annotated by yongzheng on 20250411
                   enc.add(enc.mkNot(allProp));
                 }
 

@@ -25,15 +25,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import javax.annotation.Nullable;
 import org.batfish.common.BatfishException;
-import org.batfish.datamodel.BgpActivePeerConfig;
-import org.batfish.datamodel.BgpPeerConfig;
-import org.batfish.datamodel.HeaderSpace;
-import org.batfish.datamodel.Interface;
-import org.batfish.datamodel.Ip;
-import org.batfish.datamodel.IpProtocol;
-import org.batfish.datamodel.IpWildcard;
-import org.batfish.datamodel.Prefix;
-import org.batfish.datamodel.SubRange;
+import org.batfish.datamodel.*;
 import org.batfish.minesweeper.CommunityVar;
 import org.batfish.minesweeper.Graph;
 import org.batfish.minesweeper.GraphEdge;
@@ -46,10 +38,6 @@ import org.batfish.minesweeper.utils.Tuple;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 import org.batfish.common.BatfishException;
-import org.batfish.datamodel.Configuration;
-import org.batfish.datamodel.RoutingProtocol;
-import org.batfish.datamodel.RouteFilterList;
-import org.batfish.datamodel.RouteFilterLine;
 import org.batfish.datamodel.routing_policy.RoutingPolicy;
 import org.batfish.datamodel.routing_policy.expr.AsPathListExpr;
 import org.batfish.datamodel.routing_policy.expr.BooleanExpr;
@@ -83,6 +71,8 @@ import org.batfish.datamodel.routing_policy.expr.NamedPrefixSet;
 import org.batfish.datamodel.routing_policy.expr.Not;
 import org.batfish.datamodel.routing_policy.expr.PrefixSetExpr;
 import org.batfish.datamodel.routing_policy.expr.WithEnvironmentExpr;
+import org.batfish.datamodel.routing_policy.expr.LiteralCommunity;
+import org.batfish.datamodel.routing_policy.expr.LiteralCommunitySet;
 import org.batfish.datamodel.routing_policy.statement.AddCommunity;
 import org.batfish.datamodel.routing_policy.statement.DeleteCommunity;
 import org.batfish.datamodel.routing_policy.statement.If;
@@ -97,7 +87,10 @@ import org.batfish.datamodel.routing_policy.statement.SetOspfMetricType;
 import org.batfish.datamodel.routing_policy.statement.Statement;
 import org.batfish.datamodel.routing_policy.statement.Statements.StaticStatement;
 
-import org.batfish.datamodel.PrefixRange;
+import org.batfish.datamodel.bgp.community.Community;
+import org.batfish.datamodel.bgp.community.ExtendedCommunity;
+import org.batfish.datamodel.bgp.community.StandardCommunity;
+import org.batfish.datamodel.bgp.community.LargeCommunity;
 
 /**
  * A class responsible for building a symbolic encoding of the entire network. The encoder does this
@@ -248,7 +241,7 @@ public class Encoder {
     initOutput();
 
     // initialize configuration constant - SMT symbolic variable
-    // initConfigurationConstants();
+    initConfigurationConstants();
 
     // initialize _symbolicFailures and _allVariables, which involving
     //   + all GraphEdge getPeer() == null according to _edgeMap  (_failedEdgeLinks)
@@ -1156,12 +1149,16 @@ public class Encoder {
         // write route filter list name to configs_to_variables file
         _configWriter.println("  * " + "ip prefix-list / access-list: " + routerFilterListName);
 
+        int lineIndex = 1;
         for (RouteFilterLine line : lines) {
           long prefixIp = line.getIpWildcard().getIp().asLong();
           String prefixIpStr = longToIpString(prefixIp);
+          // String configVarPrefix =
+          //     "Config_" + hostName + "_RouteFilterList_" + format(routerFilterListName) +
+          //     "__" + format(prefixIpStr) + "__";
           String configVarPrefix =
               "Config_" + hostName + "_RouteFilterList_" + format(routerFilterListName) +
-              "__" + format(prefixIpStr) + "__";
+              "__Line" + lineIndex + "__" + format(prefixIpStr) + "_";
           line.initSmtVariable(_ctx, _solver, configVarPrefix);
 
           // write (ipLongFormat -> ipStringFormat) to configs_to_variables file
@@ -1176,6 +1173,45 @@ public class Encoder {
           // SubRange
           _configWriter.println("    + " + configVarPrefix + "prefix_range_start");
           _configWriter.println("    + " + configVarPrefix + "prefix_range_end");
+
+          // add line index
+          lineIndex++;
+        }
+      }
+
+      for (Map.Entry<String, CommunityList> communityListEntry : config.getCommunityLists().entrySet()) {
+        String communityListName = communityListEntry.getKey();
+        CommunityList communityList = communityListEntry.getValue();
+
+        int lineIndex = 1;
+        for (CommunityListLine line : communityList.getLines()) {
+          String configVarPrefix =
+              "Config_" + hostName + "_CommunityList_" + format(communityListName) +
+              "__Line" + lineIndex + "__";
+
+          // TODO: add regex / exact community's string
+          CommunitySetExpr communitySetExpr = line.getMatchCondition();
+          if (communitySetExpr instanceof RegexCommunitySet) {
+            // TODO: format regex community expression
+            // String communityExprString = line.getMatchCondition().getCommunityExprString();
+            // configVarPrefix += "regex_community_" + communityExprString + "_";
+            line.initSmtVariable(_ctx, _solver, configVarPrefix);
+            // write smt symbolic variable name to configs_to_variables file
+            _configWriter.println("    + " + configVarPrefix + "action");
+            _configWriter.println("    + " + configVarPrefix + "community");
+          } else if (communitySetExpr instanceof LiteralCommunity) {
+            String communityExprString = line.getMatchCondition().getCommunityExprString();
+            configVarPrefix += "exact_community_" + communityExprString + "_";
+            line.initSmtVariable(_ctx, _solver, configVarPrefix);
+            // write smt symbolic variable name to configs_to_variables file
+            _configWriter.println("    + " + configVarPrefix + "action");
+            _configWriter.println("    + " + configVarPrefix + "community");
+          } else {
+            throw new BatfishException("Unimplemented feature " + communitySetExpr.getClass());
+          }
+
+          // add line index
+          lineIndex++;
         }
       }
 
@@ -1193,8 +1229,9 @@ public class Encoder {
         _configWriter.println("  * " + "routing policy (todo): " + policyName);
 
         List<Statement> statements = routingPolicy.getStatements();
-        initConfigurationConstants(
-            statements, "Config_" + hostName + "_RoutingPolicy_" + format(policyName) + "_");
+        String configVarPrefix =
+            "Config_" + hostName + "_RoutingPolicy_" + format(policyName) + "_";
+        initConfigurationConstants(statements, configVarPrefix);
       }
     }
 
@@ -1281,16 +1318,82 @@ public class Encoder {
         _configWriter.println("    + " + configVarPrefix + "set_localpreference");
 
       } else if (stmt instanceof AddCommunity) {
-        // TODO: implement me
-        {}  // do nothing
+        // TODO: check here and implement when needed
+        AddCommunity ac = (AddCommunity) stmt;
+        CommunitySetExpr communitySetExpr = ac.getExpr();
+        if (communitySetExpr instanceof LiteralCommunitySet) {
+          ac.initSmtVariable(_ctx, _solver, configVarPrefix + "add_community_", true);
+          LiteralCommunitySet lcs = (LiteralCommunitySet) communitySetExpr;
+          Set<Community> communities = lcs.getCommunities();
+          // write smt symbolic variable name to configs_to_variables file
+          for (Community community : communities) {
+            String communityString = format(community.getCommunityString());
+            _configWriter.println(
+                "    + " + configVarPrefix + "add_community_" + communityString + "_community");
+          }
+        } else if (communitySetExpr instanceof LiteralCommunity) {
+          LiteralCommunity lc = (LiteralCommunity) communitySetExpr;
+          String communityString = format(lc.getCommunity().getCommunityString());
+          ac.initSmtVariable(
+              _ctx, _solver, configVarPrefix + "add_community_" + communityString + "_", true);
+          // write smt symbolic variable name to configs_to_variables file
+          _configWriter.println(
+              "    + " + configVarPrefix + "add_community_" + communityString + "_community");
+        } else {
+          throw new BatfishException("Unimplemented feature " + communitySetExpr.getClass());
+        }
 
       } else if (stmt instanceof SetCommunity) {
-        // TODO: implement me
-        {}  // do nothing
+        // TODO: check here and implement when needed
+        SetCommunity sc = (SetCommunity) stmt;
+        CommunitySetExpr communitySetExpr = sc.getExpr();
+        if (communitySetExpr instanceof LiteralCommunitySet) {
+          sc.initSmtVariable(_ctx, _solver, configVarPrefix + "set_community_", true);
+          LiteralCommunitySet lcs = (LiteralCommunitySet) communitySetExpr;
+          Set<Community> communities = lcs.getCommunities();
+          // write smt symbolic variable name to configs_to_variables file
+          for (Community community : communities) {
+            String communityString = format(community.getCommunityString());
+            _configWriter.println(
+                "    + " + configVarPrefix + "set_community_" + communityString + "_community");
+          }
+        } else if (communitySetExpr instanceof LiteralCommunity) {
+          LiteralCommunity lc = (LiteralCommunity) communitySetExpr;
+          String communityString = format(lc.getCommunity().getCommunityString());
+          sc.initSmtVariable(
+              _ctx, _solver, configVarPrefix + "set_community_" + communityString + "_", true);
+          // write smt symbolic variable name to configs_to_variables file
+            _configWriter.println(
+                "    + " + configVarPrefix + "set_community_" + communityString + "_community");
+        } else {
+          throw new BatfishException("Unimplemented feature " + communitySetExpr.getClass());
+        }
 
       } else if (stmt instanceof DeleteCommunity) {
-        // TODO: implement me
-        {}  // do nothing
+        // TODO: check here and implement when needed
+        DeleteCommunity dc = (DeleteCommunity) stmt;
+        CommunitySetExpr communitySetExpr = dc.getExpr();
+        if (communitySetExpr instanceof LiteralCommunitySet) {
+          dc.initSmtVariable(_ctx, _solver, configVarPrefix + "delete_community_", false);
+          LiteralCommunitySet lcs = (LiteralCommunitySet) communitySetExpr;
+          Set<Community> communities = lcs.getCommunities();
+          // write smt symbolic variable name to configs_to_variables file
+          for (Community community : communities) {
+            String communityString = format(community.getCommunityString());
+            _configWriter.println(
+                "    + " + configVarPrefix + "delete_community_" + communityString + "_community");
+          }
+        } else if (communitySetExpr instanceof LiteralCommunity) {
+          LiteralCommunity lc = (LiteralCommunity) communitySetExpr;
+          String communityString = format(lc.getCommunity().getCommunityString());
+          dc.initSmtVariable(
+              _ctx, _solver, configVarPrefix + "delete_community_" + communityString + "_", false);
+          // write smt symbolic variable name to configs_to_variables file
+          _configWriter.println(
+              "    + " + configVarPrefix + "delete_community_" + communityString + "_community");
+        } else {
+          throw new BatfishException("Unimplemented feature " + communitySetExpr.getClass());
+        }
 
       } else if (stmt instanceof PrependAsPath) {
         // TODO: implement me

@@ -14,6 +14,9 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.testing.EqualsTester;
 import java.util.Set;
 import javax.annotation.Nonnull;
+
+import com.microsoft.z3.Context;
+import com.microsoft.z3.Solver;
 import org.batfish.datamodel.CommunityList;
 import org.batfish.datamodel.CommunityListLine;
 import org.batfish.datamodel.LineAction;
@@ -76,6 +79,25 @@ public final class CommunityListTest {
     @Override
     public boolean reducible() {
       throw new UnsupportedOperationException();
+    }
+
+    /** Add configuration constant - SMT symbolic variable */
+    @Override
+    public void initSmtVariable(Context context, Solver solver, String configVarPrefix, boolean isTrue) {
+      // TODO: implement me
+      {}  // do nothing
+    }
+
+    @Override
+    public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
+      initSmtVariable(context, solver, configVarPrefix, true);
+    }
+
+    /** Add get community expression string for configVarPrefix */
+    @Override
+    public String getCommunityExprString() {
+      // TODO: implement me when needed
+      return "";
     }
   }
 

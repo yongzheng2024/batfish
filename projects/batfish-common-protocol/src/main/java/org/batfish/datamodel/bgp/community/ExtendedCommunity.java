@@ -16,6 +16,10 @@ import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import org.batfish.datamodel.Ip;
 
+import com.microsoft.z3.Context;
+import com.microsoft.z3.Solver;
+import com.microsoft.z3.BoolExpr;
+
 /**
  * Represents an extended BGP community, as described in <a
  * href="https://tools.ietf.org/html/rfc4360">RFC4360</a>
@@ -48,6 +52,9 @@ public final class ExtendedCommunity extends Community {
     _subType = subType;
     _globalAdministrator = globalAdministrator;
     _localAdministrator = localAdministrator;
+
+    // initialize enable smt variable flag to false
+    _enableSmtVariable = false;
   }
 
   @JsonCreator
@@ -291,5 +298,62 @@ public final class ExtendedCommunity extends Community {
         .or(BigInteger.valueOf(_subType).shiftLeft(48))
         .or(BigInteger.valueOf(_globalAdministrator).shiftLeft(gaOffset))
         .or(BigInteger.valueOf(_localAdministrator));
+  }
+
+  /** Add configuration constant - SMT symbolic variable */
+  private boolean _enableSmtVariable;
+  private String _configVarPrefix;
+
+  private transient BoolExpr _configVarCommunity;
+
+  @Override
+  public void initSmtVariable(
+      Context context, Solver solver, String configVarPrefix, boolean isTrue) {
+    if (_enableSmtVariable) {
+      System.out.println("ERROR ExtendedCommunity:initSmtVariable");
+      System.out.println("Previous configVarPrefix: " + _configVarPrefix);
+      System.out.println("Current  configVarPrefix: " + configVarPrefix);
+      return;
+    }
+
+    // NOTE: configVarPrefix including extended community string
+    // configVarPrefix = configVarPrefix + _str + "_";
+    _configVarCommunity = context.mkBoolConst(configVarPrefix + "community");
+
+    // add relevant configuration constant constraint
+    // for community (regex / exact), add boolean constraint which equal true
+    BoolExpr configVarRegexCommConstraint =
+        context.mkEq(_configVarCommunity, context.mkBool(isTrue));
+    solver.add(configVarRegexCommConstraint);
+
+    // configure enable smt variable flag to true
+    _enableSmtVariable = true;
+    _configVarPrefix = configVarPrefix;
+  }
+
+  @Override
+  public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
+    initSmtVariable(context, solver, configVarPrefix, true);
+  }
+
+  @Override
+  public boolean getEnableSmtVariable() {
+    return _enableSmtVariable;
+  }
+
+  @Override
+  public String getConfigVarPrefix() {
+    return _configVarPrefix;
+  }
+
+  @Override
+  public BoolExpr getConfigVarCommunity() {
+    return _configVarCommunity;
+  }
+
+  /** Add get community string for configVarPrefix */
+  @Override
+  public String getCommunityString() {
+    return _globalAdministrator + ":" + _localAdministrator;
   }
 }

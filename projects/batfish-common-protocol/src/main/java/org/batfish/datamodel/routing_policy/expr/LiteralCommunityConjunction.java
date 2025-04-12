@@ -17,6 +17,9 @@ import org.batfish.datamodel.routing_policy.Environment;
 import org.batfish.datamodel.visitors.CommunitySetExprVisitor;
 import org.batfish.datamodel.visitors.VoidCommunitySetExprVisitor;
 
+import com.microsoft.z3.Context;
+import com.microsoft.z3.Solver;
+
 /**
  * A {@link CommunitySetExpr} matching only community-sets that contain ALL of the communities
  * returned by {@link #getRequiredCommunities()}.
@@ -105,5 +108,24 @@ public final class LiteralCommunityConjunction extends CommunitySetExpr {
   @JsonProperty(PROP_REQUIRED_COMMUNITIES)
   private SortedSet<Community> getJsonRequiredCommunities() {
     return ImmutableSortedSet.copyOf(_requiredCommunities);
+  }
+
+  /** Add configuration constant - SMT symbolic variable */
+  @Override
+  public void initSmtVariable(Context context, Solver solver, String configVarPrefix, boolean isTrue) {
+    // TODO: implement me
+    {}  // do nothing
+  }
+
+  @Override
+  public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
+    initSmtVariable(context, solver, configVarPrefix, true);
+  }
+
+  /** Add get community expression string for configVarPrefix */
+  @Override
+  public String getCommunityExprString() {
+    // TODO: implement me when needed
+    return "";
   }
 }
