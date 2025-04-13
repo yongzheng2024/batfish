@@ -405,7 +405,8 @@ class TransferSSA {
     for (CommunityListLine line : lines) {
       if (line.getEnableSmtVariable()) {
         BoolExpr action = line.getConfigVarAction();
-        BoolExpr community;
+        BoolExpr community = null;
+
         CommunitySetExpr communitySetExpr = line.getMatchCondition();
         if (communitySetExpr instanceof RegexCommunitySet) {
           RegexCommunitySet rcs = (RegexCommunitySet) communitySetExpr;
@@ -414,11 +415,19 @@ class TransferSSA {
           throw new BatfishException("Unimplemented community condition: " + communitySetExpr);
         }
 
+        /* other.getCommunities().forEach((commName, b) ->
+            System.out.println("DEBUG: " + commName.toString() + "-> " + b.toString()));
+        System.out.println("cvar: " + cvar.toString()); */
+
+        // NOTE: This is wrong, we need to actually match on the cvar.
+        //       refer to https://github.com/batfish minesweeper-ibgp-new branch
+        // BoolExpr c = matchCommunity(other.getCommunities(), cvar);
+        // if (c == null) {
+        //   throw new BatfishException("matchCommunityList: should not be null");
+        // }
+
         CommunityVar cvar = toCommunityVar(line.getMatchCondition());
-        BoolExpr c = matchCommunity(other.getCommunities(), cvar);
-        if (c == null) {
-          throw new BatfishException("matchCommunityList: should not be null");
-        }
+        BoolExpr c = other.getCommunities().get(cvar);
 
         BoolExpr matchCommunityLine = _enc.mkEq(community, c);
         acc = _enc.mkIf(matchCommunityLine, action, acc);
@@ -426,18 +435,7 @@ class TransferSSA {
       } else {
         boolean action = (line.getAction() == LineAction.PERMIT);
         CommunityVar cvar = toCommunityVar(line.getMatchCondition());
-
-        /* other.getCommunities().forEach((commName, b) ->
-            System.out.println("DEBUG: " + commName.toString() + "-> " + b.toString()));
-        System.out.println("cvar: " + cvar.toString()); */
-
-        // NOTE: This is wrong, we need to actually match on the cvar.
-        //       refer to https://github.com/batfish minesweeper-ibgp-new branch
-        // BoolExpr c = other.getCommunities().get(cvar);
-        BoolExpr c = matchCommunity(other.getCommunities(), cvar);
-        if (c == null) {
-          throw new BatfishException("matchCommunityList: should not be null");
-        }
+        BoolExpr c = other.getCommunities().get(cvar);
         acc = _enc.mkIf(c, _enc.mkBool(action), acc);
       }
     }
@@ -1374,7 +1372,8 @@ class TransferSSA {
             newValue =
                 _enc.mkIf(
                     curResult.getReturnAssignedValue(),
-                    communityEqual,
+                    // communityEqual,
+                    curP.getData().getCommunities().get(cvar),
                     // _enc.mkTrue());
                     community);
           } else {
@@ -1402,7 +1401,8 @@ class TransferSSA {
             newValue =
                 _enc.mkIf(
                     curResult.getReturnAssignedValue(),
-                    communityEqual,
+                    // communityEqual,
+                    curP.getData().getCommunities().get(cvar),
                     // _enc.mkTrue());
                     community);
           } else {
@@ -1444,7 +1444,9 @@ class TransferSSA {
             newValue =
                 _enc.mkIf(
                     curResult.getReturnAssignedValue(),
-                    communityEqual,
+                    // communityEqual,
+                    curP.getData().getCommunities().get(cvar),
+                    // _enc.mkFalse());
                     community);
           } else {
             newValue =
