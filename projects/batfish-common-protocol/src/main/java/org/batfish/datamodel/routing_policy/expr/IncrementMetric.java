@@ -76,7 +76,9 @@ public final class IncrementMetric extends LongExpr {
 
   private transient ArithExpr _configVarLocalpreference;
 
+  @Override
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
+    // assert that the literal long value is not shared object
     if (_enableSmtVariable) {
       System.out.println("ERROR IncrementMetric:initSmtVariable");
       System.out.println("Previous configVarPrefix: " + _configVarPrefix);
@@ -84,8 +86,8 @@ public final class IncrementMetric extends LongExpr {
       return;
     }
 
+    // init smt variable for literal long value
     _configVarLocalpreference = context.mkIntConst(configVarPrefix);
-
     // add relevant configuration constant constraints
     BoolExpr configVarLpConstraint = context.mkEq(
         _configVarLocalpreference, context.mkInt(_addend));
@@ -106,5 +108,11 @@ public final class IncrementMetric extends LongExpr {
 
   public ArithExpr getConfigVarLocalpreference() {
     return _configVarLocalpreference;
+  }
+
+  /** Add get literal long value for configVarPrefix */
+  @Override
+  public String getLiteralLongString() {
+    return String.valueOf(_addend);
   }
 }

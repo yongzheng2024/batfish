@@ -6,10 +6,13 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 import com.microsoft.z3.Context;
 import com.microsoft.z3.Solver;
+import org.batfish.common.BatfishException;
 import org.batfish.datamodel.HasWritableLocalPreference;
 import org.batfish.datamodel.routing_policy.Environment;
 import org.batfish.datamodel.routing_policy.Result;
+import org.batfish.datamodel.routing_policy.expr.ExplicitPrefixSet;
 import org.batfish.datamodel.routing_policy.expr.LongExpr;
+import org.batfish.datamodel.routing_policy.expr.NamedPrefixSet;
 
 @ParametersAreNonnullByDefault
 public final class SetLocalPreference extends Statement {

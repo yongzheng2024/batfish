@@ -143,6 +143,7 @@ public final class Prefix implements Comparable<Prefix>, Serializable {
 
   public static Prefix create(Ip ip, int prefixLength) {
     Prefix p = new Prefix(ip, prefixLength);
+
     // NOTE: commented CACHE by yongzheng on 20250409
     // return CACHE.getUnchecked(p);
     return p;
@@ -153,7 +154,7 @@ public final class Prefix implements Comparable<Prefix>, Serializable {
       ArithExpr configVarLength) {
     Prefix p = new Prefix(ip, prefixLength, configVarIp, configVarMask, configVarLength);
 
-    // TODO: annotated by yongzheng on 20250405
+    // TODO: commented CACHE by yongzheng on 20250405
     // return CACHE.getUnchecked(p);
     return p;
   }
@@ -316,6 +317,7 @@ public final class Prefix implements Comparable<Prefix>, Serializable {
   private transient ArithExpr _configVarLength;
 
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
+    // assert that the prefix is not shared
     if (_enableSmtVariable) {
       System.out.println("ERROR Prefix:initSmtVariable");
       System.out.println("Previous configVarPrefix: " + _configVarPrefix);

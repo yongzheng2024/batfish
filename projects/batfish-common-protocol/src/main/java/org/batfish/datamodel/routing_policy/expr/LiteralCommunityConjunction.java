@@ -122,6 +122,12 @@ public final class LiteralCommunityConjunction extends CommunitySetExpr {
     initSmtVariable(context, solver, configVarPrefix, true);
   }
 
+  @Override
+  public boolean getEnableSmtVariable() {
+    // check here and fix when needed, annotated by yongzheng on 20250413
+    return false;
+  }
+
   /** Add get community expression string for configVarPrefix */
   @Override
   public String getCommunityExprString() {

@@ -261,6 +261,7 @@ public final class IpWildcard implements Serializable, Comparable<IpWildcard> {
   private transient ArithExpr _configVarLength;
 
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
+    // assert that the ip wildcard is not shared object
     if (_enableSmtVariable) {
       System.out.println("ERROR IpWildcard:initSmtVariable");
       System.out.println("Previous configVarPrefix: " + _configVarPrefix);

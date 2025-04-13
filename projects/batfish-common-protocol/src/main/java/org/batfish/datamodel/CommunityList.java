@@ -93,6 +93,9 @@ public class CommunityList extends CommunitySetExpr {
     _lines = lines;
     _invertMatch = invertMatch;
     _communityCache = Suppliers.memoize(new CommunityCacheSupplier());
+
+    // initialize enable smt variable flag to false
+    _enableSmtVariable = false;
   }
 
   @Override
@@ -256,15 +259,46 @@ public class CommunityList extends CommunitySetExpr {
   }
 
   /** Add configuration constant - SMT symbolic variable */
+  private boolean _enableSmtVariable;
+  private String _configVarPrefix;
+
   @Override
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix, boolean isTrue) {
-    // TODO: implement me
-    {}  // do nothing
+    // assert that the community list is not shared
+    if (_enableSmtVariable) {
+      System.out.println("ERROR CommunityList:initSmtVariable");
+      System.out.println("Previous configVarPrefix: " + _configVarPrefix);
+      System.out.println("Current  configVarPrefix: " + configVarPrefix);
+      return;
+    }
+
+    for (CommunityListLine line : _lines) {
+      // check and avoid shared object
+      if (line.getEnableSmtVariable()) {
+        line = new CommunityListLine(line.getAction(), line.getMatchCondition());
+      }
+
+      // init smt variable for community list line
+      line.initSmtVariable(context, solver, configVarPrefix, isTrue);
+    }
+
+    // configure enable smt variable flag to tue
+    _enableSmtVariable = isTrue;
+    _configVarPrefix = configVarPrefix;
   }
 
   @Override
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
     initSmtVariable(context, solver, configVarPrefix, true);
+  }
+
+  @Override
+  public boolean getEnableSmtVariable() {
+    return _enableSmtVariable;
+  }
+
+  public String getConfigVarPrefix() {
+    return _configVarPrefix;
   }
 
   /** Add get community expression string for configVarPrefix */

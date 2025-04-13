@@ -26,6 +26,9 @@ public class NamedCommunitySet extends CommunitySetExpr {
 
   public NamedCommunitySet(@Nonnull String name) {
     _name = name;
+
+    // initialize enable smt variable flag to true
+    _enableSmtVariable = false;
   }
 
   @Override
@@ -101,15 +104,24 @@ public class NamedCommunitySet extends CommunitySetExpr {
   }
 
   /** Add configuration constant - SMT symbolic variable */
+  private boolean _enableSmtVariable;
+
   @Override
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix, boolean isTrue) {
-    // TODO: implement me
-    {}  // do nothing
+    // do nothing, just refer to the RouteFilterList object according to _name
+
+    // configure enable smt variable flag according to isTrue
+    _enableSmtVariable = isTrue;
   }
 
   @Override
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
     initSmtVariable(context, solver, configVarPrefix, true);
+  }
+
+  @Override
+  public boolean getEnableSmtVariable() {
+    return _enableSmtVariable;
   }
 
   /** Add get community expression string for configVarPrefix */

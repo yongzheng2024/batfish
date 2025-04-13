@@ -48,13 +48,17 @@ public final class PrefixRange implements Serializable, Comparable<PrefixRange> 
         "ERROR: PrefixRange:PrefixRange() " +
         "Prefix and SubRange enabling SMT symbolic variable are inconsistent");
 
-    if (_prefix.getEnableSmtVariable() && _lengthRange.getEnableSmtVariable()) {
-      // configure enable smt variable flag to true according to Prefix and SubRange
-      _enableSmtVariable = true;
-    } else {
-      // initialize enable smt variable flag to false
-      _enableSmtVariable = false;
-    }
+    // NOTE: check here and fix when needed, annotated by yongzheng on 20250413
+    // if (_prefix.getEnableSmtVariable() && _lengthRange.getEnableSmtVariable()) {
+    //   // configure enable smt variable flag to true according to Prefix and SubRange
+    //   _enableSmtVariable = true;
+    // } else {
+    //   // initialize enable smt variable flag to false
+    //   _enableSmtVariable = false;
+    // }
+
+    // initialize enable smt variable flag to false
+    _enableSmtVariable = false;
   }
 
   /** Returns a {@link PrefixRange} that contains exactly the specified {@link Prefix}. */
@@ -145,6 +149,7 @@ public final class PrefixRange implements Serializable, Comparable<PrefixRange> 
   
   /** Add configuration constant - SMT symbolic variable */
   private boolean _enableSmtVariable;
+  private String _configVarPrefix;
 
   private static String format(String str) {
     String formatedStr = "";
@@ -172,25 +177,39 @@ public final class PrefixRange implements Serializable, Comparable<PrefixRange> 
   }
 
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
+    // assert that the prefix range is not shared
+    if (_enableSmtVariable) {
+      System.out.println("ERROR PrefixRange:initSmtVariable");
+      System.out.println("Previous configVarPrefix: " + _configVarPrefix);
+      System.out.println("Current  configVarPrefix: " + configVarPrefix);
+      return;
+    }
+
+    // check and avoid shared object
     if (_prefix.getEnableSmtVariable()) {
       _prefix = Prefix.create(_prefix.getStartIp(), _prefix.getPrefixLength());
     }
-
     if (_lengthRange.getEnableSmtVariable()) {
       _lengthRange = new SubRange(_lengthRange.getStart(), _lengthRange.getEnd());
     }
 
+    // init smt variable for prefix and relevant length range configuration
     long prefixIp = _prefix.getStartIp().asLong();
     String prefixIpStr = longToIpString(prefixIp);
-    _prefix.initSmtVariable(context, solver, configVarPrefix + "_" + format(prefixIpStr) + "__");
+    _prefix.initSmtVariable(context, solver, configVarPrefix + format(prefixIpStr) + "__");
     _lengthRange.initSmtVariable(
-        context, solver, configVarPrefix + "_" + format(prefixIpStr) + "__");
+        context, solver, configVarPrefix + format(prefixIpStr) + "__");
 
     // configure enable smt variable flag to true
     _enableSmtVariable = true;
+    _configVarPrefix = configVarPrefix;
   }
 
   public boolean getEnableSmtVariable() {
     return _enableSmtVariable;
+  }
+
+  public String getConfigVarPrefix() {
+    return _configVarPrefix;
   }
 }

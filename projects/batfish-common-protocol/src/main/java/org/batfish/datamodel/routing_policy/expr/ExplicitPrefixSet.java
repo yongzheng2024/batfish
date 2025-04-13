@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.microsoft.z3.Context;
 import com.microsoft.z3.Solver;
+import org.batfish.common.BatfishException;
 import org.batfish.datamodel.Prefix;
 import org.batfish.datamodel.PrefixSpace;
 import org.batfish.datamodel.routing_policy.Environment;
@@ -71,16 +72,43 @@ public class ExplicitPrefixSet extends PrefixSetExpr {
 
   /** Add configuration constant - SMT symbolic variable */
   private boolean _enableSmtVariable;
+  private String _configVarPrefix;
 
   @Override
   public final void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
+    // assert that the prefix set is not shared
+    if (_enableSmtVariable) {
+      System.out.println("ERROR ExplicitPrefixSet:initSmtVariable");
+      System.out.println("Previous configVarPrefix: " + _configVarPrefix);
+      System.out.println("Current  configVarPrefix: " + configVarPrefix);
+      return;
+    }
+
+    // check and avoid shared object
+    if (_prefixSpace.getEnableSmtVariable()) {
+      PrefixSpace prefixSpaceBackup = _prefixSpace;
+      _prefixSpace = new PrefixSpace(_prefixSpace.getPrefixRanges());
+
+      // add additional assert for using shared object
+      // if (prefixSpaceBackup == _prefixSpace) {
+      if (prefixSpaceBackup.getEnableSmtVariable() == _prefixSpace.getEnableSmtVariable()) {
+        throw new BatfishException("ERROR ExplicitPrefixSet:initSmtVariable use shared object");
+      }
+    }
+
+    // init smt variable for prefix set configuration
     _prefixSpace.initSmtVariable(context, solver, configVarPrefix);
 
     // configure the enable smt variable flag to true
     _enableSmtVariable = true;
+    _configVarPrefix = configVarPrefix;
   }
 
-  boolean getEnableSmtVariable() {
+  public boolean getEnableSmtVariable() {
     return _enableSmtVariable;
+  }
+
+  public String getConfigVarPrefix() {
+    return _configVarPrefix;
   }
 }

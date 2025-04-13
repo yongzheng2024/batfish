@@ -20,6 +20,7 @@ import javax.annotation.Nullable;
 
 import com.microsoft.z3.Context;
 import com.microsoft.z3.Solver;
+import org.batfish.common.BatfishException;
 
 /** Describes a collection of {@link Prefix}es and {@link PrefixRange}s */
 public class PrefixSpace implements Serializable {
@@ -350,17 +351,44 @@ public class PrefixSpace implements Serializable {
 
   /** Add configuration constant - SMT symbolic variable */
   private boolean _enableSmtVariable;
+  private String _configVarPrefix;
 
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
+    // assert that the prefix set is not shared
+    if (_enableSmtVariable) {
+      System.out.println("ERROR PrefixSpace:initSmtVariable");
+      System.out.println("Previous configVarPrefix: " + _configVarPrefix);
+      System.out.println("Current  configVarPrefix: " + configVarPrefix);
+      return;
+    }
+
     for (PrefixRange prefixRange : getPrefixRanges()) {
+      // check and avoid shared object
+      if (prefixRange.getEnableSmtVariable()) {
+        PrefixRange prefixRangeBackup = prefixRange;
+        prefixRange = new PrefixRange(prefixRange.getPrefix(), prefixRange.getLengthRange());
+
+        // add additional assert for using shared object
+        // if (prefixRangeBackup == prefixRange) {
+        if (prefixRangeBackup.getEnableSmtVariable() == prefixRange.getEnableSmtVariable()) {
+          throw new BatfishException("ERROR PrefixSpace:initSmtVariable use shared object");
+        }
+      }
+
+      // init smt variable for prefix range configuration
       prefixRange.initSmtVariable(context, solver, configVarPrefix);
     }
 
     // configure enable smt variable flag to true
     _enableSmtVariable = true;
+    _configVarPrefix = configVarPrefix;
   }
 
   public boolean getEnableSmtVariable() {
     return _enableSmtVariable;
+  }
+
+  public String getConfigVarPrefix() {
+    return _configVarPrefix;
   }
 }

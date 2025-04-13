@@ -6,10 +6,16 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Objects;
 import java.util.Set;
+import org.batfish.common.BatfishException;
 import org.batfish.datamodel.BgpRoute;
 import org.batfish.datamodel.bgp.community.Community;
 import org.batfish.datamodel.routing_policy.Environment;
 import org.batfish.datamodel.routing_policy.Result;
+
+import org.batfish.datamodel.CommunityList;
+
+import com.microsoft.z3.Context;
+import com.microsoft.z3.Solver;
 
 /**
  * Boolean expression that tests whether an {@link Environment} contains a BGP route with a
@@ -74,5 +80,26 @@ public final class MatchCommunitySet extends BooleanExpr {
   @Override
   public int hashCode() {
     return Objects.hashCode(_expr);
+  }
+
+  /** Add configuration constant - SMT symbolic variable */
+  public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
+    // check and avoid shared object
+    // assert that init smt variable for unimplemented community set type
+    if (_expr instanceof CommunityList) {
+      CommunityList communityList = (CommunityList) _expr;
+      if (communityList.getEnableSmtVariable()) {
+        communityList = new CommunityList(
+            communityList.getName(), communityList.getLines(), communityList.getInvertMatch());
+      }
+    } else if (_expr instanceof NamedCommunitySet) {
+      {}  // do nothing
+    } else {
+      throw new BatfishException(
+          "Unimplemented community set type: " + _expr.getClass().getName());
+    }
+
+    // init smt variable for community set configuration
+    _expr.initSmtVariable(context, solver, configVarPrefix);
   }
 }

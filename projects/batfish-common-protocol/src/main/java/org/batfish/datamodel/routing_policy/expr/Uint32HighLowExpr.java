@@ -82,8 +82,15 @@ public final class Uint32HighLowExpr extends LongExpr {
   private final @Nonnull IntExpr _lowExpr;
 
   /** Add configuration constant - SMT symbolic variable */
+  @Override
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
     // TODO: implement me when needed
     {}  // do nothing
+  }
+
+  /** Add get literal long value for configVarPrefix */
+  @Override
+  public String getLiteralLongString() {
+    return "";
   }
 }

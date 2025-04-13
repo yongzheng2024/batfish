@@ -92,6 +92,7 @@ public abstract class CommunitySetExpr implements Serializable {
   public abstract void initSmtVariable(
       Context context, Solver solver, String configVarPrefix, boolean isTrue);
   public abstract void initSmtVariable(Context context, Solver solver, String configVarPrefix);
+  public abstract boolean getEnableSmtVariable();
 
   /** Add get community expression string for configVarPrefix */
   public abstract String getCommunityExprString();

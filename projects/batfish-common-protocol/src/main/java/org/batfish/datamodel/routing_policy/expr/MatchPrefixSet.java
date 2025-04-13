@@ -8,6 +8,8 @@ import java.util.Objects;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+
+import org.batfish.common.BatfishException;
 import org.batfish.datamodel.Prefix;
 import org.batfish.datamodel.routing_policy.Environment;
 import org.batfish.datamodel.routing_policy.Result;
@@ -26,7 +28,7 @@ public final class MatchPrefixSet extends BooleanExpr {
   private static final String PROP_PREFIX_SET = "prefixSet";
 
   @Nonnull private final PrefixExpr _prefix;
-  @Nonnull private final PrefixSetExpr _prefixSet;
+  @Nonnull private /*final*/ PrefixSetExpr _prefixSet;
 
   @JsonCreator
   private static MatchPrefixSet jsonCreator(
@@ -91,6 +93,21 @@ public final class MatchPrefixSet extends BooleanExpr {
 
   /** Add configuration constant - SMT symbolic variable */
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
+    // check and avoid shared object
+    // assert that init smt variable for unimplemented prefix set type
+    if (_prefixSet instanceof ExplicitPrefixSet) {
+      ExplicitPrefixSet explicitPrefixSet = (ExplicitPrefixSet) _prefixSet;
+      if (explicitPrefixSet.getEnableSmtVariable()) {
+        _prefixSet = new ExplicitPrefixSet(explicitPrefixSet.getPrefixSpace());
+      }
+    } else if (_prefixSet instanceof NamedPrefixSet) {
+      {}  // do nothing
+    } else {
+      throw new BatfishException(
+          "Unimplemented prefix set type: " + _prefixSet.getClass().getName());
+    }
+
+    // init smt variable for prefix set configuration
     _prefixSet.initSmtVariable(context, solver, configVarPrefix);
   }
 }

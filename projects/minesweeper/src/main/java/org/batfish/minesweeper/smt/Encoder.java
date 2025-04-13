@@ -1158,7 +1158,7 @@ public class Encoder {
           //     "__" + format(prefixIpStr) + "__";
           String configVarPrefix =
               "Config_" + hostName + "_RouteFilterList_" + format(routerFilterListName) +
-              "__Line" + lineIndex + "__" + format(prefixIpStr) + "_";
+              "__Line" + lineIndex + "__" + format(prefixIpStr) + "__";
           line.initSmtVariable(_ctx, _solver, configVarPrefix);
 
           // write (ipLongFormat -> ipStringFormat) to configs_to_variables file
@@ -1189,18 +1189,18 @@ public class Encoder {
               "Config_" + hostName + "_CommunityList_" + format(communityListName) +
               "__Line" + lineIndex + "__";
 
-          // TODO: add regex / exact community's string
+          // Add regex / exact community's string
           CommunitySetExpr communitySetExpr = line.getMatchCondition();
+          String communityExprString = format(line.getMatchCondition().getCommunityExprString());
+
           if (communitySetExpr instanceof RegexCommunitySet) {
-            // TODO: format regex community expression
-            // String communityExprString = line.getMatchCondition().getCommunityExprString();
+            // TODO: add formated regex community expression
             // configVarPrefix += "regex_community_" + communityExprString + "_";
             line.initSmtVariable(_ctx, _solver, configVarPrefix);
             // write smt symbolic variable name to configs_to_variables file
             _configWriter.println("    + " + configVarPrefix + "action");
             _configWriter.println("    + " + configVarPrefix + "community");
           } else if (communitySetExpr instanceof LiteralCommunity) {
-            String communityExprString = line.getMatchCondition().getCommunityExprString();
             configVarPrefix += "exact_community_" + communityExprString + "_";
             line.initSmtVariable(_ctx, _solver, configVarPrefix);
             // write smt symbolic variable name to configs_to_variables file
@@ -1301,10 +1301,11 @@ public class Encoder {
 
       } else if (stmt instanceof SetMetric) {
         SetMetric sm = (SetMetric) stmt;
-        sm.initSmtVariable(_ctx, _solver, configVarPrefix + "set_metric");
+        String metricValue = sm.getMetric().getLiteralLongString();
+        sm.initSmtVariable(_ctx, _solver, configVarPrefix + "set_metric_" + metricValue);
 
         // write smt symbolic variable name to configs_to_variables file
-        _configWriter.println("    + " + configVarPrefix + "set_metric");
+        _configWriter.println("    + " + configVarPrefix + "set_metric_" + metricValue);
 
       } else if (stmt instanceof SetOspfMetricType) {
         // TODO: implement me
@@ -1312,10 +1313,13 @@ public class Encoder {
 
       } else if (stmt instanceof SetLocalPreference) {
         SetLocalPreference slp = (SetLocalPreference) stmt;
-        slp.initSmtVariable(_ctx, _solver, configVarPrefix + "set_localpreference");
+        String localPreferenceValue = slp.getLocalPreference().getLiteralLongString();
+        slp.initSmtVariable(_ctx, _solver,
+            configVarPrefix + "set_localpreference_" + localPreferenceValue);
 
         // write smt symbolic variable name to configs_to_variables file
-        _configWriter.println("    + " + configVarPrefix + "set_localpreference");
+        _configWriter.println("    + " + configVarPrefix +
+            "set_localpreference_" + localPreferenceValue);
 
       } else if (stmt instanceof AddCommunity) {
         // TODO: check here and implement when needed
@@ -1489,19 +1493,20 @@ public class Encoder {
           // write (ipLongFormat -> ipStringFormat) to configs_to_variables file
           long prefixIp = prefixRange.getPrefix().getStartIp().asLong();
           String prefixIpStr = longToIpString(prefixIp);
-          _configWriter.println("    (" + prefixIp + " -> " + prefixIpStr + ")");
+          // _configWriter.println("    (" + prefixIp + " -> " + prefixIpStr + ")");
           // write smt symbolic variable name to configs_to_variables file
-          _configWriter.println("    + " + configVarPrefix + "_" + format(prefixIpStr) + "__ip");
-          _configWriter.println("    + " + configVarPrefix + "_" + format(prefixIpStr) + "__mask");
+          _configWriter.println("    + " + configVarPrefix + format(prefixIpStr) + "__ip");
+          _configWriter.println("    + " + configVarPrefix + format(prefixIpStr) + "__mask");
+          _configWriter.println("    + " + configVarPrefix + format(prefixIpStr) + "__length");
           _configWriter.println(
-              "    + " + configVarPrefix + "_" + format(prefixIpStr) + "__length");
+              "    + " + configVarPrefix + format(prefixIpStr) + "__prefix_range_start");
           _configWriter.println(
-              "    + " + configVarPrefix + "_" + format(prefixIpStr) + "__prefix_range_start");
-          _configWriter.println(
-              "    + " + configVarPrefix + "_" + format(prefixIpStr) + "__prefix_range_end");
+              "    + " + configVarPrefix + format(prefixIpStr) + "__prefix_range_end");
         }
       } else if (prefixSetExpr instanceof NamedPrefixSet) {
-        // call ip prefix-list / access-list
+        {}  // do nothing, call ip prefix-list / access-list in configuration
+      } else {
+        throw new BatfishException("Unimplemented feature " + expr.getClass());
       }
 
     } else if (expr instanceof MatchPrefix6Set) {
@@ -1519,7 +1524,54 @@ public class Encoder {
 
     } else if (expr instanceof MatchCommunitySet) {
       // TODO: check here and implement it when needed
-      {}  // do nothing
+      MatchCommunitySet mcs = (MatchCommunitySet) expr;
+      // mcs.initSmtVariable(_ctx, _solver, configVarPrefix);
+
+      CommunitySetExpr communitySetExpr = mcs.getExpr();
+      if (communitySetExpr instanceof CommunityList) {
+        CommunityList cl = (CommunityList) communitySetExpr;
+        for (CommunityListLine communityListLine : cl.getLines()) {
+          String innerCommunityExprString =
+              format(communityListLine.getMatchCondition().getCommunityExprString());
+          CommunitySetExpr innerCommunitySetExpr = communityListLine.getMatchCondition();
+          if (innerCommunitySetExpr instanceof RegexCommunitySet) {
+            // TODO: add formated regex community expression
+            // init smt variable for regex community set
+            mcs.initSmtVariable(_ctx, _solver, configVarPrefix + "regex_community_");
+            // write smt symbolic variable name to configs_to_variables file
+            _configWriter.println("    + " + configVarPrefix + "regex_community_action");
+            _configWriter.println("    + " + configVarPrefix + "regex_community_community");
+          } else if (innerCommunitySetExpr instanceof LiteralCommunity) {
+            // init smt variable for literal community
+            mcs.initSmtVariable(_ctx, _solver,
+                configVarPrefix + "exact_community_" + innerCommunityExprString + "_");
+            // write smt symbolic variable name to configs_to_variables file
+            _configWriter.println("    + " + configVarPrefix +
+                "exact_community_" + innerCommunityExprString + "_action");
+            _configWriter.println("    + " + configVarPrefix +
+                "exact_community_" + innerCommunityExprString + "_community");
+          } else if (innerCommunitySetExpr instanceof LiteralCommunitySet) {
+            // init smt variable for literal community
+            mcs.initSmtVariable(_ctx, _solver, configVarPrefix + "exact_community_set_");
+            LiteralCommunitySet innerCommunitySet = (LiteralCommunitySet) innerCommunitySetExpr;
+            for (Community innerCommunity : innerCommunitySet.getCommunities()) {
+              String innerCommunityString = format(innerCommunity.getCommunityString());
+              // write smt symbolic variable name to configs_to_variables file
+              _configWriter.println("    + " + configVarPrefix +
+                  "exact_community_set_" + innerCommunityString + "_action");
+              _configWriter.println("    + " + configVarPrefix +
+                  "exact_community_set_" + innerCommunityString + "_community");
+            }
+          } else {
+            throw new BatfishException("Unimplemented feature " + communitySetExpr.getClass());
+          }
+
+        }
+      } else if (communitySetExpr instanceof NamedCommunitySet) {
+        {}  // do nothing, call community-list in configuration
+      } else {
+        throw new BatfishException("Unimplemented feature " + expr.getClass());
+      }
 
     } else if (expr instanceof BooleanExprs.StaticBooleanExpr) {
       BooleanExprs.StaticBooleanExpr b = (BooleanExprs.StaticBooleanExpr) expr;

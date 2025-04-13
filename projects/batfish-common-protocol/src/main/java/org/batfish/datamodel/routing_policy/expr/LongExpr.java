@@ -22,4 +22,7 @@ public abstract class LongExpr implements Serializable {
 
   /** Add configuration constant - SMT symbolic variable */
   public abstract void initSmtVariable(Context context, Solver solver, String configVarPrefix);
+
+  /** Add get literal long value for configVarPrefix */
+  public abstract String getLiteralLongString();
 }

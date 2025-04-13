@@ -116,6 +116,7 @@ public final class RouteFilterLine implements Serializable {
   private transient BoolExpr _configVarAction;
 
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
+    // assert the route filter list is not shared
     if (_enableSmtVariable) {
       System.out.println("ERROR RouteFilterLine:initSmtVariable");
       System.out.println("Previous configVarPrefix: " + _configVarPrefix);
@@ -123,11 +124,11 @@ public final class RouteFilterLine implements Serializable {
       return;
     }
 
+    // check and avoid shared object
     if (_ipWildcard.getEnableSmtVariable()) {
       _ipWildcard =
           IpWildcard.ipWithWildcardMask(_ipWildcard.getIp(), _ipWildcard.getWildcardMask());
     }
-
     if (_lengthRange.getEnableSmtVariable()) {
       _lengthRange = new SubRange(_lengthRange.getStart(), _lengthRange.getEnd());
     }

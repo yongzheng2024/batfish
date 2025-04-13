@@ -122,6 +122,7 @@ public final class RegexCommunitySet extends CommunitySetExpr {
   @Override
   public void initSmtVariable(
       Context context, Solver solver, String configVarPrefix, boolean isTrue) {
+    // assert that the regex community set is not shared
     if (_enableSmtVariable) {
       System.out.println("ERROR RegexCommunitySet:initSmtVariable");
       System.out.println("Previous configVarPrefix: " + _configVarPrefix);
@@ -129,8 +130,8 @@ public final class RegexCommunitySet extends CommunitySetExpr {
       return;
     }
 
+    // init smt variable for regex community set
     _configVarCommunity = context.mkBoolConst(configVarPrefix + "community");
-
     // add relevant configuration constant constraint
     // for community (regex / exact), add boolean constraint which equal true
     BoolExpr configVarRegexCommConstraint =
@@ -138,7 +139,7 @@ public final class RegexCommunitySet extends CommunitySetExpr {
     solver.add(configVarRegexCommConstraint);
 
     // configure enable smt variable flag to true
-    _enableSmtVariable = true;
+    _enableSmtVariable = isTrue;
     _configVarPrefix = configVarPrefix;
   }
 
@@ -147,6 +148,7 @@ public final class RegexCommunitySet extends CommunitySetExpr {
     initSmtVariable(context, solver, configVarPrefix, true);
   }
 
+  @Override
   public boolean getEnableSmtVariable() {
     return _enableSmtVariable;
   }

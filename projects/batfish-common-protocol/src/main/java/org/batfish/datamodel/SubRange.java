@@ -163,6 +163,7 @@ public final class SubRange implements Serializable, Comparable<SubRange> {
   private transient ArithExpr _configVarEnd;
 
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
+    // assert that the sub range is not shared
     if (_enableSmtVariable) {
       System.out.println("ERROR SubRange:initSmtVariable");
       System.out.println("Previous configVarPrefix: " + _configVarPrefix);

@@ -190,6 +190,7 @@ public final class StandardCommunity extends Community {
   @Override
   public void initSmtVariable(
       Context context, Solver solver, String configVarPrefix, boolean isTrue) {
+    // assert that the standard community is not shared
     if (_enableSmtVariable) {
       System.out.println("ERROR StandardCommunity:initSmtVariable");
       System.out.println("Previous configVarPrefix: " + _configVarPrefix);
@@ -197,8 +198,6 @@ public final class StandardCommunity extends Community {
       return;
     }
 
-    // NOTE: configVarPrefix including extended community string
-    // configVarPrefix = configVarPrefix + _str + "_";
     _configVarCommunity = context.mkBoolConst(configVarPrefix + "community");
 
     // add relevant configuration constant constraint

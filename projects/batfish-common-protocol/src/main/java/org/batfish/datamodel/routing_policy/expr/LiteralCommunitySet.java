@@ -14,7 +14,11 @@ import javax.annotation.Nonnull;
 
 import com.microsoft.z3.Context;
 import com.microsoft.z3.Solver;
+import org.batfish.common.BatfishException;
 import org.batfish.datamodel.bgp.community.Community;
+import org.batfish.datamodel.bgp.community.ExtendedCommunity;
+import org.batfish.datamodel.bgp.community.StandardCommunity;
+import org.batfish.datamodel.bgp.community.LargeCommunity;
 import org.batfish.datamodel.routing_policy.Environment;
 import org.batfish.datamodel.visitors.CommunitySetExprVisitor;
 import org.batfish.datamodel.visitors.VoidCommunitySetExprVisitor;
@@ -36,6 +40,9 @@ public class LiteralCommunitySet extends CommunitySetExpr {
 
   public LiteralCommunitySet(@Nonnull Collection<? extends Community> communities) {
     _communities = ImmutableSet.copyOf(communities);
+
+    // initialize enable smt variable flag to false
+    _enableSmtVariable = false;
   }
 
   @Override
@@ -129,6 +136,7 @@ public class LiteralCommunitySet extends CommunitySetExpr {
 
   @Override
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix, boolean isTrue) {
+    // assert that the literal community set is not shared
     if (_enableSmtVariable) {
       System.out.println("ERROR LiteralCommunitySet:initSmtVariable");
       System.out.println("Previous configVarPrefix: " + _configVarPrefix);
@@ -137,13 +145,39 @@ public class LiteralCommunitySet extends CommunitySetExpr {
     }
 
     for (Community community : _communities) {
+      // check and avoid shared object
+      if (community.getEnableSmtVariable()) {
+        if (community instanceof ExtendedCommunity) {
+          ExtendedCommunity extendedCommunity = (ExtendedCommunity) community;
+          community =
+              ExtendedCommunity.of(
+                  extendedCommunity.getSubType(),
+                  extendedCommunity.getGlobalAdministrator(),
+                  extendedCommunity.getLocalAdministrator());
+        } else if (community instanceof StandardCommunity) {
+          StandardCommunity standardCommunity = (StandardCommunity) community;
+          community = StandardCommunity.of(standardCommunity.asLong());
+        } else if (community instanceof LargeCommunity) {
+          LargeCommunity largeCommunity = (LargeCommunity) community;
+            community =
+                LargeCommunity.of(
+                    largeCommunity.getGlobalAdministrator(),
+                    largeCommunity.getLocalData1(),
+                    largeCommunity.getLocalData2());
+        } else {
+          throw new BatfishException(
+              "Unimplemented community type: " + community.getClass().getName());
+        }
+      }
+
+      // init smt variable for community
       String communityString = format(community.getCommunityString());
       configVarPrefix += communityString + "_";
       community.initSmtVariable(context, solver, configVarPrefix, isTrue);
     }
 
     // configure enable smt variable flag to true
-    _enableSmtVariable = true;
+    _enableSmtVariable = isTrue;
     _configVarPrefix = configVarPrefix;
   }
 
@@ -152,6 +186,7 @@ public class LiteralCommunitySet extends CommunitySetExpr {
     initSmtVariable(context, solver, configVarPrefix, true);
   }
 
+  @Override
   public boolean getEnableSmtVariable() {
     return _enableSmtVariable;
   }

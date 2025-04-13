@@ -223,6 +223,10 @@ public final class ExtendedCommunity extends Community {
     return (_type == 0x00 || _type == 0x01) && _subType == 0x10;
   }
 
+  public byte getSubType() {
+    return _subType;
+  }
+
   /**
    * Return the global administrator value.
    *
@@ -309,6 +313,7 @@ public final class ExtendedCommunity extends Community {
   @Override
   public void initSmtVariable(
       Context context, Solver solver, String configVarPrefix, boolean isTrue) {
+    // assert that the extended community is not shared
     if (_enableSmtVariable) {
       System.out.println("ERROR ExtendedCommunity:initSmtVariable");
       System.out.println("Previous configVarPrefix: " + _configVarPrefix);

@@ -12,6 +12,7 @@ import javax.annotation.Nonnull;
 import com.microsoft.z3.BoolExpr;
 import com.microsoft.z3.Context;
 import com.microsoft.z3.Solver;
+import org.batfish.common.BatfishException;
 import org.batfish.datamodel.routing_policy.expr.CommunitySetExpr;
 import org.batfish.datamodel.routing_policy.expr.LiteralCommunity;
 import org.batfish.datamodel.routing_policy.expr.LiteralCommunitySet;
@@ -27,7 +28,7 @@ public class CommunityListLine implements Serializable {
 
   private final LineAction _action;
 
-  private final CommunitySetExpr _matchCondition;
+  private /*final*/ CommunitySetExpr _matchCondition;
 
   public CommunityListLine(@Nonnull LineAction action, @Nonnull CommunitySetExpr matchCondition) {
     _action = action;
@@ -87,6 +88,7 @@ public class CommunityListLine implements Serializable {
 
   public void initSmtVariable(
       Context context, Solver solver, String configVarPrefix, boolean isTrue) {
+    // assert that the community list line is not shared
     if (_enableSmtVariable) {
       System.out.println("ERROR CommunityListLine:initSmtVariable");
       System.out.println("Previous configVarPrefix: " + _configVarPrefix);
@@ -106,13 +108,29 @@ public class CommunityListLine implements Serializable {
     //   throw new IllegalArgumentException("Unimplemented community condition: " + _matchCondition);
     // }
 
-    _configVarAction = context.mkBoolConst(configVarPrefix + "action");
+    // check and avoid shared object
+    if (_matchCondition.getEnableSmtVariable()) {
+      if (_matchCondition instanceof RegexCommunitySet) {
+        RegexCommunitySet regexCommunitySet = (RegexCommunitySet) _matchCondition;
+        _matchCondition = new RegexCommunitySet(regexCommunitySet.getRegex());
+      } else if (_matchCondition instanceof LiteralCommunitySet) {
+        LiteralCommunitySet literalCommunitySet = (LiteralCommunitySet) _matchCondition;
+        _matchCondition = new LiteralCommunitySet(literalCommunitySet.getCommunities());
+      } else if (_matchCondition instanceof LiteralCommunity) {
+        LiteralCommunity literalCommunity = (LiteralCommunity) _matchCondition;
+        _matchCondition = new LiteralCommunity(literalCommunity.getCommunity());
+      } else {
+        throw new BatfishException(
+            "Unimplemented community set type: " + _matchCondition.getClass().getName());
+      }
+    }
 
+    _configVarAction = context.mkBoolConst(configVarPrefix + "action");
     // add relevant configuration constant constraint
     BoolExpr configVarActionConstraint = context.mkEq(
         _configVarAction, context.mkBool(_action == LineAction.PERMIT));
     solver.add(configVarActionConstraint);
-
+    // init smt variable for community set expr
     _matchCondition.initSmtVariable(context, solver, configVarPrefix, isTrue);
 
     // configure enable smt variable flag to true

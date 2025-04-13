@@ -444,6 +444,9 @@ class EncoderSlice {
 
     assert (p.getPrefixLength() <= lower && lower <= upper);
 
+    // TODO: check here, i.e. p.getEnableSmtVariable and r.getEnableSmtVariable
+    //       annotated by yongzheng on 20250413
+
     // well formed prefix
     if (p.getEnableSmtVariable() && r.getEnableSmtVariable()) {
       BitVecExpr configVarIp = p.getConfigVarIp();
@@ -462,7 +465,6 @@ class EncoderSlice {
         return mkAnd(lengthLowerBound, lengthUpperBound, lowerBitsMatch);
       }
     } else {
-      // TODO: check here, i.e. p.getEnableSmtVariable and r.getEnableSmtVariable
       BoolExpr lowerBitsMatch = firstBitsEqual(_symbolicPacket.getDstIp(), pfx, len);
       if (lower == upper) {
         BoolExpr equalLen = mkEq(prefixLen, mkInt(lower));

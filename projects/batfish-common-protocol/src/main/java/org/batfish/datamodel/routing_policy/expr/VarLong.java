@@ -65,8 +65,15 @@ public class VarLong extends LongExpr {
   }
 
   /** Add configuration constant - SMT symbolic variable */
+  @Override
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
     // TODO: implement me when needed
     {}  // do nothing
+  }
+
+  /** Add get literal long value for configVarPrefix */
+  @Override
+  public String getLiteralLongString() {
+    return "";
   }
 }
