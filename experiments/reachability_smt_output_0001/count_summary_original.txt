@@ -1,0 +1,5 @@
+number of variables: 419
+number of constraints: 800
+number of nodes: 3
+number of edges: 4
+runtime of z3 solver: ...
