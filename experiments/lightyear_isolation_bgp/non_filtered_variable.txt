@@ -1,0 +1,316 @@
+|0_SLICE-r2__reachable-id_r3|
+|0_SLICE-r2__reachable-id_r1|
+|0_SLICE-r1__reachable-id_r2|
+|0_SLICE-r1__reachable-id_r3|
+|0_SLICE-r3__reachable-id_r2|
+|0_SLICE-r3__reachable-id_r1|
+|0_SLICE-MAIN_CONTROL-FORWARDING_r3_iBGP-r2|
+|0_SLICE-MAIN_CONTROL-FORWARDING_r1_iBGP-r2|
+|0_SLICE-MAIN_CONTROL-FORWARDING_r2_iBGP-r3|
+|0_SLICE-MAIN_CONTROL-FORWARDING_r1_iBGP-r3|
+|0_SLICE-MAIN_isp1_OVERALL_BEST_None_history|
+|0_SLICE-MAIN_CONTROL-FORWARDING_r2_iBGP-r1|
+|0_SLICE-MAIN_CONTROL-FORWARDING_r3_iBGP-r1|
+|0_SLICE-MAIN_CONTROL-FORWARDING_r2_GigabitEthernet0/0|
+|0_SLICE-MAIN_CONTROL-FORWARDING_r2_GigabitEthernet1/0|
+|0_SLICE-MAIN_CONTROL-FORWARDING_r3_GigabitEthernet0/0|
+|0_SLICE-MAIN_CONTROL-FORWARDING_r3_GigabitEthernet1/0|
+|0_SLICE-MAIN_CONTROL-FORWARDING_r1_GigabitEthernet0/0|
+|0_SLICE-MAIN_CONTROL-FORWARDING_r1_GigabitEthernet1/0|
+|0_SLICE-MAIN__reachable-id_r2|
+|0_SLICE-MAIN__reachable-id_r3|
+|0_SLICE-MAIN__reachable-id_isp1|
+|0_SLICE-MAIN__reachable-id_isp2|
+|0_SLICE-MAIN__reachable-id_customer|
+|0_SLICE-MAIN__reachable-id_r1|
+
+|0_SLICE-MAIN_dst-port|
+|0_SLICE-MAIN_src-port|
+|0_SLICE-MAIN_icmp-type|
+|0_SLICE-MAIN_ip-protocol|
+|0_SLICE-MAIN_icmp-code|
+|0_SLICE-MAIN_r2_OVERALL_BEST_None_localPref|
+|0_SLICE-MAIN_r2_OVERALL_BEST_None_metric|
+|0_SLICE-MAIN_r2_OVERALL_BEST_None_igpMetric|
+|0_SLICE-MAIN_r2_OVERALL_BEST_None_prefixLength|
+|0_SLICE-MAIN_r3_OVERALL_BEST_None_localPref|
+|0_SLICE-MAIN_r3_OVERALL_BEST_None_metric|
+|0_SLICE-MAIN_r3_OVERALL_BEST_None_igpMetric|
+|0_SLICE-MAIN_r3_OVERALL_BEST_None_prefixLength|
+|0_SLICE-MAIN_isp1_OVERALL_BEST_None_adminDist|
+|0_SLICE-MAIN_isp1_OVERALL_BEST_None_localPref|
+|0_SLICE-MAIN_isp1_OVERALL_BEST_None_metric|
+|0_SLICE-MAIN_isp1_OVERALL_BEST_None_prefixLength|
+|0_SLICE-MAIN_isp1_BGP_BEST_None_localPref|
+|0_SLICE-MAIN_isp1_BGP_BEST_None_metric|
+|0_SLICE-MAIN_isp1_BGP_BEST_None_prefixLength|
+|0_SLICE-MAIN_isp1_CONNECTED_BEST_None_prefixLength|
+|0_SLICE-MAIN_isp2_OVERALL_BEST_None_localPref|
+|0_SLICE-MAIN_isp2_OVERALL_BEST_None_metric|
+|0_SLICE-MAIN_isp2_OVERALL_BEST_None_prefixLength|
+|0_SLICE-MAIN_customer_OVERALL_BEST_None_localPref|
+|0_SLICE-MAIN_customer_OVERALL_BEST_None_metric|
+|0_SLICE-MAIN_customer_OVERALL_BEST_None_prefixLength|
+|0_SLICE-MAIN_r1_OVERALL_BEST_None_localPref|
+|0_SLICE-MAIN_r1_OVERALL_BEST_None_metric|
+|0_SLICE-MAIN_r1_OVERALL_BEST_None_igpMetric|
+|0_SLICE-MAIN_r1_OVERALL_BEST_None_prefixLength|
+|0_SLICE-MAIN_r2_BGP_EXPORT_GigabitEthernet0/0_localPref|
+|0_SLICE-MAIN_r2_BGP_EXPORT_GigabitEthernet0/0_metric|
+|0_SLICE-MAIN_r2_BGP_EXPORT_GigabitEthernet0/0_prefixLength|
+|0_SLICE-MAIN_r2_BGP_EXPORT_GigabitEthernet1/0_localPref|
+|0_SLICE-MAIN_r2_BGP_EXPORT_GigabitEthernet1/0_metric|
+|0_SLICE-MAIN_r2_BGP_EXPORT_GigabitEthernet1/0_prefixLength|
+|0_SLICE-MAIN_r2_BGP_EXPORT_GigabitEthernet3/0_localPref|
+|0_SLICE-MAIN_r2_BGP_EXPORT_GigabitEthernet3/0_metric|
+|0_SLICE-MAIN_r2_BGP_EXPORT_GigabitEthernet3/0_prefixLength|
+|0_SLICE-MAIN_r2_BGP_IMPORT_GigabitEthernet3/0_localPref|
+|0_SLICE-MAIN_r2_BGP_IMPORT_GigabitEthernet3/0_metric|
+|0_SLICE-MAIN_r2_BGP_IMPORT_GigabitEthernet3/0_prefixLength|
+|0_SLICE-MAIN_r2_BGP_EXPORT_iBGP-r3_localPref|
+|0_SLICE-MAIN_r2_BGP_EXPORT_iBGP-r3_metric|
+|0_SLICE-MAIN_r2_BGP_EXPORT_iBGP-r3_prefixLength|
+|0_SLICE-MAIN_r2_BGP_IMPORT_iBGP-r3_localPref|
+|0_SLICE-MAIN_r2_BGP_IMPORT_iBGP-r3_metric|
+|0_SLICE-MAIN_r2_BGP_IMPORT_iBGP-r3_igpMetric|
+|0_SLICE-MAIN_r2_BGP_IMPORT_iBGP-r3_prefixLength|
+|0_SLICE-MAIN_r2_BGP_EXPORT_iBGP-r1_localPref|
+|0_SLICE-MAIN_r2_BGP_EXPORT_iBGP-r1_metric|
+|0_SLICE-MAIN_r2_BGP_EXPORT_iBGP-r1_prefixLength|
+|0_SLICE-MAIN_r2_BGP_IMPORT_iBGP-r1_localPref|
+|0_SLICE-MAIN_r2_BGP_IMPORT_iBGP-r1_metric|
+|0_SLICE-MAIN_r2_BGP_IMPORT_iBGP-r1_igpMetric|
+|0_SLICE-MAIN_r2_BGP_IMPORT_iBGP-r1_prefixLength|
+|0_SLICE-MAIN_r3_BGP_EXPORT_GigabitEthernet0/0_localPref|
+|0_SLICE-MAIN_r3_BGP_EXPORT_GigabitEthernet0/0_metric|
+|0_SLICE-MAIN_r3_BGP_EXPORT_GigabitEthernet0/0_prefixLength|
+|0_SLICE-MAIN_r3_BGP_EXPORT_GigabitEthernet2/0_localPref|
+|0_SLICE-MAIN_r3_BGP_EXPORT_GigabitEthernet2/0_metric|
+|0_SLICE-MAIN_r3_BGP_EXPORT_GigabitEthernet2/0_prefixLength|
+|0_SLICE-MAIN_r3_BGP_IMPORT_GigabitEthernet2/0_localPref|
+|0_SLICE-MAIN_r3_BGP_IMPORT_GigabitEthernet2/0_metric|
+|0_SLICE-MAIN_r3_BGP_IMPORT_GigabitEthernet2/0_prefixLength|
+|0_SLICE-MAIN_r3_BGP_EXPORT_GigabitEthernet1/0_localPref|
+|0_SLICE-MAIN_r3_BGP_EXPORT_GigabitEthernet1/0_metric|
+|0_SLICE-MAIN_r3_BGP_EXPORT_GigabitEthernet1/0_prefixLength|
+|0_SLICE-MAIN_r3_BGP_EXPORT_iBGP-r2_localPref|
+|0_SLICE-MAIN_r3_BGP_EXPORT_iBGP-r2_metric|
+|0_SLICE-MAIN_r3_BGP_EXPORT_iBGP-r2_prefixLength|
+|0_SLICE-MAIN_r3_BGP_IMPORT_iBGP-r2_localPref|
+|0_SLICE-MAIN_r3_BGP_IMPORT_iBGP-r2_metric|
+|0_SLICE-MAIN_r3_BGP_IMPORT_iBGP-r2_igpMetric|
+|0_SLICE-MAIN_r3_BGP_IMPORT_iBGP-r2_prefixLength|
+|0_SLICE-MAIN_r3_BGP_EXPORT_iBGP-r1_localPref|
+|0_SLICE-MAIN_r3_BGP_EXPORT_iBGP-r1_metric|
+|0_SLICE-MAIN_r3_BGP_EXPORT_iBGP-r1_prefixLength|
+|0_SLICE-MAIN_r3_BGP_IMPORT_iBGP-r1_localPref|
+|0_SLICE-MAIN_r3_BGP_IMPORT_iBGP-r1_metric|
+|0_SLICE-MAIN_r3_BGP_IMPORT_iBGP-r1_igpMetric|
+|0_SLICE-MAIN_r3_BGP_IMPORT_iBGP-r1_prefixLength|
+|0_SLICE-MAIN_isp1_BGP_SINGLE-EXPORT__localPref|
+|0_SLICE-MAIN_isp1_BGP_SINGLE-EXPORT__metric|
+|0_SLICE-MAIN_isp1_BGP_SINGLE-EXPORT__prefixLength|
+|0_SLICE-MAIN_isp1_BGP_IMPORT_GigabitEthernet0/0_localPref|
+|0_SLICE-MAIN_isp1_BGP_IMPORT_GigabitEthernet0/0_metric|
+|0_SLICE-MAIN_isp1_BGP_IMPORT_GigabitEthernet0/0_prefixLength|
+|0_SLICE-MAIN_isp1_CONNECTED_IMPORT_GigabitEthernet1/0_prefixLength|
+|0_SLICE-MAIN_isp2_BGP_SINGLE-EXPORT__localPref|
+|0_SLICE-MAIN_isp2_BGP_SINGLE-EXPORT__metric|
+|0_SLICE-MAIN_isp2_BGP_SINGLE-EXPORT__prefixLength|
+|0_SLICE-MAIN_isp2_BGP_IMPORT_GigabitEthernet0/0_localPref|
+|0_SLICE-MAIN_isp2_BGP_IMPORT_GigabitEthernet0/0_metric|
+|0_SLICE-MAIN_isp2_BGP_IMPORT_GigabitEthernet0/0_prefixLength|
+|0_SLICE-MAIN_customer_BGP_SINGLE-EXPORT__localPref|
+|0_SLICE-MAIN_customer_BGP_SINGLE-EXPORT__metric|
+|0_SLICE-MAIN_customer_BGP_SINGLE-EXPORT__prefixLength|
+|0_SLICE-MAIN_customer_BGP_IMPORT_GigabitEthernet0/0_localPref|
+|0_SLICE-MAIN_customer_BGP_IMPORT_GigabitEthernet0/0_metric|
+|0_SLICE-MAIN_customer_BGP_IMPORT_GigabitEthernet0/0_prefixLength|
+|0_SLICE-MAIN_r1_BGP_EXPORT_GigabitEthernet2/0_localPref|
+|0_SLICE-MAIN_r1_BGP_EXPORT_GigabitEthernet2/0_metric|
+|0_SLICE-MAIN_r1_BGP_EXPORT_GigabitEthernet2/0_prefixLength|
+|0_SLICE-MAIN_r1_BGP_IMPORT_GigabitEthernet2/0_localPref|
+|0_SLICE-MAIN_r1_BGP_IMPORT_GigabitEthernet2/0_metric|
+|0_SLICE-MAIN_r1_BGP_IMPORT_GigabitEthernet2/0_prefixLength|
+|0_SLICE-MAIN_r1_BGP_EXPORT_GigabitEthernet0/0_localPref|
+|0_SLICE-MAIN_r1_BGP_EXPORT_GigabitEthernet0/0_metric|
+|0_SLICE-MAIN_r1_BGP_EXPORT_GigabitEthernet0/0_prefixLength|
+|0_SLICE-MAIN_r1_BGP_EXPORT_GigabitEthernet1/0_localPref|
+|0_SLICE-MAIN_r1_BGP_EXPORT_GigabitEthernet1/0_metric|
+|0_SLICE-MAIN_r1_BGP_EXPORT_GigabitEthernet1/0_prefixLength|
+|0_SLICE-MAIN_r1_BGP_EXPORT_iBGP-r2_localPref|
+|0_SLICE-MAIN_r1_BGP_EXPORT_iBGP-r2_metric|
+|0_SLICE-MAIN_r1_BGP_EXPORT_iBGP-r2_prefixLength|
+|0_SLICE-MAIN_r1_BGP_IMPORT_iBGP-r2_localPref|
+|0_SLICE-MAIN_r1_BGP_IMPORT_iBGP-r2_metric|
+|0_SLICE-MAIN_r1_BGP_IMPORT_iBGP-r2_igpMetric|
+|0_SLICE-MAIN_r1_BGP_IMPORT_iBGP-r2_prefixLength|
+|0_SLICE-MAIN_r1_BGP_EXPORT_iBGP-r3_localPref|
+|0_SLICE-MAIN_r1_BGP_EXPORT_iBGP-r3_metric|
+|0_SLICE-MAIN_r1_BGP_EXPORT_iBGP-r3_prefixLength|
+|0_SLICE-MAIN_r1_BGP_IMPORT_iBGP-r3_localPref|
+|0_SLICE-MAIN_r1_BGP_IMPORT_iBGP-r3_metric|
+|0_SLICE-MAIN_r1_BGP_IMPORT_iBGP-r3_igpMetric|
+|0_SLICE-MAIN_r1_BGP_IMPORT_iBGP-r3_prefixLength|
+|0_SLICE-MAIN_r2_BGP_EXPORT_GigabitEthernet0/0_community_(,\|\\{\|\\}\|^\|$\| )100:_OTHER|
+|0_SLICE-MAIN_r2_BGP_EXPORT_GigabitEthernet0/0_community_100:1|
+|0_SLICE-MAIN_r2_BGP_EXPORT_GigabitEthernet1/0_community_(,\|\\{\|\\}\|^\|$\| )100:_OTHER|
+|0_SLICE-MAIN_r2_BGP_EXPORT_GigabitEthernet1/0_community_100:1|
+|0_SLICE-MAIN_r2_BGP_EXPORT_GigabitEthernet3/0_community_(,\|\\{\|\\}\|^\|$\| )100:_OTHER|
+|0_SLICE-MAIN_r2_BGP_EXPORT_GigabitEthernet3/0_community_100:1|
+|0_SLICE-MAIN_r2_BGP_EXPORT_iBGP-r3_community_(,\|\\{\|\\}\|^\|$\| )100:_OTHER|
+|0_SLICE-MAIN_r2_BGP_EXPORT_iBGP-r3_community_100:1|
+|0_SLICE-MAIN_r2_BGP_EXPORT_iBGP-r1_community_(,\|\\{\|\\}\|^\|$\| )100:_OTHER|
+|0_SLICE-MAIN_r2_BGP_EXPORT_iBGP-r1_community_100:1|
+|0_SLICE-MAIN_r3_BGP_EXPORT_GigabitEthernet0/0_community_(,\|\\{\|\\}\|^\|$\| )100:_OTHER|
+|0_SLICE-MAIN_r3_BGP_EXPORT_GigabitEthernet0/0_community_100:1|
+|0_SLICE-MAIN_r3_BGP_EXPORT_GigabitEthernet2/0_community_(,\|\\{\|\\}\|^\|$\| )100:_OTHER|
+|0_SLICE-MAIN_r3_BGP_EXPORT_GigabitEthernet2/0_community_100:1|
+|0_SLICE-MAIN_r3_BGP_EXPORT_GigabitEthernet1/0_community_(,\|\\{\|\\}\|^\|$\| )100:_OTHER|
+|0_SLICE-MAIN_r3_BGP_EXPORT_GigabitEthernet1/0_community_100:1|
+|0_SLICE-MAIN_r3_BGP_EXPORT_iBGP-r2_community_(,\|\\{\|\\}\|^\|$\| )100:_OTHER|
+|0_SLICE-MAIN_r3_BGP_EXPORT_iBGP-r2_community_100:1|
+|0_SLICE-MAIN_r3_BGP_EXPORT_iBGP-r1_community_(,\|\\{\|\\}\|^\|$\| )100:_OTHER|
+|0_SLICE-MAIN_r3_BGP_EXPORT_iBGP-r1_community_100:1|
+|0_SLICE-MAIN_isp1_BGP_SINGLE-EXPORT__community_(,\|\\{\|\\}\|^\|$\| )100:_OTHER|
+|0_SLICE-MAIN_isp1_BGP_SINGLE-EXPORT__community_100:1|
+|0_SLICE-MAIN_isp2_BGP_SINGLE-EXPORT__community_(,\|\\{\|\\}\|^\|$\| )100:_OTHER|
+|0_SLICE-MAIN_isp2_BGP_SINGLE-EXPORT__community_100:1|
+|0_SLICE-MAIN_customer_BGP_SINGLE-EXPORT__community_(,\|\\{\|\\}\|^\|$\| )100:_OTHER|
+|0_SLICE-MAIN_customer_BGP_SINGLE-EXPORT__community_100:1|
+|0_SLICE-MAIN_r1_BGP_EXPORT_GigabitEthernet2/0_community_(,\|\\{\|\\}\|^\|$\| )100:_OTHER|
+|0_SLICE-MAIN_r1_BGP_EXPORT_GigabitEthernet2/0_community_100:1|
+|0_SLICE-MAIN_r1_BGP_EXPORT_GigabitEthernet0/0_community_(,\|\\{\|\\}\|^\|$\| )100:_OTHER|
+|0_SLICE-MAIN_r1_BGP_EXPORT_GigabitEthernet0/0_community_100:1|
+|0_SLICE-MAIN_r1_BGP_EXPORT_GigabitEthernet1/0_community_(,\|\\{\|\\}\|^\|$\| )100:_OTHER|
+|0_SLICE-MAIN_r1_BGP_EXPORT_GigabitEthernet1/0_community_100:1|
+|0_SLICE-MAIN_r1_BGP_EXPORT_iBGP-r2_community_(,\|\\{\|\\}\|^\|$\| )100:_OTHER|
+|0_SLICE-MAIN_r1_BGP_EXPORT_iBGP-r2_community_100:1|
+|0_SLICE-MAIN_r1_BGP_EXPORT_iBGP-r3_community_(,\|\\{\|\\}\|^\|$\| )100:_OTHER|
+|0_SLICE-MAIN_r1_BGP_EXPORT_iBGP-r3_community_100:1|
+|0_SLICE-MAIN_r2_BGP_EXPORT_GigabitEthernet0/0_permitted|
+|0_SLICE-MAIN_r2_BGP_EXPORT_GigabitEthernet0/0_bgpInternal|
+|0_SLICE-MAIN_r2_OVERALL_BEST_None_community_(,\|\\{\|\\}\|^\|$\| )100:_OTHER|
+|0_SLICE-MAIN_r2_OVERALL_BEST_None_community_100:1|
+|0_SLICE-MAIN_r2_BGP_EXPORT_GigabitEthernet1/0_permitted|
+|0_SLICE-MAIN_r2_BGP_EXPORT_GigabitEthernet1/0_bgpInternal|
+|0_SLICE-MAIN_r2_BGP_IMPORT_GigabitEthernet3/0_permitted|
+|0_SLICE-MAIN_r2_BGP_IMPORT_GigabitEthernet3/0_bgpInternal|
+|0_SLICE-MAIN_r2_BGP_IMPORT_GigabitEthernet3/0_community_(,\|\\{\|\\}\|^\|$\| )100:_OTHER|
+|0_SLICE-MAIN_r2_BGP_IMPORT_GigabitEthernet3/0_community_100:1|
+|0_SLICE-MAIN_isp2_BGP_SINGLE-EXPORT__permitted|
+|0_SLICE-MAIN_r2_BGP_EXPORT_GigabitEthernet3/0_permitted|
+|0_SLICE-MAIN_r2_BGP_EXPORT_GigabitEthernet3/0_bgpInternal|
+|0_SLICE-MAIN_dst-ip|
+|0_SLICE-MAIN_r2_BGP_IMPORT_iBGP-r3_permitted|
+|0_SLICE-r3_r2_OVERALL_BEST_None_metric|
+|0_SLICE-MAIN_r2_BGP_IMPORT_iBGP-r3_bgpInternal|
+|0_SLICE-MAIN_r2_BGP_IMPORT_iBGP-r3_community_(,\|\\{\|\\}\|^\|$\| )100:_OTHER|
+|0_SLICE-MAIN_r2_BGP_IMPORT_iBGP-r3_community_100:1|
+|0_SLICE-MAIN_r3_BGP_EXPORT_iBGP-r2_permitted|
+|0_SLICE-MAIN_r2_BGP_EXPORT_iBGP-r3_permitted|
+|0_SLICE-MAIN_r2_BGP_EXPORT_iBGP-r3_bgpInternal|
+|0_SLICE-MAIN_r2_OVERALL_BEST_None_bgpInternal|
+|0_SLICE-MAIN_r2_BGP_IMPORT_iBGP-r1_permitted|
+|0_SLICE-r1_r2_OVERALL_BEST_None_metric|
+|0_SLICE-MAIN_r2_BGP_IMPORT_iBGP-r1_bgpInternal|
+|0_SLICE-MAIN_r2_BGP_IMPORT_iBGP-r1_community_(,\|\\{\|\\}\|^\|$\| )100:_OTHER|
+|0_SLICE-MAIN_r2_BGP_IMPORT_iBGP-r1_community_100:1|
+|0_SLICE-MAIN_r1_BGP_EXPORT_iBGP-r2_permitted|
+|0_SLICE-MAIN_r2_BGP_EXPORT_iBGP-r1_permitted|
+|0_SLICE-MAIN_r2_BGP_EXPORT_iBGP-r1_bgpInternal|
+|0_SLICE-MAIN_r3_BGP_EXPORT_GigabitEthernet0/0_permitted|
+|0_SLICE-MAIN_r3_BGP_EXPORT_GigabitEthernet0/0_bgpInternal|
+|0_SLICE-MAIN_r3_OVERALL_BEST_None_community_(,\|\\{\|\\}\|^\|$\| )100:_OTHER|
+|0_SLICE-MAIN_r3_OVERALL_BEST_None_community_100:1|
+|0_SLICE-MAIN_r3_BGP_IMPORT_GigabitEthernet2/0_permitted|
+|0_SLICE-MAIN_r3_BGP_IMPORT_GigabitEthernet2/0_bgpInternal|
+|0_SLICE-MAIN_r3_BGP_IMPORT_GigabitEthernet2/0_community_(,\|\\{\|\\}\|^\|$\| )100:_OTHER|
+|0_SLICE-MAIN_r3_BGP_IMPORT_GigabitEthernet2/0_community_100:1|
+|0_SLICE-MAIN_customer_BGP_SINGLE-EXPORT__permitted|
+|0_SLICE-MAIN_r3_BGP_EXPORT_GigabitEthernet2/0_permitted|
+|0_SLICE-MAIN_r3_BGP_EXPORT_GigabitEthernet2/0_bgpInternal|
+|0_SLICE-MAIN_r3_BGP_EXPORT_GigabitEthernet1/0_permitted|
+|0_SLICE-MAIN_r3_BGP_EXPORT_GigabitEthernet1/0_bgpInternal|
+|0_SLICE-MAIN_r3_BGP_IMPORT_iBGP-r2_permitted|
+|0_SLICE-r2_r3_OVERALL_BEST_None_metric|
+|0_SLICE-MAIN_r3_BGP_IMPORT_iBGP-r2_bgpInternal|
+|0_SLICE-MAIN_r3_BGP_IMPORT_iBGP-r2_community_(,\|\\{\|\\}\|^\|$\| )100:_OTHER|
+|0_SLICE-MAIN_r3_BGP_IMPORT_iBGP-r2_community_100:1|
+|0_SLICE-MAIN_r3_BGP_EXPORT_iBGP-r2_bgpInternal|
+|0_SLICE-MAIN_r3_OVERALL_BEST_None_bgpInternal|
+|0_SLICE-MAIN_r3_BGP_IMPORT_iBGP-r1_permitted|
+|0_SLICE-r1_r3_OVERALL_BEST_None_metric|
+|0_SLICE-MAIN_r3_BGP_IMPORT_iBGP-r1_bgpInternal|
+|0_SLICE-MAIN_r3_BGP_IMPORT_iBGP-r1_community_(,\|\\{\|\\}\|^\|$\| )100:_OTHER|
+|0_SLICE-MAIN_r3_BGP_IMPORT_iBGP-r1_community_100:1|
+|0_SLICE-MAIN_r1_BGP_EXPORT_iBGP-r3_permitted|
+|0_SLICE-MAIN_r3_BGP_EXPORT_iBGP-r1_permitted|
+|0_SLICE-MAIN_r3_BGP_EXPORT_iBGP-r1_bgpInternal|
+|0_SLICE-MAIN_isp1_BGP_IMPORT_GigabitEthernet0/0_community_(,\|\\{\|\\}\|^\|$\| )100:_OTHER|
+|0_SLICE-MAIN_isp1_BGP_IMPORT_GigabitEthernet0/0_community_100:1|
+|0_SLICE-MAIN_r1_BGP_EXPORT_GigabitEthernet2/0_permitted|
+|0_SLICE-MAIN_isp1_BGP_SINGLE-EXPORT__permitted|
+|0_SLICE-MAIN_isp1_OVERALL_BEST_None_community_(,\|\\{\|\\}\|^\|$\| )100:_OTHER|
+|0_SLICE-MAIN_isp1_OVERALL_BEST_None_community_100:1|
+|0_SLICE-MAIN_isp2_BGP_IMPORT_GigabitEthernet0/0_community_(,\|\\{\|\\}\|^\|$\| )100:_OTHER|
+|0_SLICE-MAIN_isp2_BGP_IMPORT_GigabitEthernet0/0_community_100:1|
+|0_SLICE-MAIN_isp2_OVERALL_BEST_None_community_(,\|\\{\|\\}\|^\|$\| )100:_OTHER|
+|0_SLICE-MAIN_isp2_OVERALL_BEST_None_community_100:1|
+|0_SLICE-MAIN_customer_BGP_IMPORT_GigabitEthernet0/0_community_(,\|\\{\|\\}\|^\|$\| )100:_OTHER|
+|0_SLICE-MAIN_customer_BGP_IMPORT_GigabitEthernet0/0_community_100:1|
+|0_SLICE-MAIN_customer_OVERALL_BEST_None_community_(,\|\\{\|\\}\|^\|$\| )100:_OTHER|
+|0_SLICE-MAIN_customer_OVERALL_BEST_None_community_100:1|
+|0_SLICE-MAIN_r1_BGP_IMPORT_GigabitEthernet2/0_permitted|
+|0_SLICE-MAIN_r1_BGP_IMPORT_GigabitEthernet2/0_bgpInternal|
+|0_SLICE-MAIN_r1_BGP_IMPORT_GigabitEthernet2/0_community_(,\|\\{\|\\}\|^\|$\| )100:_OTHER|
+|0_SLICE-MAIN_r1_BGP_IMPORT_GigabitEthernet2/0_community_100:1|
+|0_SLICE-MAIN_r1_BGP_EXPORT_GigabitEthernet2/0_bgpInternal|
+|0_SLICE-MAIN_r1_OVERALL_BEST_None_community_(,\|\\{\|\\}\|^\|$\| )100:_OTHER|
+|0_SLICE-MAIN_r1_OVERALL_BEST_None_community_100:1|
+|0_SLICE-MAIN_r1_BGP_EXPORT_GigabitEthernet0/0_permitted|
+|0_SLICE-MAIN_r1_BGP_EXPORT_GigabitEthernet0/0_bgpInternal|
+|0_SLICE-MAIN_r1_BGP_EXPORT_GigabitEthernet1/0_permitted|
+|0_SLICE-MAIN_r1_BGP_EXPORT_GigabitEthernet1/0_bgpInternal|
+|0_SLICE-MAIN_r1_BGP_IMPORT_iBGP-r2_permitted|
+|0_SLICE-r2_r1_OVERALL_BEST_None_metric|
+|0_SLICE-MAIN_r1_BGP_IMPORT_iBGP-r2_bgpInternal|
+|0_SLICE-MAIN_r1_BGP_IMPORT_iBGP-r2_community_(,\|\\{\|\\}\|^\|$\| )100:_OTHER|
+|0_SLICE-MAIN_r1_BGP_IMPORT_iBGP-r2_community_100:1|
+|0_SLICE-MAIN_r1_BGP_EXPORT_iBGP-r2_bgpInternal|
+|0_SLICE-MAIN_r1_OVERALL_BEST_None_bgpInternal|
+|0_SLICE-MAIN_r1_BGP_IMPORT_iBGP-r3_permitted|
+|0_SLICE-r3_r1_OVERALL_BEST_None_metric|
+|0_SLICE-MAIN_r1_BGP_IMPORT_iBGP-r3_bgpInternal|
+|0_SLICE-MAIN_r1_BGP_IMPORT_iBGP-r3_community_(,\|\\{\|\\}\|^\|$\| )100:_OTHER|
+|0_SLICE-MAIN_r1_BGP_IMPORT_iBGP-r3_community_100:1|
+|0_SLICE-MAIN_r1_BGP_EXPORT_iBGP-r3_bgpInternal|
+|0_SLICE-MAIN_isp1_BGP_BEST_None_community_(,\|\\{\|\\}\|^\|$\| )100:_OTHER|
+|0_SLICE-MAIN_isp1_BGP_BEST_None_community_100:1|
+|0_SLICE-r1_src-port|
+|0_SLICE-r1_icmp-type|
+|0_SLICE-r1_icmp-code|
+|0_SLICE-r1_r2_OVERALL_BEST_None_prefixLength|
+|0_SLICE-r1_r3_OVERALL_BEST_None_prefixLength|
+|0_SLICE-r1_r1_OVERALL_BEST_None_metric|
+|0_SLICE-r1_r1_OVERALL_BEST_None_prefixLength|
+|0_SLICE-r1_r3_CONNECTED_IMPORT_GigabitEthernet0/0_prefixLength|
+|0_SLICE-r1_r1_CONNECTED_IMPORT_GigabitEthernet0/0_prefixLength|
+|0_SLICE-r2_src-port|
+|0_SLICE-r2_icmp-type|
+|0_SLICE-r2_icmp-code|
+|0_SLICE-r2_r2_OVERALL_BEST_None_metric|
+|0_SLICE-r2_r2_OVERALL_BEST_None_prefixLength|
+|0_SLICE-r2_r3_OVERALL_BEST_None_prefixLength|
+|0_SLICE-r2_r1_OVERALL_BEST_None_prefixLength|
+|0_SLICE-r2_r2_CONNECTED_IMPORT_GigabitEthernet0/0_prefixLength|
+|0_SLICE-r2_r1_CONNECTED_IMPORT_GigabitEthernet1/0_prefixLength|
+|0_SLICE-r3_src-port|
+|0_SLICE-r3_icmp-type|
+|0_SLICE-r3_icmp-code|
+|0_SLICE-r3_r2_OVERALL_BEST_None_prefixLength|
+|0_SLICE-r3_r3_OVERALL_BEST_None_metric|
+|0_SLICE-r3_r3_OVERALL_BEST_None_prefixLength|
+|0_SLICE-r3_r1_OVERALL_BEST_None_prefixLength|
+|0_SLICE-r3_r3_CONNECTED_IMPORT_GigabitEthernet0/0_prefixLength|
+|0_SLICE-r3_r1_CONNECTED_IMPORT_GigabitEthernet0/0_prefixLength|
