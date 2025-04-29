@@ -404,7 +404,6 @@ class TransferSSA {
 
     for (CommunityListLine line : lines) {
       if (line.getEnableSmtVariable()) {
-        BoolExpr action = line.getConfigVarAction();
         BoolExpr community = null;
 
         CommunitySetExpr communitySetExpr = line.getMatchCondition();
@@ -429,13 +428,19 @@ class TransferSSA {
           throw new BatfishException("matchCommunityList: should not be null");
         }
 
+        BoolExpr action = line.getConfigVarAction();
         BoolExpr matchCommunityLine = _enc.mkEq(community, c);
         acc = _enc.mkIf(matchCommunityLine, action, acc);
 
       } else {
-        boolean action = (line.getAction() == LineAction.PERMIT);
+        // NOTE: This is wrong, we need to actually match on the cvar.
+        //       refer to https://github.com/batfish minesweeper-ibgp-new branch
+        // CommunityVar cvar = toCommunityVar(line.getMatchCondition());
+        // BoolExpr c = other.getCommunities().get(cvar);
         CommunityVar cvar = toCommunityVar(line.getMatchCondition());
-        BoolExpr c = other.getCommunities().get(cvar);
+        BoolExpr c = matchCommunity(other.getCommunities(), cvar);
+
+        boolean action = (line.getAction() == LineAction.PERMIT);
         acc = _enc.mkIf(c, _enc.mkBool(action), acc);
       }
     }
