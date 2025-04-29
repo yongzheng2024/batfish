@@ -839,7 +839,7 @@ public class Encoder {
     // System.out.println(simplifiedSolver.toString());
     _smtWriter.println(simplifiedSolver.toString());
     _smtWriter.println("(check-sat)");
-    _smtWriter.println("(get-model)");
+    _smtWriter.println(";(get-model)");
     _smtWriter.close();
     // System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
 
