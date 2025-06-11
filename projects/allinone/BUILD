@@ -239,6 +239,7 @@ junit_tests(
         "//projects/batfish",
         "//projects/batfish:batfish_testlib",
         "//projects/batfish-common-protocol:common",
+        "//projects/question",
         "//projects/minesweeper",
         "//projects/minesweeper:matchers",
         "@maven//:com_google_guava_guava",
