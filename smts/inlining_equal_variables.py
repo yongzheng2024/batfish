@@ -1,6 +1,18 @@
 import os
 import re
 import sys
+from collections import OrderedDict
+
+##########################################################################################
+### global variables
+##########################################################################################
+
+definitions = OrderedDict()
+simple_definitions = {}
+composed_definitions = {}
+
+target_variables = set()
+cached_equal_variables = {}
 
 
 ##########################################################################################
@@ -8,10 +20,13 @@ import sys
 ### SMT2 assert experssions
 ##########################################################################################
 
-# SMT2 variable regex (supports quoted identifiers (|...|) and normal indentifiers)
+# smt2 variable regex (supports quoted identifiers (|...|) and normal indentifiers)
 var_regex =   r'(\|[^|]*?(?:\\\|[^|]*?)*\||[^\s()]+)'
-# SMT2 constant regex (supports #xabc12345 and 25)
+var_pattern = re.compile(var_regex)
+# smt2 constant regex (supports hex #xabc12345, or decimal 123)
+# const_regex = r'(?:#[xX][0-9a-fA-F]+|\d+)'
 const_regex = r'(#[xX][0-9a-fA-F]+|\d+)'
+const_pattern = re.compile(const_regex)
 
 # (assert (= V c)) and (assert (= c V))
 pattern_eqvc = re.compile(rf'^\(assert\s+\(=\s+{var_regex}\s+{const_regex}\)\)$')
@@ -50,15 +65,23 @@ def error_equal_variables_diff(expr):
     print(f"ERROR: the two equal variables have different corresponding experssion:")
     print(expr)
 
+def is_simple_definition(def_expr):
+    return (
+        def_expr in {'true', 'false'} or
+        re.fullmatch(r'#[xX][0-9a-fA-F]+', def_expr) or  # SMT hex constant
+        re.fullmatch(r'\d+', def_expr)                   # decimal constant
+    )
+
+def is_composed_definition(def_expr):
+    return None
 
 ##########################################################################################
 ### parse variable definitions (involving intermediate and configuration variable)
 ##########################################################################################
 
-def parse_intermediate_definitions(file_path):
-    definitions = {}
-    current_var = None
+def parse_variable_definitions(variable_definitions_path):
     cached_definitions = set()
+    lines = []
 
     def extract_assert_eqvc(expr):
         # Matches: (assert (= V c)) 
@@ -145,13 +168,12 @@ def parse_intermediate_definitions(file_path):
             return
 
         # Finally add the equality if not overwritten
-        # print("88888888888888888888888888888888888888888888888888888888")
         if rhs_var not in definitions:
             definitions[rhs_var] = definitions[lhs_var]
         if lhs_var not in definitions:
             definitions[lhs_var] = definitions[rhs_var]
 
-    with open(file_path, 'r') as f:
+    with open(variable_definitions_path, 'r') as f:
         lines = [line.strip() for line in f if line.strip()]
 
     i = 0
@@ -159,22 +181,25 @@ def parse_intermediate_definitions(file_path):
         line = lines[i]
         # print(line)
 
-        # Match var ending with colon (includes escaped characters safely)
+        # If the line is not a variable, print error information and exit
         if not line.endswith(':'):
             error_invalid_expr(line)
             i += 1
             continue
 
+        # Match var ending with colon (includes escaped characters safely)
         current_var = line.rstrip(':')
         i += 1
         if i >= len(lines):
             break
 
+        # Extract the corresponding definition expressions of the variables
         current_defs = set()
         while i < len(lines) and not lines[i].strip().endswith(':'):
             current_defs.add(lines[i])
             i += 1
 
+        # Warning: a variable has multiple corresponding definition expressions
         if len(current_defs) == 2:
             handle_multi_exprs(current_var, list(current_defs))
             continue
@@ -184,12 +209,11 @@ def parse_intermediate_definitions(file_path):
             error_multi_exprs(current_var, current_defs)
             exit(1)
 
-        # Normal: a variable has only one corresponding definition
+        # Normal: a variable has only one corresponding definition expression
         def_line = list(current_defs)[0]
 
         # Scenario 0
         if (eqvc := extract_assert_eqvc(def_line)):
-            # print("00000000000000000000000000000000000000000000000000000000")
             left, right = eqvc
             if left == current_var:
                 definitions[current_var] = right
@@ -197,12 +221,10 @@ def parse_intermediate_definitions(file_path):
 
         # Scenario 1
         if (eqvv := extract_assert_eqvv(def_line)):
-            # print("11111111111111111111111111111111111111111111111111111111")
             cached_definitions.add(def_line)
 
         # Scenario 2
         if (eqve := extract_assert_eqve(def_line)):
-            # print("22222222222222222222222222222222222222222222222222222222")
             left, right = eqve
             if left == current_var:
                 definitions[current_var] = right
@@ -219,7 +241,6 @@ def parse_intermediate_definitions(file_path):
             if (not_var != current_var):
                 error_invalid_expr(def_line)
                 exit(1)
-            # print("33333333333333333333333333333333333333333333333333333333")
             definitions[current_var] = "false"
             continue
 
@@ -228,25 +249,21 @@ def parse_intermediate_definitions(file_path):
             if (true_var != current_var):
                 error_invalid_expr(def_line)
                 exit(1)
-            # print("44444444444444444444444444444444444444444444444444444444")
             definitions[current_var] = "true"
             continue
 
         # Scenario 5, TODO
         for left, right in extract_assert_ands(def_line):
             if left == current_var:
-                # print("55555555555555555555555555555555555555555555555555555555")
                 definitions[current_var] = right
                 break
             elif right == current_var:
-                # print("55555555555555555555555555555555555555555555555555555555")
                 definitions[current_var] = left
                 break
 
     # Scenario 1
     for def_line in list(cached_definitions):
         if (eqvv := extract_assert_eqvv(def_line)):
-            # print("11111111111111111111111111111111111111111111111111111111")
             lhs_var, rhs_var = eqvv
             if lhs_var not in definitions and rhs_var not in definitions:
                 error_equal_variables_miss(def_line)
@@ -259,6 +276,10 @@ def parse_intermediate_definitions(file_path):
                 continue
             # lhs_var in definitions and rhs_var in definitions
             elif definitions[lhs_var] != definitions[rhs_var]:
+                # TODO: Cache equal variables for other handle late.
+                cached_equal_variables[lhs_var] = rhs_var
+                cached_equal_variables[rhs_var] = lhs_var
+                # print error information (and exit)
                 error_equal_variables_diff(def_line)
                 print(f"{lhs_var}: {definitions[lhs_var]}")
                 print(f"{rhs_var}: {definitions[rhs_var]}")
@@ -267,39 +288,144 @@ def parse_intermediate_definitions(file_path):
     return definitions
 
 
-def load_excluded_vars(path):
-    with open(path, 'r') as f:
-        return set(line.strip() for line in f if line.strip())
+def extract_symbolic_variables(def_expr: str) -> set[str]:
+    vals = var_pattern.findall(def_expr)
+
+    sym_vars = set()
+    for val in vals:
+        if val in {'not', '<', '<=', '>', '>=', '=', 'and', 'or'}:
+            continue
+        if val in {'true', 'false'}:
+            continue
+        if re.fullmatch(r'\d+', val):                # decimal constant
+            continue
+        if re.fullmatch(r'#[xX][0-9a-fA-F]+', val):  # hex constant
+            continue
+        sym_vars.add(val)
+
+    return sym_vars 
 
 
-def inline_definitions(smt_content, definitions, excluded_vars):
+def replace_simple_definitions(def_expr: str, dep_vars: set[str]) -> str:
+    for dep_var in dep_vars:
+        escaped_var = re.escape(dep_var)
+        def_expr = re.sub(escaped_var, definitions[dep_var], def_expr)
+    return def_expr
+
+
+def simplify_variable_definitions():
+    to_remove = []
+    for var, def_expr in definitions.items():
+        if is_simple_definition(def_expr):
+            continue
+        composed_definitions[var] = f"({def_expr})"
+        to_remove.append(var)
+
+    for var in to_remove:
+        del definitions[var]
+
+    # FIXME: Improve simplifing variable definitions via topo-sort.
+    #        * construct topo graph                       - O(cN) / O(n + e)
+    #        * select the non-dependent node, iteratively - O(cN) / O(n + e)
+    #                     ^------------
+    #                     depend on external node or null node only
+
+    changed_flag = True
+    while changed_flag:
+        changed_flag = False
+        to_remove = []
+
+        for var, def_expr in composed_definitions.items():
+            deps = extract_symbolic_variables(def_expr)
+            known_deps = [d for d in deps if d in definitions.keys()]
+            unknown_deps = [d for d in deps if d not in definitions.keys()]
+
+            if known_deps:
+                composed_definitions[var] =  \
+                    replace_simple_definitions(def_expr, known_deps)
+
+            if unknown_deps:
+                continue
+
+            definitions[var] = replace_simple_definitions(def_expr, deps)
+            to_remove.append(var)
+            changed = True
+
+        for var in to_remove:
+            del composed_definitions[var]
+
+    changed_flag = True
+    while changed_flag:
+        changed_flag = False
+        to_remove = []
+
+        for var, def_expr in composed_definitions.items():
+            deps = extract_symbolic_variables(def_expr)
+            error_deps = [d for d in deps if d in composed_definitions.keys()]
+
+            if error_deps:
+                continue
+
+            definitions[var] = composed_definitions[var]
+            to_remove.append(var)
+            changed_flag = True
+
+        for var in to_remove:
+            del composed_definitions[var] 
+
+    # if not composed_definitions:
+    #     print("OK")
+    # else:
+    #     print(f"NO, {len(composed_definitions)}")
+
+
+##########################################################################################
+### load target variables (and delete these definitions)
+##########################################################################################
+
+def load_target_variables(target_variables_path):
+    # Read all target variables
+    with open(target_variables_path, 'r') as f:
+        target_variables = set(line.strip() for line in f if line.strip())
+    # Delete these target variables' definition
+    for target_var in target_variables:
+        if target_var in definitions.keys():
+            del definitions[target_var]
+        if target_var in composed_definitions.keys():
+            del composed_definitions[target_var]
+    return target_variables
+
+
+##########################################################################################
+### inline variable definitions
+##########################################################################################
+
+def inline_variable_definitions(smt_content):
     # Only inline if var not in excluded list
-    for var, val in definitions.items():
-        if var not in excluded_vars:
-            # Replace whole word (SMT identifiers)
-            pattern = rf'(?<![\w|]){re.escape(var)}(?![\w|])'
-            smt_content = re.sub(pattern, f'({val})', smt_content)
+    for var, def_expr in reversed(list(definitions.items())):
+        if var in target_variables:
+            continue
+        # Replace the variable to its definition
+        escaped_var = re.escape(var)
+        smt_content = re.sub(escaped_var, def_expr, smt_content)
     return smt_content
 
 
 def process_smt_encoding(smt_path, defs_path, target_vars_path, output_path):
     # Load inputs
-    definitions = parse_intermediate_definitions(defs_path)
-    # print(definitions)
-
-    """
-    excluded_vars = load_excluded_vars(target_vars_path)
+    parse_variable_definitions(defs_path)
+    load_target_variables(target_vars_path)
+    simplify_variable_definitions()
 
     with open(smt_path, 'r') as f:
-        content = f.read()
+        smt_content = f.read()
 
-    simplified_content = inline_definitions(content, definitions, excluded_vars)
+    inlined_content = inline_variable_definitions(smt_content)
 
     with open(output_path, 'w') as f:
-        f.write(simplified_content)
+        f.write(inlined_content)
 
-    print(f"Simplified SMT written to {output_path}")
-    """
+    print(f"Inlined SMT encoding written to {output_path}")
 
 
 if __name__ == '__main__':
@@ -309,8 +435,8 @@ if __name__ == '__main__':
 
     path = sys.argv[1]
     smt_encoding_file = os.path.join(path, 'smt_encoding.smt2')
-    equals_variable_file = os.path.join(path, 'filtered_equals_variable.txt')
-    target_variable_file = os.path.join(path, 'target_variable.txt')
+    equal_definitions_file = os.path.join(path, 'filtered_equal_definitions.txt')
+    target_variables_file = os.path.join(path, 'target_variables.txt')
     output_inlined_file = os.path.join(path, 'inlined_smt_encoding.smt2')
 
-    process_smt_encoding(smt_encoding_file, equals_variable_file, target_variable_file, output_inlined_file)
+    process_smt_encoding(smt_encoding_file, equal_definitions_file, target_variables_file, output_inlined_file)
