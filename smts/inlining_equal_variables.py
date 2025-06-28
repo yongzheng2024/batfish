@@ -2,6 +2,7 @@ import os
 import re
 import sys
 from collections import OrderedDict
+from typing import List, Tuple, Optional
 
 ##########################################################################################
 ### global variables
@@ -400,15 +401,186 @@ def load_target_variables(target_variables_path):
 ### inline variable definitions
 ##########################################################################################
 
-def inline_variable_definitions(smt_content):
+def inline_variable_definitions(smt_encoding):
     # Only inline if var not in excluded list
     for var, def_expr in reversed(list(definitions.items())):
         if var in target_variables:
             continue
         # Replace the variable to its definition
         escaped_var = re.escape(var)
-        smt_content = re.sub(escaped_var, def_expr, smt_content)
-    return smt_content
+        smt_encoding = re.sub(escaped_var, def_expr, smt_encoding)
+    return smt_encoding
+
+##########################################################################################
+### extract assert expressions
+##########################################################################################
+def extract_assert_expressions(smt2_lines: list[str]) -> list[str]:
+    """Extract assert expression from the smt encoding lines"""
+    assert_exprs = []
+    current_expr = ''
+    depth = 0
+    in_assert = False
+
+    for line in smt2_lines:
+        line = line.strip()
+        if not line or line.startswith(';'):
+            continue
+
+        if '(assert' in line:
+            in_assert = True
+
+        if in_assert:
+            current_expr += ' ' + line
+            depth += line.count('(') - line.count(')')
+            if depth == 0:
+                if current_expr.strip().startswith('(assert'):
+                    assert_exprs.append(current_expr.strip())
+                current_expr = ''
+                in_assert = False
+
+    return assert_exprs
+
+
+##########################################################################################
+### expand let expressions
+##########################################################################################
+def extract_let_parts(line: str) -> Tuple[Optional[str], Optional[str]]:
+    """Extract the bindings and body of a `let` expression"""
+    if not line.startswith("(assert (let"):
+        return None, None
+
+    i = line.find("(let")
+    stack = []
+    start = i
+    i += 4  # skip "(let"
+
+    # Skip whitespace
+    while i < len(line) and line[i] in " \n\t":
+        i += 1
+
+    # Expecting bindings block to start with '('
+    if line[i] != '(':
+        return None, None
+
+    # Parse the bindings block
+    bindings_start = i
+    stack.append('(')
+    i += 1
+    while i < len(line) and stack:
+        if line[i] == '(':
+            stack.append('(')
+        elif line[i] == ')':
+            stack.pop()
+        i += 1
+    bindings_block = line[bindings_start:i].strip()
+
+    # Skip whitespace
+    while i < len(line) and line[i] in " \n\t":
+        i += 1
+
+    # Parse the body
+    body_start = i
+    stack = ['(']
+    i += 1
+    while i < len(line) and stack:
+        if line[i] == '(':
+            stack.append('(')
+        elif line[i] == ')':
+            stack.pop()
+        i += 1
+    body = line[body_start:i].strip()
+
+    return bindings_block, body
+
+def replace_vars(body: str, bindings: List[Tuple[str, str]]) -> str:
+    """Replace variables in the body of a `let` expression with their corresponding expressions"""
+    for var, expr in reversed(bindings):
+        # Wrap the expression in parentheses if it's not already wrapped
+        expr_wrapped = f"({expr})" if not expr.startswith("(") else expr
+        # Ensure that the variable is properly matched, even when it contains special characters
+        # Using a more robust regex pattern to match standalone variable names
+        pattern = rf"(?<![\w!]){re.escape(var)}(?![\w\d!])"
+        # Use re.sub to replace the variable in the body with its expression
+        body = re.sub(pattern, expr_wrapped, body)
+    return body
+
+def extract_bindings(bindings_block: str) -> List[Tuple[str, str]]:
+    """Extract variables and their corresponding expressions from the `let` bindings block"""
+    bindings = []
+    i = 0
+    n = len(bindings_block)
+    
+    while i < n:
+        # Skip any whitespace
+        while i < n and bindings_block[i].isspace():
+            i += 1
+        
+        # Start of a binding tuple (var expr)
+        if i < n and bindings_block[i] == '(':
+            i += 1  # Skip the opening '('
+            
+            # Extract variable name (ignoring the leading '(' and any trailing spaces)
+            start = i
+            while i < n and not bindings_block[i].isspace() and bindings_block[i] != ')':
+                i += 1
+            var = bindings_block[start:i]
+
+            # Strip the leading '(' if it exists in the variable name
+            if var.startswith('('):
+                var = var[1:]
+
+            # Skip whitespace between var and expr
+            while i < n and bindings_block[i].isspace():
+                i += 1
+            
+            # Extract expression, handling nested parentheses
+            if i < n and bindings_block[i] == '(':
+                count = 1
+                expr_start = i
+                i += 1
+                while i < n and count > 0:
+                    if bindings_block[i] == '(':
+                        count += 1
+                    elif bindings_block[i] == ')':
+                        count -= 1
+                    i += 1
+                expr = bindings_block[expr_start:i]
+            else:
+                # For non-parenthesized expressions (e.g., constants or symbols)
+                expr_start = i
+                while i < n and bindings_block[i] != ')':
+                    i += 1
+                expr = bindings_block[expr_start:i]
+            
+            # Strip extra whitespace around expressions
+            bindings.append((var.strip(), expr.strip()))
+        
+        # Move to the next potential binding
+        while i < n and bindings_block[i] != '(':
+            i += 1
+    
+    return bindings
+
+def expand_one_let(line: str) -> str:
+    """Expand the outermost `let` sub-expression in a line"""
+    bindings_block, body = extract_let_parts(line)
+    if bindings_block is None or body is None:
+        return line
+    bindings = extract_bindings(bindings_block)
+
+    # Replace the variables in the body with their expressions
+    body = replace_vars(body, bindings)
+
+    return f"(assert {body})"
+
+def expand_let_expressions(smt_lines: List[str]) -> List[str]:
+    """Expand the outermost `let` expressions in each line"""
+    expanded_lines = []
+    for line in smt_lines:
+        while "(let" in line:
+            line = expand_one_let(line)  # Only expand the outermost `let`
+        expanded_lines.append(line)
+    return expanded_lines
 
 
 def process_smt_encoding(smt_path, defs_path, target_vars_path, output_path):
@@ -417,13 +589,19 @@ def process_smt_encoding(smt_path, defs_path, target_vars_path, output_path):
     load_target_variables(target_vars_path)
     simplify_variable_definitions()
 
-    with open(smt_path, 'r') as f:
-        smt_content = f.read()
+    with open(smt_path, 'r', encoding='utf-8') as f:
+        smt_encoding = f.read()
+        smt_lines = smt_encoding.splitlines()
 
-    inlined_content = inline_variable_definitions(smt_content)
+    inlined_smt_encoding = inline_variable_definitions(smt_encoding)
+    inlined_smt_lines = inlined_smt_encoding.splitlines()
+    
+    assert_exprs = extract_assert_expressions(inlined_smt_lines)
+    assert_exprs = expand_let_expressions(assert_exprs)
 
-    with open(output_path, 'w') as f:
-        f.write(inlined_content)
+    with open(output_path, 'w', encoding='utf-8') as f:
+        for expr in assert_exprs:
+            f.write(expr + '\n')
 
     print(f"Inlined SMT encoding written to {output_path}")
 
