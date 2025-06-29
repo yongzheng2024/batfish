@@ -289,22 +289,27 @@ def parse_variable_definitions(variable_definitions_path):
     return definitions
 
 
-def extract_symbolic_variables(def_expr: str) -> set[str]:
-    vals = var_pattern.findall(def_expr)
+def extract_symbolic_variables(expr: str) -> set[str]:
+    expr_tokens = var_pattern.findall(expr)
+    symbolic_variables = set()
 
-    sym_vars = set()
-    for val in vals:
-        if val in {'not', '<', '<=', '>', '>=', '=', 'and', 'or'}:
-            continue
-        if val in {'true', 'false'}:
-            continue
-        if re.fullmatch(r'\d+', val):                # decimal constant
-            continue
-        if re.fullmatch(r'#[xX][0-9a-fA-F]+', val):  # hex constant
-            continue
-        sym_vars.add(val)
+    smt2_keyword = {
+        'assert', 'declare-fun', 'define-fun', 'check-sat', 'set-option', 
+        'not', 'and', 'or', 'ite', 'let', 
+        '<', '<=', '>', '>=', '=', '=>', '+', '-', '*', 'div', 'mod', 
+        'true', 'false'
+    }
 
-    return sym_vars 
+    for token in expr_tokens:
+        if token in smt2_keyword:
+            continue
+        if re.fullmatch(r'\d+', token):                # decimal constant
+            continue
+        if re.fullmatch(r'#[xX][0-9a-fA-F]+', token):  # hex constant
+            continue
+        symbolic_variables.add(token)
+
+    return symbolic_variables
 
 
 def replace_simple_definitions(def_expr: str, dep_vars: set[str]) -> str:
@@ -411,9 +416,41 @@ def inline_variable_definitions(smt_encoding):
         smt_encoding = re.sub(escaped_var, def_expr, smt_encoding)
     return smt_encoding
 
+
 ##########################################################################################
-### extract assert expressions
+### extract declare-fun and assert expressions
 ##########################################################################################
+
+def extract_declare_fun_expressions(smt2_lines: list[str]) -> list[str]:
+    """Extract declare-fun expression from the smt encoding lines"""
+    declare_exprs = []
+    current_expr = ''
+    depth = 0
+    in_declare = False
+
+    for line in smt2_lines:
+        line = line.strip()
+        if not line or line.startswith(';'):
+            continue
+
+        if '(declare-fun' in line:
+            in_declare = True
+
+        if in_declare:
+            current_expr += ' ' + line
+            depth += line.count('(') - line.count(')')
+
+            if depth != 0:
+                continue
+
+            if current_expr.strip().startswith('(declare-fun'):
+                declare_exprs.append(current_expr.strip())
+            current_expr = ''
+            in_declare = False
+
+    return declare_exprs
+
+
 def extract_assert_expressions(smt2_lines: list[str]) -> list[str]:
     """Extract assert expression from the smt encoding lines"""
     assert_exprs = []
@@ -432,11 +469,14 @@ def extract_assert_expressions(smt2_lines: list[str]) -> list[str]:
         if in_assert:
             current_expr += ' ' + line
             depth += line.count('(') - line.count(')')
-            if depth == 0:
-                if current_expr.strip().startswith('(assert'):
-                    assert_exprs.append(current_expr.strip())
-                current_expr = ''
-                in_assert = False
+
+            if depth != 0:
+                continue
+
+            if current_expr.strip().startswith('(assert'):
+                assert_exprs.append(current_expr.strip())
+            current_expr = ''
+            in_assert = False
 
     return assert_exprs
 
@@ -444,6 +484,7 @@ def extract_assert_expressions(smt2_lines: list[str]) -> list[str]:
 ##########################################################################################
 ### expand let expressions
 ##########################################################################################
+
 def extract_let_parts(line: str) -> Tuple[Optional[str], Optional[str]]:
     """Extract the bindings and body of a `let` expression"""
     if not line.startswith("(assert (let"):
@@ -583,10 +624,61 @@ def expand_let_expressions(smt_lines: List[str]) -> List[str]:
     return expanded_lines
 
 
+##########################################################################################
+### slice smt encoding
+##########################################################################################
+
+def slice_smt_encoding(exprs: set[str], key_vars: set[str]) -> set[str]:
+    exprs_vars = {}
+    vars_exprs = {}
+    related_vars = set(key_vars)
+    related_exprs = set()
+
+    # Build dependency maps
+    for i, expr in enumerate(exprs):
+        vals = extract_symbolic_variables(expr)
+        exprs_vars[i] = vals
+
+        for val in vals:
+            if val not in vars_exprs:
+                vars_exprs[val] = set()
+            vars_exprs[val].add(i)
+
+    # FIXME: Improve iterative approach with dependency graph approach.
+    #         * parse smt2 encoding and build dependency graph (variable -> variables)
+    #         * compute transitive closure of all dependencies
+    #         * retain relevant statements
+
+    # Iteratively expand related vars and related exprs
+    changed_flag = True
+    while changed_flag:
+        changed_flag = False
+        new_vars = set()
+
+        for var in related_vars:
+            if var not in vars_exprs:
+                continue
+            for expr_id in vars_exprs[var]:
+                if expr_id in related_exprs:
+                    continue
+                related_exprs.add(expr_id)
+                # Add all vars in this expression to new_vars if not seen
+                for expr_var in exprs_vars[expr_id]:
+                    if expr_var in related_vars:
+                        continue
+                    new_vars.add(expr_var)
+                    changed_flag = True
+
+        related_vars.update(new_vars)
+
+    # Return all expressions relevant to key_vars
+    return {exprs[i] for i in sorted(related_exprs)}
+
+
 def process_smt_encoding(smt_path, defs_path, target_vars_path, output_path):
     # Load inputs
     parse_variable_definitions(defs_path)
-    load_target_variables(target_vars_path)
+    target_variables = load_target_variables(target_vars_path)
     simplify_variable_definitions()
 
     with open(smt_path, 'r', encoding='utf-8') as f:
@@ -596,11 +688,18 @@ def process_smt_encoding(smt_path, defs_path, target_vars_path, output_path):
     inlined_smt_encoding = inline_variable_definitions(smt_encoding)
     inlined_smt_lines = inlined_smt_encoding.splitlines()
     
+    # extract declare-fun and assert expressions after inlining variable definition
+    declare_exprs = extract_declare_fun_expressions(inlined_smt_lines)
     assert_exprs = extract_assert_expressions(inlined_smt_lines)
+    # expand let expression
     assert_exprs = expand_let_expressions(assert_exprs)
 
+    # slice smt encoding
+    key_assert_exprs = slice_smt_encoding(assert_exprs, target_variables)
+    print(key_assert_exprs)
+    # write sliced smt encoding to output file
     with open(output_path, 'w', encoding='utf-8') as f:
-        for expr in assert_exprs:
+        for expr in key_assert_exprs:
             f.write(expr + '\n')
 
     print(f"Inlined SMT encoding written to {output_path}")
