@@ -57,8 +57,8 @@ class PropertyAdder {
       int id = _encoderSlice.getEncoder().getId();
       String s1 = id + "_" + sliceName + "_reachable-id_" + r;
       String s2 = id + "_" + sliceName + "_reachable_" + r;
-      ArithExpr idVar = ctx.mkIntConst(s1);     // idVar
-      BoolExpr var = ctx.mkBoolConst(s2);       // reachableVar
+      ArithExpr idVar = ctx.mkIntConst(s1);     // reachable-id Var
+      BoolExpr var = ctx.mkBoolConst(s2);       // reachable Vakkkr
       idVars.put(r, idVar);
       reachableVars.put(r, var);
       _encoderSlice.getAllVariables().put(idVar.toString(), idVar);
@@ -164,8 +164,6 @@ class PropertyAdder {
       }
 
       // Add the recursive case, where it is reachable through a neighbor
-      // TODO annotated by yongzheng in 20250312
-      // if guard then expr1 else expr2
       BoolExpr recursive = recursiveReachability(ctx, slice, edges, idVars, router, id);
       BoolExpr guard = ctx.mkOr(hasDirectRoute, isAbsorbed);
       BoolExpr cond = slice.mkIf(guard, ctx.mkEq(id, ctx.mkInt(1)), recursive);
@@ -415,6 +413,9 @@ class PropertyAdder {
     Solver solver = _encoderSlice.getSolver();
     String sliceName = _encoderSlice.getSliceName();
 
+    ArithExpr zero = ctx.mkInt(0);
+    ArithExpr one = ctx.mkInt(1);
+
     Map<String, ArithExpr> loadVars = new HashMap<>();
     Graph graph = _encoderSlice.getGraph();
     for (String router : graph.getRouters()) {
@@ -424,9 +425,7 @@ class PropertyAdder {
       _encoderSlice.getAllVariables().put(var.toString(), var);
     }
 
-    loadVars.forEach((name, var) -> solver.add(ctx.mkGe(var, ctx.mkInt(0))));
-    ArithExpr zero = ctx.mkInt(0);
-    ArithExpr one = ctx.mkInt(1);
+    loadVars.forEach((name, var) -> solver.add(ctx.mkGe(var, zero)));
 
     for (Entry<String, List<GraphEdge>> entry : graph.getEdgeMap().entrySet()) {
       String router = entry.getKey();

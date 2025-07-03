@@ -132,6 +132,7 @@ class EncoderSlice {
     initOptimizations();
     // initialize _originatedNetworks for all optimizated protocol
     initOriginatedPrefixes();
+    // TODO: to-read
     // initialize LogicalGraph _redistributedProtocols() according to Graph
     initRedistributionProtocols();
 
@@ -150,7 +151,7 @@ class EncoderSlice {
     //   * _choiceVariables, it's a helper for encoding _controlForwarding
     // initialize SymbolicEnum for Protocol
     // initialize this class's _ospfRedistributed
-    // add storage partical variable to this class's _allVariables
+    // add storage partial variable to this class's _allVariables
     initVariables();
 
     // initialize _outboundAcls and _inboundAcls (IpAccessList -> BoolExpr)
@@ -777,7 +778,7 @@ class EncoderSlice {
     }
 
     // Build a map to find the opposite of a given edge
-    // TODO: annotated by yongzheng on 20250324
+    // TODO: to-read
     _logicalGraph
         .getLogicalEdges()
         .forEach(
@@ -806,6 +807,7 @@ class EncoderSlice {
                         if (list == null) {
                           m.put(otherEdge, new ArrayList<>());
                         } else if (list.size() > 0) {
+                          // NOTE: why use list[0] when list.size() > 0
                           LogicalEdge other = list.get(0);
                           _logicalGraph.getOtherEnd().put(e, other);
                         }
@@ -830,6 +832,8 @@ class EncoderSlice {
       String router = entry.getKey();
       Configuration conf = entry.getValue();
       for (Protocol proto : _optimizations.getProtocols().get(router)) {
+        // TODO: filter originated networks via relevantPrefix
+        //       annotated by yongzheng2024 on 20250703
         Set<Prefix> prefixes = Graph.getOriginatedNetworks(conf, proto);
         _originatedNetworks.put(router, proto, prefixes);
       }
@@ -1560,7 +1564,10 @@ class EncoderSlice {
 
         if (someProto) {
           if (acc != null) {
+            // NOTE: OVERALL_BEST = BGP_BEST \/ OSPF_BEST \/ CONNECTED_BEST \/ STATIC_BEST
+            //       added by yongzheng2024 in 20250629
             add(mkEq(somePermitted, best.getPermitted()));
+            // NOTE:
             add(mkImplies(somePermitted, acc));
           }
         } else {
@@ -2478,17 +2485,20 @@ class EncoderSlice {
    */
   void computeEncoding() {
     addBoundConstraints();
-    // TODO: I don't understand relevant code about community in Graph.
     addCommunityConstraints();
     // TODO: annotated by yongzheng on 20250319
     addTransferFunction();
     addHistoryConstraints();
+
     addBestPerProtocolConstraints();
     addChoicePerProtocolConstraints();
+
     addBestOverallConstraints();
+
     addControlForwardingConstraints();
     // data_fwd(iface) = control_fwd(iface) and not outbound acl(iface)
     addDataForwardingConstraints();
+
     addUnusedDefaultValueConstraints();
     addHeaderSpaceConstraint();
     if (isMainSlice()) {

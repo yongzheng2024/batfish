@@ -110,7 +110,7 @@ class Optimizations {
     _keepOspfType = computeKeepOspfType();
 
     // just model BGP in main slice
-    // initialize Map<String, List<Protocol>> _protocols according to cnfiguration
+    // initialize Map<String, List<Protocol>> _protocols according to configuration
     initProtocols();
 
     // initialize Set<String> _needBgpInternal according to Graph _ibgpneighbors

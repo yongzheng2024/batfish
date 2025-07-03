@@ -3,6 +3,7 @@ package org.batfish.minesweeper.smt;
 import com.microsoft.z3.ArithExpr;
 import com.microsoft.z3.BitVecExpr;
 import com.microsoft.z3.BoolExpr;
+import com.microsoft.z3.IntNum;
 import com.microsoft.z3.Context;
 import com.microsoft.z3.Expr;
 import com.microsoft.z3.Model;
@@ -96,8 +97,6 @@ public class PropertyChecker {
 
     // Infer relevant destination IP headerspace from interfaces
     HeaderSpace headerSpace = q.getHeaderSpace();
-    // TODO: the following modification whether to modify the original headerSpace of q ?
-    // annotated by yongzheng in 20250314
     for (GraphEdge ge : destPorts) {
       // If there is an external interface, then
       // it can be any prefix, so we leave it unconstrained
@@ -364,34 +363,20 @@ public class PropertyChecker {
       Function<VerifyParam, AnswerElement> answer) {
 
     long totalTime = System.currentTimeMillis();
-    // _dstRegex, _notDstRegex, ifaceRegex, _notIfaceRegex, 
-    // _srcRegex, _notSrcRegex
-    PathRegexes p = new PathRegexes(qOrig);
-    // configure Graph _bddBasedAnalysis to false by default
+    // Note: Configure Graph _bddBasedAnalysis to false by default.
     //   * true:  BDD-based analysis
     //   * false: SMT-based analysis
-    // TODO: initialize Graph ...
     Graph graph = new Graph(_batfish, snapshot);
+    PathRegexes p = new PathRegexes(qOrig);
 
-    // filter GrapeEdge
+    // Filter GrapeEdge.
     //   * match _dstRegex and not match _notDstRegex
-    //     + if ! edge.isAbstract()
+    //     + if not GrapeEdge.isAbstract()
     //       - match _ifaceRegex and not match _notIfaceRegex
     Set<GraphEdge> destPorts = findFinalInterfaces(graph, p);
-    // filter Router(String)
+    // Filter Router(String).
     //   * match _srcRegex and not match _notSrcRegex
     List<String> sourceRouters = PatternUtils.findMatchingSourceNodes(graph, p);
-
-    // print all destination ports and source routers
-    // System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-    // for (GraphEdge destPort : destPorts) {
-    //   System.out.println(destPort);
-    // }
-    // System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-    // for (String sourceRouter : sourceRouters) {
-    //   System.out.println(sourceRouter);
-    // }
-    // System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 
     if (destPorts.isEmpty()) {
       throw new BatfishException("Set of valid destination interfaces is empty");
@@ -403,7 +388,7 @@ public class PropertyChecker {
     // copy before updating header space, so these changes don't get propagated to the answer
     HeaderLocationQuestion q = new HeaderLocationQuestion(qOrig);
     q.setHeaderSpace(q.getHeaderSpace().toBuilder().build());
-    // inference dstIps and notDstIps in HeaderLocationQuestion HeaderSpace
+    // Infer dstIps and notDstIps in HeaderLocationQuestion HeaderSpace.
     // * isExternal interface
     //   + it can be any prefix, leave it unconstrained
     //   + set headerSpace.setDstIps    (Collections.emptySet())
@@ -417,11 +402,12 @@ public class PropertyChecker {
     //   + set headerSpace.setDstIps    (ge.getStart() exact Ip address)
     inferDestinationHeaderSpace(graph, destPorts, q);
 
-    // find all failed GraphEdges
+    // Identify all GraphEdges that are allowed to fail optionally.
     Set<GraphEdge> failOptions = failLinkSet(graph, q);
-    // find all failed Routers
+    // Identify all Routers that are allowed to fail optionally.
     Set<String> failNodeOptions = failNodeSet(graph, q);
-    // TODO: I don't understand how NetworkSlice work. Needs further review.
+
+    // When HeaderQuestion abstraction is enabled, enable network slices.
     Tuple<Stream<Supplier<NetworkSlice>>, Long> ecs = findAllNetworkSlices(q, graph, true);
     Stream<Supplier<NetworkSlice>> stream = ecs.getFirst();
     Long timeAbstraction = ecs.getSecond();
@@ -466,8 +452,10 @@ public class PropertyChecker {
                   addEnvironmentConstraints(enc, question.getBaseEnvironmentType());
                 }
 
-                // TODO: annotated by yongzheng in 20250312
-                // call PropertyAdder instrumentReachability (initialReachability and resursiveReachability)
+                // This function dispatches to the PropertyAdder.instrumentxxx method.
+                // Call PropertyAdder instrumentReachability for checkReachability.
+                //   (initialReachability and resursiveReachability)
+                // Call PropertyAdder instrumentLoad for checkLoadBalancing.
                 Map<String, BoolExpr> prop = instrument.apply(enc, srcRouters, destPorts);
 
                 // If this is a equivalence query, we create a second copy of the network
@@ -476,6 +464,7 @@ public class PropertyChecker {
 
                 if (question.getDiffType() != null) {
                   HeaderLocationQuestion q2 = new HeaderLocationQuestion(question);
+                  // Set the number of link failure (GraphEdges) to 0, no failed GrphEdge.
                   q2.setFailures(0);
                   long timeDiffEncoding = System.currentTimeMillis();
                   enc2 = new Encoder(enc, g, q2);
@@ -533,20 +522,21 @@ public class PropertyChecker {
                   BoolExpr allProp = enc.mkTrue();
                   for (String router : srcRouters) {
                     BoolExpr r = prop.get(router);
+                    // NOTE: Choose original network property or negated network property.
+                    // Enable negate flag to verify isolation property via checkReachability method.
                     if (q.getNegate()) {
                       r = enc.mkNot(r);
                     }
                     allProp = enc.mkAnd(allProp, r);
                   }
-                  // NOTE: set negated network property
-                  //       annotated by yongzheng on 20250411
+                  // Negate this network property for verification.
                   enc.add(enc.mkNot(allProp));
                 }
 
                 addLinkFailureConstraints(enc, destPorts, failOptions);
                 addNodeFailureConstraints(enc, failNodeOptions);
 
-                // Encoder verify() call Solver check() and print relevant information
+                // Call Solver.check to verify and print relevant information.
                 Tuple<VerificationResult, Model> tup = enc.verify();
                 VerificationResult res = tup.getFirst();
                 Model model = tup.getSecond();
@@ -610,7 +600,7 @@ public class PropertyChecker {
         snapshot,
         q,
         (enc, srcRouters, destPorts) -> {
-          // FIXME the parameter srcRouters is declared but not used in the lambda body.
+          // NOTE: srcRouters is declared but not used in the lambda body.
           PropertyAdder pa = new PropertyAdder(enc.getMainSlice());
           return pa.instrumentReachability(destPorts);
         },
@@ -705,11 +695,46 @@ public class PropertyChecker {
           PropertyAdder pa = new PropertyAdder(enc.getMainSlice());
           Map<String, ArithExpr> loads = pa.instrumentLoad(destPorts);
           Map<String, BoolExpr> prop = new HashMap<>();
+
           // TODO: implement this properly after refactoring
-          loads.forEach((name, ae) -> prop.put(name, enc.mkTrue()));
+          // loads.forEach((name, ae) -> prop.put(name, enc.mkTrue()));
+          // NOTE: modified by yongzheng in 20240522 for enabling load balancing property
+          IntNum kExpr = (IntNum) enc.mkInt(k);
+          IntNum negkExpr = (IntNum) enc.mkInt(-k);
+
+          for (Map.Entry<String, ArithExpr> loadEntry1 : loads.entrySet()) {
+            BoolExpr loadExprs = enc.mkTrue();
+            String router = loadEntry1.getKey();
+
+            for (Map.Entry<String, ArithExpr> loadEntry2: loads.entrySet()) {
+              String other = loadEntry2.getKey();
+
+              if (router.equals(other))  continue;
+
+              ArithExpr loadRouter1 = loadEntry1.getValue();
+              ArithExpr loadRouter2 = loadEntry2.getValue();
+
+              BoolExpr loadExpr = 
+                  addLoadBalancing(enc, loadRouter1, loadRouter2, kExpr, negkExpr);
+              loadExprs = enc.mkAnd(loadExprs, loadExpr);
+            }
+            
+            prop.put(router, loadExprs);
+          }
+
           return prop;
         },
         (vp) -> new SmtOneAnswerElement(vp.getResult()));
+  }
+
+  public BoolExpr addLoadBalancing(
+      Encoder enc, ArithExpr loadA, ArithExpr loadB, IntNum kExpr, IntNum negkExpr) {
+    // -k <= loadA - loadB <= k
+    ArithExpr loadDiff = enc.mkSub(loadA, loadB);
+    BoolExpr lowerBound = enc.mkLe(negkExpr, loadDiff);
+    BoolExpr upperBound = enc.mkLe(loadDiff, kExpr);
+    BoolExpr loadExpr = enc.mkAnd(lowerBound, upperBound);
+    return loadExpr;
   }
 
   /*
