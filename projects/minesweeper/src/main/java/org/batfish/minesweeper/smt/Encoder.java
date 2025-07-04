@@ -830,10 +830,11 @@ public class Encoder {
 
     // simplify all assertions and record in simplifiedSolver
     Solver simplifiedSolver = _ctx.mkSolver();
-    // TODO: assertion.simplify always replace "=>" with "or not", but "=>" is suitable
+    // TODO: assertion.simplify always replace "=>" with "or not", but "=>" is more suitable
     //       added by yongzheng2024 on 20250703
     for (BoolExpr assertion : _solver.getAssertions()) {
-      BoolExpr simplifiedAssertion = (BoolExpr) assertion.simplify();
+      // BoolExpr simplifiedAssertion = (BoolExpr) assertion.simplify();
+      BoolExpr simplifiedAssertion = assertion;
       simplifiedSolver.add(simplifiedAssertion);
     }
 
