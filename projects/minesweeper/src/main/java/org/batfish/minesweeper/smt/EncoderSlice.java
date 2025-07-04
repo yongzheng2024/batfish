@@ -311,6 +311,8 @@ class EncoderSlice {
                   "INBOUND", inbound.getName());
           BoolExpr inAcl = getCtx().mkBoolConst(inName);
           BoolExpr inAclFunc = computeACL(inbound);
+          // NOTE: Here is an intermeditate variable's definition.
+          //       added by yongzheng2024 on 20250704
           add(mkEq(inAcl, inAclFunc));
           _inboundAcls.put(ge, inAcl);
         }
@@ -879,6 +881,7 @@ class EncoderSlice {
                 if (n != null && ge.getEnd() == null) {
 
                   if (!isMainSlice()) {
+                    // un-reachable code snippet
                     LogicalGraph lg = _encoder.getMainSlice().getLogicalGraph();
                     SymbolicRoute r = lg.getEnvironmentVars().get(e);
                     _logicalGraph.getEnvironmentVars().put(e, r);
@@ -953,13 +956,14 @@ class EncoderSlice {
 
     // initialize SymbolicDecisions _choiceVariables
     //                              ^^^^^^^^^^^^^^^^ Table3<String, Protocol, LogicalEdge, BoolExpr>
+    //   focus on IMPORT logical graphedge
     //   _choiceVariables is helper for encoding _controlForwarding
     //   and storage the relevant variable in _allVariables
     addChoiceVariables();
 
     // initialize LogicalGraph _environmentVars for main encoder slice
     //                         ^^^^^^^^^^^^^^^^ Map<LogicalEdge, SymbolicRoute>
-    //   focus on BGP IMPORT
+    //   focus on BGP IMPORT logical graphedge
     //   use the main encoder slice _environmentVars for other slice
     //   and storage relevant SymbolicRoute in _allSymbolicRoutes
     addEnvironmentVariables();
