@@ -160,6 +160,7 @@ public class SymbolicRoute implements IDeepCopy<SymbolicRoute> {
     _igpMetric = null;
 
     if (proto.isBest()) {
+      // NOTE: best routes may not have ASPath Length attribute if OSPF is the only protocol
       _metric = ctx.mkIntConst(_name + "_metric");
       _localPref = (modelLp ? ctx.mkIntConst(_name + "_localPref") : null);
       _adminDist = (modelAd ? ctx.mkIntConst(_name + "_adminDist") : null);

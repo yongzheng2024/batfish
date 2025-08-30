@@ -1020,6 +1020,9 @@ class TransferSSA {
       case "METRIC":
         p.getData().setMetric((ArithExpr) expr);
         break;
+      case "MED":
+        p.getData().setMed((ArithExpr) expr);
+        break;
       case "PREFIX-LEN":
         p.getData().setPrefixLength((ArithExpr) expr);
         break;
@@ -1113,6 +1116,15 @@ class TransferSSA {
       newValue = _enc.mkIf(r.getReturnAssignedValue(), p.getData().getMetric(), newValue);
       ArithExpr ret = createArithVariableWith(p, "METRIC", newValue);
       p.getData().setMetric(ret);
+      return new MsPair<>(ret, null);
+    }
+    if (variableName.equals("MED")) {
+      Expr t = (trueBranch == null ? p.getData().getMed() : trueBranch);
+      Expr f = (falseBranch == null ? p.getData().getMed() : falseBranch);
+      ArithExpr newValue = _enc.mkIf(guard, (ArithExpr) t, (ArithExpr) f);
+      newValue = _enc.mkIf(r.getReturnAssignedValue(), p.getData().getMed(), newValue);
+      ArithExpr ret = createArithVariableWith(p, "METRIC", newValue);
+      p.getData().setMed(ret);
       return new MsPair<>(ret, null);
     }
     if (variableName.equals("OSPF-TYPE")) {
@@ -1317,6 +1329,7 @@ class TransferSSA {
       } else if (stmt instanceof SetMetric) {
         curP.debug("SetMetric");
         // TODO: what is the semantics for BGP? Is this MED?
+        // NOTE: SetMetric meaning set MED in BGP route-map.
         if (!_current.getProto().isBgp()) {
           SetMetric sm = (SetMetric) stmt;
           LongExpr ie = sm.getMetric();
@@ -1326,6 +1339,15 @@ class TransferSSA {
           ArithExpr x = createArithVariableWith(curP, "METRIC", newValue);
           curP.getData().setMetric(x);
           curResult = curResult.addChangedVariable("METRIC", x);
+        } else {
+          SetMetric sm = (SetMetric) stmt;
+          LongExpr ie = sm.getMetric();
+          ArithExpr newValue = applyLongExprModification(curP.getData().getMed(), ie);
+          newValue =
+              _enc.mkIf(curResult.getReturnAssignedValue(), curP.getData().getMed(), newValue);
+          ArithExpr x = createArithVariableWith(curP, "MED", newValue);
+          curP.getData().setMed(x);
+          curResult = curResult.addChangedVariable("MED", x);
         }
 
       } else if (stmt instanceof SetOspfMetricType) {
@@ -1466,6 +1488,7 @@ class TransferSSA {
         }
 
       } else if (stmt instanceof PrependAsPath) {
+        // TODO: modify metric to aspathLength.
         curP.debug("PrependAsPath");
         PrependAsPath pap = (PrependAsPath) stmt;
         int prependCost = prependLength(pap.getExpr());
@@ -1636,14 +1659,30 @@ class TransferSSA {
     }
   }
 
-  private void setDefaultLocalPref(TransferParam<SymbolicRoute> p) {
+  private void setDefaultLocalPref(TransferParam<SymbolicRoute> p, boolean isEbgp) {
     // must be the case that it is an environment variable
     if (p.getData().getLocalPref() == null) {
-      p.getData().setLocalPref(_enc.mkInt(100));
+      p.getData().setLocalPref(_enc.mkInt(_enc.defaultLocalPref()));
+    }
+    if (isEbgp) {
+      p.getData().setLocalPref(_enc.mkInt(_enc.defaultLocalPref()));
+    }
+  }
+
+  private void setDefaultMed(TransferParam<SymbolicRoute> p, boolean isEbgp) {
+    if (p.getData().getMed() == null) {
+      p.getData().setMed(_enc.mkInt(_enc.defaultMed()));
+    }
+    if (isEbgp) {
+      p.getData().setMed(_enc.mkInt(_enc.defaultMed()));
     }
   }
 
   public BoolExpr compute() {
+    return compute(false);
+  }
+
+  public BoolExpr compute(boolean isEbgp) {
     SymbolicRoute o = new SymbolicRoute(_other);
     TransferParam<SymbolicRoute> p = new TransferParam<>(o, Encoder.ENABLE_DEBUGGING);
 
@@ -1657,7 +1696,9 @@ class TransferSSA {
     applyMetricUpdate(p);
 
     // set default local prefence to 100
-    setDefaultLocalPref(p);
+    setDefaultLocalPref(p, isEbgp);
+    // set default med to 0
+    setDefaultMed(p, isEbgp);
 
     TransferResult<BoolExpr, BoolExpr> result = compute(_statements, p, initialResult());
     return result.getReturnValue();

@@ -1100,6 +1100,10 @@ class EncoderSlice {
     return 0;
   }
 
+  int defaultMed() {
+    return 0;
+  }
+
   int defaultMed(Protocol proto) {
     if (proto.isBgp()) {
       return 100;
@@ -2119,6 +2123,10 @@ class EncoderSlice {
    * Creates the transfer function to represent export filters
    * between two symbolic records. The import filter depends
    * heavily on the protocol.
+   *
+   * NOTE: update eBGP export function
+   * if outbound route-map not set localPref and set metric (MED)
+   * then the localPref is default (100) and metric is 0
    */
   private void addExportConstraint(
       LogicalEdge e,
@@ -2220,6 +2228,14 @@ class EncoderSlice {
                   : pol.getStatements());
         }
 
+        // Configure (recover) default MED and LocalPref for eBGP edge.
+        boolean isEbgp = getGraph().getEbgpNeighbors().get(ge) != null;
+        // boolean isEbgpEdge = getGraph().getEbgpNeighbors().get(ge) != null;
+        // if (isEbgpEdge) {
+        //   varsOther.setMed(mkInt(defaultMed()));
+        //   varsOther.setLocalPref(mkInt(defaultLocalPref()));
+        // }
+
         System.out.println();
         System.out.println("EXPORT FUNCTION: " + router + " " + varsOther.getName());
         for (Statement stmt : statements) {
@@ -2228,7 +2244,7 @@ class EncoderSlice {
 
         TransferSSA f =
             new TransferSSA(this, conf, varsOther, vars, proto, statements, cost, ge, true);
-        acc = f.compute();
+        acc = f.compute(isEbgp);
 
         BoolExpr usable =
             mkAnd(active, doExport, varsOther.getPermitted(), notFailed, notFailedNode);

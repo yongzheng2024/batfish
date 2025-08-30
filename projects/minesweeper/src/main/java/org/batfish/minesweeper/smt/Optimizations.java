@@ -215,7 +215,9 @@ class Optimizations {
    * Check if we need to keep around the BGP Med attribute.
    */
   private boolean computeKeepMed() {
-    return !Optimizations.ENABLE_SLICING_OPTIMIZATION;
+    // NOTE: Always enable MED.
+    // return !Optimizations.ENABLE_SLICING_OPTIMIZATION;
+    return true;
     /* if (!PolicyQuotient.ENABLE_SLICING_OPTIMIZATION) {
         return true;
     }
