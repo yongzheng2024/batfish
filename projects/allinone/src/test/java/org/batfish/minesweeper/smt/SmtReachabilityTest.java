@@ -2,14 +2,18 @@ package org.batfish.minesweeper.smt;
 
 import org.batfish.common.Answerer;
 // import org.batfish.common.NetworkSnapshot;
+import org.batfish.datamodel.Zone;
 import org.batfish.datamodel.answers.AnswerElement;
 import org.batfish.main.Batfish;
 import org.batfish.main.BatfishTestUtils;
 import org.batfish.main.TestrigText;
+import org.batfish.minesweeper.answers.SmtOneAnswerElement;
 import org.batfish.question.routes.RoutesQuestion;
 import org.batfish.question.routes.RoutesAnswerer;
 import org.batfish.minesweeper.answers.SmtReachabilityAnswerElement;
 import org.batfish.minesweeper.question.SmtReachabilityQuestionPlugin.ReachabilityQuestion;
+import org.batfish.minesweeper.question.SmtBoundedLengthQuestionPlugin.BoundedLengthQuestion;
+import org.batfish.minesweeper.question.SmtBlackholeQuestionPlugin.BlackholeQuestion;
 import org.batfish.minesweeper.utils.ConfigLoader;
 import org.batfish.minesweeper.utils.RibPrinter;
 
@@ -23,7 +27,11 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.time.ZoneId;
 import java.util.SortedMap;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class SmtReachabilityTest {
     @Rule public TemporaryFolder _temp = new TemporaryFolder();
@@ -33,8 +41,19 @@ public class SmtReachabilityTest {
 
     @Before
     public void setup() throws IOException {
+        System.out.println();
+        // Beijing timezone
+        ZoneId chinaZone = ZoneId.of("Asia/Shanghai");
+        // Current time in Beijing
+        LocalDateTime beijingTime = LocalDateTime.now(chinaZone);
+        // Format output
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        String formattedNow = beijingTime.format(formatter);
+        // Output the beijing time for the beginning of the test running
+        System.out.println("=== Running test at " + formattedNow + " (Beijing Time) ===");
+
         // read the configurations from the filesystem
-        String configPath = "/home/deza/codes/batfish/networks/test_example/";
+        String configPath = "/home/deza/codes/batfish/networks/test_example_simple/";
         TestrigText _testrig = loadConfigurations(configPath);
         _batfish = BatfishTestUtils.getBatfishFromTestrigText(_testrig, _temp);
 
@@ -55,7 +74,7 @@ public class SmtReachabilityTest {
     @Test
     public void testReachability() {
         final ReachabilityQuestion question = new ReachabilityQuestion();
-        question.setIngressNodeRegex("customer2");
+        question.setIngressNodeRegex("customer1");
         question.setFinalNodeRegex("isp1");
         question.setFinalIfaceRegex("GigabitEthernet3/0");
 
@@ -65,6 +84,47 @@ public class SmtReachabilityTest {
         final SmtReachabilityAnswerElement smtAnswer = (SmtReachabilityAnswerElement) answer;
         assertThat(smtAnswer.getResult().isVerified(), is(true));
     }
+
+    /**
+     * Test network property: Bounded Length via SMT.
+     * You can set node failures (or not) or edge failures (or not).
+     */
+    /*
+    @Test
+    public void testBoundedLength() {
+        final BoundedLengthQuestion question = new BoundedLengthQuestion();
+        question.setBound(3);
+        question.setIngressNodeRegex("customer1");
+        question.setFinalNodeRegex("isp1");
+        question.setFinalIfaceRegex("GigabitEthernet3/0");
+
+        final AnswerElement answer = Answerer.create(question, _batfish).answer(_batfish.getSnapshot());
+        assertThat(answer, instanceOf(SmtOneAnswerElement.class));
+
+        final SmtOneAnswerElement smtAnswer = (SmtOneAnswerElement) answer;
+        assertThat(smtAnswer.getResult().isVerified(), is(true));
+    }
+     */
+
+    /**
+     * Test network property: Bounded Length via SMT.
+     * You can set node failures (or not) or edge failures (or not).
+     */
+    /*
+    @Test
+    public void testBoundedLength() {
+        final BlackholeQuestion question = new BlackholeQuestion();
+        // question.setIngressNodeRegex("customer1");
+        // question.setFinalNodeRegex("isp1");
+        // question.setFinalIfaceRegex("GigabitEthernet3/0");
+
+        final AnswerElement answer = Answerer.create(question, _batfish).answer(_batfish.getSnapshot());
+        assertThat(answer, instanceOf(SmtOneAnswerElement.class));
+
+        final SmtOneAnswerElement smtAnswer = (SmtOneAnswerElement) answer;
+        assertThat(smtAnswer.getResult().isVerified(), is(true));
+    }
+     */
 
     /**
      * Load configurations, hosts and iptables files from specified directory.
