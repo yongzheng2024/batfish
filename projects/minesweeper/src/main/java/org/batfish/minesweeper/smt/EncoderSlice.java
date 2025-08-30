@@ -311,7 +311,7 @@ class EncoderSlice {
                   "INBOUND", inbound.getName());
           BoolExpr inAcl = getCtx().mkBoolConst(inName);
           BoolExpr inAclFunc = computeACL(inbound);
-          // NOTE: Here is an intermeditate variable's definition.
+          // NOTE: Here is an intermediate variable's definition.
           //       added by yongzheng2024 on 20250704
           add(mkEq(inAcl, inAclFunc));
           _inboundAcls.put(ge, inAcl);
@@ -1418,6 +1418,15 @@ class EncoderSlice {
    *    )
    * )
    *
+   * vector = [ e1 e2 e3 ... ]
+   * Maximum element
+   * max_element = MIN_INT;
+   * for (int i = 0; i < len(vector); ++i) {
+   *     if (max_element < vector[i]) {
+   *         max_element = vector[i]
+   *     }
+   * }
+   *
    * This recursive encoding introduces a new variable for each subexpressions,
    * which ends up being much more efficient than expanding out options.
    */
@@ -1571,7 +1580,6 @@ class EncoderSlice {
             // NOTE: OVERALL_BEST = BGP_BEST \/ OSPF_BEST \/ CONNECTED_BEST \/ STATIC_BEST
             //       added by yongzheng2024 in 20250629
             add(mkEq(somePermitted, best.getPermitted()));
-            // NOTE:
             add(mkImplies(somePermitted, acc));
           }
         } else {
