@@ -26,6 +26,7 @@ import org.batfish.datamodel.routing_policy.expr.BooleanExpr;
 import org.batfish.datamodel.routing_policy.expr.BooleanExprs;
 import org.batfish.datamodel.routing_policy.expr.CallExpr;
 import org.batfish.datamodel.routing_policy.expr.CommunitySetExpr;
+import org.batfish.datamodel.routing_policy.expr.LiteralCommunity;
 import org.batfish.datamodel.routing_policy.expr.Conjunction;
 import org.batfish.datamodel.routing_policy.expr.ConjunctionChain;
 import org.batfish.datamodel.routing_policy.expr.DecrementLocalPreference;
@@ -410,6 +411,9 @@ class TransferSSA {
         if (communitySetExpr instanceof RegexCommunitySet) {
           RegexCommunitySet rcs = (RegexCommunitySet) communitySetExpr;
           community = rcs.getConfigVarCommunity();
+        } else if (communitySetExpr instanceof LiteralCommunity) {
+          LiteralCommunity lc = (LiteralCommunity) communitySetExpr;
+          community = lc.getConfigVarCommunity();
         } else {
           throw new BatfishException("Unimplemented community condition: " + communitySetExpr);
         }
