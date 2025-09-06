@@ -2,6 +2,7 @@ package org.batfish.minesweeper.smt;
 
 import org.batfish.common.Answerer;
 // import org.batfish.common.NetworkSnapshot;
+import org.batfish.datamodel.IpWildcard;
 import org.batfish.datamodel.Zone;
 import org.batfish.datamodel.answers.AnswerElement;
 import org.batfish.main.Batfish;
@@ -16,6 +17,7 @@ import org.batfish.minesweeper.question.SmtBoundedLengthQuestionPlugin.BoundedLe
 import org.batfish.minesweeper.question.SmtBlackholeQuestionPlugin.BlackholeQuestion;
 import org.batfish.minesweeper.utils.ConfigLoader;
 import org.batfish.minesweeper.utils.RibPrinter;
+import static org.batfish.minesweeper.smt.Encoder.createOutputDirectory;
 
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -26,8 +28,12 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.PrintWriter;
 import java.io.IOException;
 import java.time.ZoneId;
+import java.util.Set;
 import java.util.SortedMap;
 
 import java.time.LocalDateTime;
@@ -38,6 +44,10 @@ public class SmtReachabilityTest {
 
     private Batfish _batfish;
     // private NetworkSnapshot _snapshot;
+
+    // printers for output files
+    private PrintWriter _bgpRouteWriter;
+    private PrintWriter _dataPlaneWriter;
 
     @Before
     public void setup() throws IOException {
@@ -52,19 +62,32 @@ public class SmtReachabilityTest {
         // Output the beijing time for the beginning of the test running
         System.out.println("=== Running test at " + formattedNow + " (Beijing Time) ===");
 
+        // create a smt output directory
+        String outputDir = createOutputDirectory();
+        String outputBgpRouteFileName = outputDir + "/0_ebgp_routes.txt";
+        String outputDataPlaneFileName = outputDir + "/0_data_plane.txt";
+        File outputBgpRouteFile = new File(outputBgpRouteFileName);
+        File outputDataPlaneFile = new File(outputDataPlaneFileName);
+        try {
+            _bgpRouteWriter = new PrintWriter(new FileWriter(outputBgpRouteFile, true));
+            _dataPlaneWriter = new PrintWriter(new FileWriter(outputDataPlaneFile, true));
+        } catch (IOException e) {
+            System.err.println("Error: Unable to create file: " + e.getMessage());
+        }
+
         // read the configurations from the filesystem
-        String configPath = "/home/deza/codes/batfish/networks/test_example_simple/";
+        // String configPath = "/home/deza/codes/batfish/benchmarks/FatTrees/sp4/";
+        String configPath = "/home/deza/codes/batfish/networks/test_examples/network_4";
         TestrigText _testrig = loadConfigurations(configPath);
         _batfish = BatfishTestUtils.getBatfishFromTestrigText(_testrig, _temp);
 
          // compute data plane for printing RIBs before
-         _batfish.computeDataPlane(_batfish.getSnapshot());
+         _batfish.computeDataPlane(_batfish.getSnapshot(), _bgpRouteWriter);
          // print RIBs of the data plane in formal format
          RoutesQuestion routesQuestion = new RoutesQuestion();
          RoutesAnswerer routesAnswerer = new RoutesAnswerer(routesQuestion, _batfish);
          AnswerElement routesAnswer = routesAnswerer.answer(_batfish.getSnapshot());
-         RibPrinter.printRouteTable(routesAnswer);
-         // System.out.println(routesAnswer);
+         RibPrinter.printRouteTable(routesAnswer, _dataPlaneWriter);
     }
 
     /**
@@ -77,6 +100,12 @@ public class SmtReachabilityTest {
         question.setIngressNodeRegex("customer1");
         question.setFinalNodeRegex("isp1");
         question.setFinalIfaceRegex("GigabitEthernet3/0");
+        question.setNegate(true);
+        // question.setIngressNodeRegex("core-0");
+        // question.setFinalNodeRegex("edge-10");
+        // question.setFinalIfaceRegex("Ethernet0");
+        // IpWildcard ipWildcard = IpWildcard.parse("70.0.10.0/24");
+        // question.setDstIps(Set.of(ipWildcard));
 
         final AnswerElement answer = Answerer.create(question, _batfish).answer(_batfish.getSnapshot());
         assertThat(answer, instanceOf(SmtReachabilityAnswerElement.class));

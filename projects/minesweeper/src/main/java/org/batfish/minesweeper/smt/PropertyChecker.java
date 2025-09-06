@@ -7,6 +7,7 @@ import com.microsoft.z3.IntNum;
 import com.microsoft.z3.Context;
 import com.microsoft.z3.Expr;
 import com.microsoft.z3.Model;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -518,10 +519,14 @@ public class PropertyChecker {
                   enc.add(enc.mkNot(required));
 
                 } else {
+                  // get a writer for the property variables
+                  PrintWriter writer = enc.getPropertiesVarWriter();
+
                   // Not a differential query; just a query on a single version of the network.
                   BoolExpr allProp = enc.mkTrue();
                   for (String router : srcRouters) {
                     BoolExpr r = prop.get(router);
+                    writer.println(r);
                     // NOTE: Choose original network property or negated network property.
                     // Enable negate flag to verify isolation property via checkReachability method.
                     if (q.getNegate()) {
@@ -531,6 +536,10 @@ public class PropertyChecker {
                   }
                   // Negate this network property for verification.
                   enc.add(enc.mkNot(allProp));
+
+                  // Flush and close the writer
+                  writer.flush();
+                  writer.close();
                 }
 
                 addLinkFailureConstraints(enc, destPorts, failOptions);

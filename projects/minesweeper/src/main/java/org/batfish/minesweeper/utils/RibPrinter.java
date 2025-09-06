@@ -5,6 +5,7 @@ import org.batfish.datamodel.table.TableAnswerElement;
 import org.batfish.datamodel.table.Row;
 import com.fasterxml.jackson.databind.JsonNode;
 
+import java.io.PrintWriter;
 import java.util.Comparator;
 import java.util.List;
 import java.util.ArrayList;
@@ -19,7 +20,7 @@ public class RibPrinter {
    * @param answerElement a Batfish AnswerElement expected to be a TableAnswerElement
    *                      containing routing table entries
    */
-  public static void printRouteTable(AnswerElement answerElement) {
+  public static void printRouteTable(AnswerElement answerElement, PrintWriter writer) {
     // Ensure the answer element is a TableAnswerElement
     if (!(answerElement instanceof TableAnswerElement)) {
       System.out.println("Provided AnswerElement is not a TableAnswerElement.");
@@ -42,8 +43,10 @@ public class RibPrinter {
     String header = String.format(format, "Node", "VRF", "Network", "Protocol", "NextHopIP",
         "NextHopInterface", "NextHop", "Metric", "AD", "Tag");
     // Print column headers
+    writer.print(header);
     System.out.print(header);
     // Print a horizontal divider line
+    writer.println(repeatChar('=', header.length()));
     System.out.println(repeatChar('=', header.length()));
 
     // Iterate over each route entry and print its fields
@@ -59,9 +62,15 @@ public class RibPrinter {
       int adminDistance = getFieldAsInt(row, "Admin_Distance");
       String tag = row.hasNonNull("Tag") ? row.get("Tag").toString() : "-";
 
+      writer.printf(format, node, vrf, network, protocol, nextHopIp,
+          nextHopInterface, nextHop, metric, adminDistance, tag);
       System.out.printf(format, node, vrf, network, protocol, nextHopIp,
           nextHopInterface, nextHop, metric, adminDistance, tag);
     }
+
+    // Flush and close the writer
+    writer.flush();
+    writer.close();
   }
 
   /** Helper: get a nested field as text (e.g., row.get("Node").get("name").asText()) */

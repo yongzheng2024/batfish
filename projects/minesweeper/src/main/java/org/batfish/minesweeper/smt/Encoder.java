@@ -146,6 +146,10 @@ public class Encoder {
   PrintWriter _smtWriter;
   PrintWriter _constWriter;
   PrintWriter _configWriter;
+  PrintWriter _hostnameWriter;
+  PrintWriter _ebgpneighborWriter;
+  PrintWriter _propertiesVarWriter;
+  PrintWriter _dstipsWriter;
 
   /**
    * Create an encoder object that will consider all packets in the provided headerspace.
@@ -264,6 +268,9 @@ public class Encoder {
 
     // initialize output directory and relevant file print writer
     initOutput();
+
+    // initialize hostnames and ebgp neighbors
+    initNetworkTopology();
 
     // initialize configuration constant - SMT symbolic variable
     initConfigurationConstants();
@@ -868,6 +875,7 @@ public class Encoder {
     _smtWriter.println(simplifiedSolver.toString());
     _smtWriter.println("(check-sat)");
     _smtWriter.println(";(get-model)");
+    _smtWriter.flush();
     _smtWriter.close();
     // System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
 
@@ -966,26 +974,71 @@ public class Encoder {
   }
 
   private void initOutput() {
-    _outputDirectoryName = createOutputDirectory();
+    // _outputDirectoryName = createOutputDirectory();
+    _outputDirectoryName = searchOutputDirectory();
 
     String outputSmtFileName = _outputDirectoryName + "/smt_encoding.smt2";
     String outputConstFileName = _outputDirectoryName + "/config_constraints.smt2";
     String outputConfigFileName = _outputDirectoryName + "/configs_to_variables.txt";
+    String outputHostnameFileName = _outputDirectoryName + "/0_hostnames.txt";
+    String outputEbgpNeighborFileName = _outputDirectoryName + "/0_ebgp_neighbors.txt";
+    String outputDstipsFileName = _outputDirectoryName + "/0_dst_ips.txt";
+    String outputPropertiesVarFileName = _outputDirectoryName + "/0_properties_variables.txt";
 
     File outputSmtFile = new File(outputSmtFileName);
     File outputConstFile = new File(outputConstFileName);
     File outputConfigFile = new File(outputConfigFileName);
+    File outputHostnameFile = new File(outputHostnameFileName);
+    File outputEbgpNeighborFile = new File(outputEbgpNeighborFileName);
+    File outputDstipsFile = new File(outputDstipsFileName);
+    File outputPropertiesVarFile = new File(outputPropertiesVarFileName);
 
     try {
       _smtWriter = new PrintWriter(new FileWriter(outputSmtFile, true));
       _constWriter = new PrintWriter(new FileWriter(outputConstFile, true));
       _configWriter = new PrintWriter(new FileWriter(outputConfigFile, true));
+      _hostnameWriter = new PrintWriter(new FileWriter(outputHostnameFile, true));
+      _ebgpneighborWriter = new PrintWriter(new FileWriter(outputEbgpNeighborFile, true));
+      _dstipsWriter = new PrintWriter(new FileWriter(outputDstipsFile, true));
+      _propertiesVarWriter = new PrintWriter(new FileWriter(outputPropertiesVarFile, true));
     } catch (IOException e) {
       System.err.println("Error: Unable to create file: " + e.getMessage());
     }
   }
 
-  private static String createOutputDirectory() {
+  public static String searchOutputDirectory() {
+    // SMT_DIRECTORY_PREFIX = "/PATH-TO/batfish/smts"
+    final String DIRECTORY_PREFIX = System.getenv("SMT_DIRECTORY_PREFIX");
+    final String DIRECTORY_NAME = DIRECTORY_PREFIX + "/smt_output_";
+    final int DIRECTORY_INDEX_LIMIT = 9999;
+
+    String outputDirectoryName = null;
+
+    for (int i = 1; i <= DIRECTORY_INDEX_LIMIT; ++i) {
+      // outputDirectoryName = "/PATH-TO/batfish/smts/smt_output_xxxx"
+      // output directory range from 0001 to 9999
+      String outputDirectoryNameNew = String.format("%s%04d", DIRECTORY_NAME, i);
+      File outputDirectoryNew = new File(outputDirectoryNameNew);
+
+      // FIXME: If there are three directory smt_output_0001, smt_output_0002, smt_output_0004,
+      //        and we call createOutputDirectory(), it will return smt_output_0003,
+      //        but then we call searchOutputDirectory(), it will return smt_output_0004.
+      // if we find a non-existing output directory, return the previous one
+      if (!outputDirectoryNew.exists()) {
+        return outputDirectoryName;
+      }
+
+      outputDirectoryName = outputDirectoryNameNew;
+    }
+
+    /**
+     * Search for the latest existing output directory.
+     * Returns null if none exist.
+     */
+    return null;
+  }
+
+  public static String createOutputDirectory() {
     // SMT_DIRECTORY_PREFIX = "/PATH-TO/batfish/smts"
     final String DIRECTORY_PREFIX = System.getenv("SMT_DIRECTORY_PREFIX");
     final String DIRECTORY_NAME = DIRECTORY_PREFIX + "/smt_output_";
@@ -1162,6 +1215,36 @@ public class Encoder {
     );
   }
 
+  private void initNetworkTopology() {
+    // write all host names
+    for (String hostname : _graph.getConfigurations().keySet()) {
+      _hostnameWriter.println(hostname);
+    }
+    _hostnameWriter.flush();
+    _hostnameWriter.close();
+
+    // write all eBGP neighbor pairs (with as-number)
+    for (Map.Entry<GraphEdge, BgpActivePeerConfig> entry : _graph.getEbgpNeighbors().entrySet()) {
+      GraphEdge ge = entry.getKey();
+      BgpActivePeerConfig bgpConfig = entry.getValue();
+
+      String ebgpNeighborPair =
+          ge.getRouter() + "," + ge.getStart().getName() + " (" + bgpConfig.getLocalAs() + ") -> " +
+          ge.getPeer() + "," + ge.getEnd().getName() + " (" + bgpConfig.getRemoteAsns() + ")";
+      _ebgpneighborWriter.println(ebgpNeighborPair);
+    }
+    _ebgpneighborWriter.flush();
+    _ebgpneighborWriter.close();
+
+    // write all dst-ips
+    SortedSet<IpWildcard> dstIps = _question.getDstIps();
+    for (IpWildcard dstIp : dstIps) {
+      _dstipsWriter.println(dstIp);
+    }
+    _dstipsWriter.flush();
+    _dstipsWriter.close();
+  }
+
   private void initConfigurationConstants() {
     for (Map.Entry<String, Configuration> configEntry : _graph.getConfigurations().entrySet()) {
       String hostName = configEntry.getKey();
@@ -1273,8 +1356,10 @@ public class Encoder {
     // System.out.println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
     // System.out.println(_solver.toString());
     _constWriter.println(_solver.toString());
+    _constWriter.flush();
     _constWriter.close();
     // System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+    _configWriter.flush();
     _configWriter.close();
   }
 
@@ -1634,5 +1719,9 @@ public class Encoder {
     // FIXME: check here and implement it when needed
     // String msg = String.format("Unimplemented feature %s", expr.toString());
     // throw new BatfishException(msg);
+  }
+
+  public PrintWriter getPropertiesVarWriter() {
+    return _propertiesVarWriter;
   }
 }

@@ -50,6 +50,7 @@ import io.opentracing.SpanContext;
 import io.opentracing.util.GlobalTracer;
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.PrintWriter;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -799,6 +800,53 @@ public class Batfish extends PluginConsumer implements IBatfish {
         }
       };
 
+  // added by yongzheng2024 for print ebgp-v4 routes (aspath and communities)
+  public DataPlaneAnswerElement computeDataPlane(NetworkSnapshot snapshot, PrintWriter writer) {
+    // If already present, invalidate a dataplane for this snapshot.
+    // (unlikely, only when devs force recomputation)
+    _cachedDataPlanes.invalidate(snapshot);
+
+    // Reserve space for the new dataplane in the in-memory cache by inserting and invalidating a
+    // dummy value.
+    _cachedDataPlanes.put(DUMMY_SNAPSHOT, DUMMY_DATAPLANE);
+    _cachedDataPlanes.invalidate(DUMMY_SNAPSHOT);
+
+    ComputeDataPlaneResult result = getDataPlanePlugin().computeDataPlane(snapshot);
+
+    // Define table header format and header (column widths)
+    String format = "%-12s %-10s %-20s %-15s %-20s%n";
+    String header = String.format(format, "Node", "VRF", "Network", "ASPath", "Communities");
+
+    // Print column headers
+    writer.print(header);
+    // Print a horizontal divider line
+    writer.println(repeatChar('=', header.length()));
+
+    // Iterate over each route entry and print fields
+    for (Table.Cell<String, String, Set<Bgpv4Route>> route : result._dataPlane.getBgpRoutes().cellSet()) {
+      String hostname = route.getRowKey();
+      String vrfname = route.getColumnKey();
+      for (Bgpv4Route r : route.getValue()) {
+        String network = r.getNetwork().toString();
+        String asPath = r.getAsPath().toString();
+        String communities = r.getCommunities().getCommunities().toString();
+        writer.printf(format, hostname, vrfname, network, asPath, communities);
+      }
+    }
+
+    // Flush and close the writer
+    writer.flush();
+    writer.close();
+
+    DataPlaneAnswerElement answerElement = result._answerElement;
+    DataPlane dataplane = result._dataPlane;
+    TopologyContainer topologyContainer = result._topologies;
+    result = null; // let it be garbage collected.
+
+    saveDataPlane(snapshot, dataplane, topologyContainer);
+    return answerElement;
+  }
+
   @Override
   public DataPlaneAnswerElement computeDataPlane(NetworkSnapshot snapshot) {
     // If already present, invalidate a dataplane for this snapshot.
@@ -811,6 +859,16 @@ public class Batfish extends PluginConsumer implements IBatfish {
     _cachedDataPlanes.invalidate(DUMMY_SNAPSHOT);
 
     ComputeDataPlaneResult result = getDataPlanePlugin().computeDataPlane(snapshot);
+    // System.out.println(result._dataPlane.getBgpRoutes());
+    for (Table.Cell<String, String, Set<Bgpv4Route>> route : result._dataPlane.getBgpRoutes().cellSet()) {
+      String hostname = route.getRowKey();
+      String vrfname = route.getColumnKey();
+      for (Bgpv4Route r : route.getValue()) {
+        System.out.println(
+            hostname + " " + vrfname + " " +
+            r.getNetwork() + " " + r.getAsPath() + " " + r.getCommunities());
+      }
+    }
     DataPlaneAnswerElement answerElement = result._answerElement;
     DataPlane dataplane = result._dataPlane;
     TopologyContainer topologyContainer = result._topologies;
@@ -3225,4 +3283,19 @@ public class Batfish extends PluginConsumer implements IBatfish {
   }
 
   private static final Logger LOGGER = LogManager.getLogger(Batfish.class);
+
+  /**
+   * Repeat a character `count` times and return the resulting string.
+   *
+   * @param c the character to repeat
+   * @param count the number of repetitions
+   * @return a String with the character repeated `count` times
+   */
+  private static String repeatChar(char c, int count) {
+    StringBuilder builder = new StringBuilder(count);
+    for (int i = 0; i < count; i++) {
+      builder.append(c);
+    }
+    return builder.toString();
+  }
 }
