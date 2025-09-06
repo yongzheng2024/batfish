@@ -10,6 +10,10 @@ import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+
+import com.microsoft.z3.ArithExpr;
+import com.microsoft.z3.Context;
+import com.microsoft.z3.Solver;
 import org.batfish.datamodel.AsPath;
 import org.batfish.datamodel.AsSet;
 import org.batfish.datamodel.BgpRoute;
@@ -96,5 +100,33 @@ public final class PrependAsPath extends Statement {
 
   public void setExpr(AsPathListExpr expr) {
     _expr = expr;
+  }
+
+  /** Add configuration constant - SMT symbolic variable */
+  protected boolean _enableSmtVariable;
+  protected String _configVarPrefix;
+
+  public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
+    // assert that the prefix is not shared
+    if (_enableSmtVariable) {
+      System.out.println("ERROR Prefix:initSmtVariable");
+      System.out.println("Previous configVarPrefix: " + _configVarPrefix);
+      System.out.println("Current  configVarPrefix: " + configVarPrefix);
+      return;
+    }
+
+    _expr.initSmtVariable(context, solver, configVarPrefix);
+
+    // config enable smt variable flag to true
+    _enableSmtVariable = true;
+    _configVarPrefix = configVarPrefix;
+  }
+
+  public boolean getEnableSmtVariable() {
+    return _enableSmtVariable;
+  }
+
+  public String getConfigVarPrefix() {
+    return _configVarPrefix;
   }
 }

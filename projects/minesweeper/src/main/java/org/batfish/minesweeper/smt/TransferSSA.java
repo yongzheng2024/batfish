@@ -811,6 +811,13 @@ class TransferSSA {
     throw new BatfishException("Error[prependLength]: unreachable");
   }
 
+  private ArithExpr prependLengthVar(AsPathListExpr expr) {
+    if (!expr.getEnableSmtVariable()) {
+      throw new BatfishException("Encoding[prependLengthVar]: unreachable");
+    }
+    return expr.getConfigVarPrepend();
+  }
+
   /*
    * Get the BgpPeerConfig object given the current
    * graph edge and protocol information
@@ -1495,8 +1502,16 @@ class TransferSSA {
         // TODO: modify metric to aspathLength.
         curP.debug("PrependAsPath");
         PrependAsPath pap = (PrependAsPath) stmt;
-        int prependCost = prependLength(pap.getExpr());
-        ArithExpr newValue = _enc.mkSum(curP.getData().getMetric(), _enc.mkInt(prependCost));
+
+        ArithExpr newValue = null;
+        if (pap.getEnableSmtVariable()) {
+          ArithExpr prependCost = prependLengthVar(pap.getExpr());
+          newValue = _enc.mkSum(curP.getData().getMetric(), prependCost);
+        } else {
+          int prependCost = prependLength(pap.getExpr());
+          newValue = _enc.mkSum(curP.getData().getMetric(), _enc.mkInt(prependCost));
+        }
+
         newValue =
             _enc.mkIf(curResult.getReturnAssignedValue(), curP.getData().getMetric(), newValue);
         ArithExpr x = createArithVariableWith(curP, "METRIC", newValue);

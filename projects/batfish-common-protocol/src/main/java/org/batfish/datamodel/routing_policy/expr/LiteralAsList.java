@@ -9,6 +9,11 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+
+import com.microsoft.z3.ArithExpr;
+import com.microsoft.z3.BoolExpr;
+import com.microsoft.z3.Context;
+import com.microsoft.z3.Solver;
 import org.batfish.datamodel.routing_policy.Environment;
 
 @ParametersAreNonnullByDefault
@@ -64,5 +69,33 @@ public final class LiteralAsList extends AsPathListExpr {
 
   public void setList(List<AsExpr> list) {
     _list = ImmutableList.copyOf(list);
+  }
+
+  /** Add configuration constant - SMT symbolic variable */
+  private transient ArithExpr _configVarPrepend;
+
+  @Override
+  public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
+    // assert that the prefix is not shared
+    if (_enableSmtVariable) {
+      System.out.println("ERROR Prefix:initSmtVariable");
+      System.out.println("Previous configVarPrefix: " + _configVarPrefix);
+      System.out.println("Current  configVarPrefix: " + configVarPrefix);
+      return;
+    }
+
+    _configVarPrepend = context.mkIntConst(configVarPrefix + "cost");
+    BoolExpr configVarPrependConstraint =
+        context.mkEq(_configVarPrepend, context.mkInt(_list.size()));
+    solver.add(configVarPrependConstraint);
+
+    // config enable smt variable flag to true
+    _enableSmtVariable = true;
+    _configVarPrefix = configVarPrefix;
+  }
+
+  @Override
+  public ArithExpr getConfigVarPrepend() {
+    return _configVarPrepend;
   }
 }

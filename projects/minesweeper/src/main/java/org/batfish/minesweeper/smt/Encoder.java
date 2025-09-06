@@ -1434,8 +1434,8 @@ public class Encoder {
         }
 
       } else if (stmt instanceof PrependAsPath) {
-        // TODO: implement me
-        {}  // do nothing
+        PrependAsPath pap = (PrependAsPath) stmt;
+        pap.initSmtVariable(_ctx, _solver, configVarPrefix + "prepend_aspath_");
 
       } else if (stmt instanceof SetOrigin) {
         // TODO: implement me
