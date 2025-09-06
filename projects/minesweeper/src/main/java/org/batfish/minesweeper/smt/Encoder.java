@@ -137,6 +137,10 @@ public class Encoder {
 
   private UnsatCore _unsatCore;
 
+  // NOTE: added by yongzheng2024
+  // support destination ports without peer (i.e. null peer)
+  private Set<GraphEdge> _destPorts;
+
   // the output directory name and relevant print writer
   private String _outputDirectoryName;
   PrintWriter _smtWriter;
@@ -150,6 +154,12 @@ public class Encoder {
    */
   Encoder(Graph graph, HeaderQuestion q) {
     this(null, graph, q, null, null, null, 0);
+  }
+
+  // NOTE: added by yongzheng2024
+  // support destination ports without peer (i.e. null peer)
+  Encoder(Graph graph, HeaderQuestion q, Set<GraphEdge> destPorts) {
+    this(null, graph, q, null, null, null, 0, destPorts);
   }
 
   /**
@@ -171,6 +181,21 @@ public class Encoder {
    */
   Encoder(Encoder e, Graph g, HeaderQuestion q) {
     this(e, g, q, e.getCtx(), e.getSolver(), e.getAllVariables(), e.getId() + 1);
+  }
+
+  // NOTE: added by yongzheng2024
+  // support destination ports without peer (i.e. null peer)
+  private Encoder(
+      @Nullable Encoder enc,
+      Graph graph,
+      HeaderQuestion q,
+      @Nullable Context ctx,
+      @Nullable Solver solver,
+      @Nullable Map<String, Expr> vars,
+      int id,
+      Set<GraphEdge> destPorts) {
+    this(enc, graph, q, ctx, solver, vars, id);
+    _destPorts = destPorts;
   }
 
   /**
@@ -1053,6 +1078,12 @@ public class Encoder {
 
   public String getDirectoryName() {
     return _outputDirectoryName;
+  }
+
+  // NOTE: added by yongzheng2024
+  // support destination ports without peer (i.e. null peer)
+  public Set<GraphEdge> getDestPorts() {
+    return _destPorts;
   }
 
   public void setQuestion(HeaderQuestion question) {

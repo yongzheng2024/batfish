@@ -1697,7 +1697,15 @@ class EncoderSlice {
           if (other == null || getGraph().isHost(ge.getPeer())) {
             Ip ip = ge.getStart().getConcreteAddress().getIp();
             BitVecExpr val = getCtx().mkBV(ip.asLong(), 32);
-            connectedWillSend = mkNot(mkEq(_symbolicPacket.getDstIp(), val));
+            // NOTE: modified by yongzheng2024 in 20250905
+            // * if the graph edge is destination ports, then always send out
+            // * otherwise, send out only if dstIp does not match the interface ip
+            // connectedWillSend = mkNot(mkEq(_symbolicPacket.getDstIp(), val));
+            if (getEncoder().getDestPorts().contains(ge)) {
+              connectedWillSend = mkTrue();
+            } else {
+              connectedWillSend = mkNot(mkEq(_symbolicPacket.getDstIp(), val));
+            }
           } else {
             Ip ip = other.getStart().getConcreteAddress().getIp();
             BitVecExpr val = getCtx().mkBV(ip.asLong(), 32);
