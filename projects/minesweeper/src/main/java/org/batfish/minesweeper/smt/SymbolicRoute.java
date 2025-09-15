@@ -244,7 +244,9 @@ public class SymbolicRoute implements IDeepCopy<SymbolicRoute> {
         //   continue;
         // }
         String s = cvar.getRegex();
-        if (cvar.getType() == CommunityVar.Type.OTHER) {
+        if (cvar.getType() == CommunityVar.Type.REGEX) {
+          s = s + "_REGEX";
+        } else if (cvar.getType() == CommunityVar.Type.OTHER) {
           s = s + "_OTHER";
         }
         BoolExpr var = ctx.mkBoolConst(_name + "_community_" + s);
