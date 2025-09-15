@@ -148,8 +148,10 @@ public class Encoder {
   PrintWriter _configWriter;
   PrintWriter _hostnameWriter;
   PrintWriter _ebgpneighborWriter;
-  PrintWriter _propertiesVarWriter;
+  PrintWriter _regexCommWriter;
   PrintWriter _dstipsWriter;
+  PrintWriter _unusedCfwdWriter;
+  PrintWriter _propertiesVarWriter;
 
   /**
    * Create an encoder object that will consider all packets in the provided headerspace.
@@ -342,9 +344,9 @@ public class Encoder {
    */
   private void initSlices(HeaderSpace h, Graph g) {
     if (g.getIbgpNeighbors().isEmpty() || !_modelIgp) {
-      _slices.put(MAIN_SLICE_NAME, new EncoderSlice(this, h, g, ""));
+      _slices.put(MAIN_SLICE_NAME, new EncoderSlice(this, h, g, "", _unusedCfwdWriter));
     } else {
-      _slices.put(MAIN_SLICE_NAME, new EncoderSlice(this, h, g, MAIN_SLICE_NAME));
+      _slices.put(MAIN_SLICE_NAME, new EncoderSlice(this, h, g, MAIN_SLICE_NAME, _unusedCfwdWriter));
     }
 
     if (_modelIgp) {
@@ -384,7 +386,7 @@ public class Encoder {
           // TODO: create domains once
           Graph gNew = new Graph(g.getBatfish(), g.getSnapshot(), null, g.getDomain(router));
           String sliceName = "SLICE-" + router + "_";
-          EncoderSlice slice = new EncoderSlice(this, hs, gNew, sliceName);
+          EncoderSlice slice = new EncoderSlice(this, hs, gNew, sliceName, _unusedCfwdWriter);
           _slices.put(sliceName, slice);
 
           // TODO: annotated by yongzheng on 20250319
@@ -971,6 +973,10 @@ public class Encoder {
         slice.computeEncoding();
       }
     }
+
+    // flush and close file print writer
+    _unusedCfwdWriter.flush();
+    _unusedCfwdWriter.close();
   }
 
   private void initOutput() {
@@ -982,7 +988,9 @@ public class Encoder {
     String outputConfigFileName = _outputDirectoryName + "/configs_to_variables.txt";
     String outputHostnameFileName = _outputDirectoryName + "/0_hostnames.txt";
     String outputEbgpNeighborFileName = _outputDirectoryName + "/0_ebgp_neighbors.txt";
+    String outputRegexCommFileName = _outputDirectoryName + "/0_regex_communities.txt";
     String outputDstipsFileName = _outputDirectoryName + "/0_dst_ips.txt";
+    String outputunusedCfwdFileName = _outputDirectoryName + "/0_unused_control_forwarding.txt";
     String outputPropertiesVarFileName = _outputDirectoryName + "/0_properties_variables.txt";
 
     File outputSmtFile = new File(outputSmtFileName);
@@ -990,7 +998,9 @@ public class Encoder {
     File outputConfigFile = new File(outputConfigFileName);
     File outputHostnameFile = new File(outputHostnameFileName);
     File outputEbgpNeighborFile = new File(outputEbgpNeighborFileName);
+    File outputRegexCommFile = new File(outputRegexCommFileName);
     File outputDstipsFile = new File(outputDstipsFileName);
+    File outputunusedCfwdFile = new File(outputunusedCfwdFileName);
     File outputPropertiesVarFile = new File(outputPropertiesVarFileName);
 
     try {
@@ -999,7 +1009,9 @@ public class Encoder {
       _configWriter = new PrintWriter(new FileWriter(outputConfigFile, true));
       _hostnameWriter = new PrintWriter(new FileWriter(outputHostnameFile, true));
       _ebgpneighborWriter = new PrintWriter(new FileWriter(outputEbgpNeighborFile, true));
+      _regexCommWriter = new PrintWriter(new FileWriter(outputRegexCommFile, true));
       _dstipsWriter = new PrintWriter(new FileWriter(outputDstipsFile, true));
+      _unusedCfwdWriter = new PrintWriter(new FileWriter(outputunusedCfwdFile, true));
       _propertiesVarWriter = new PrintWriter(new FileWriter(outputPropertiesVarFile, true));
     } catch (IOException e) {
       System.err.println("Error: Unable to create file: " + e.getMessage());
@@ -1235,6 +1247,20 @@ public class Encoder {
     }
     _ebgpneighborWriter.flush();
     _ebgpneighborWriter.close();
+
+    // write all regex and other communities
+    Set<CommunityVar> allComms = _graph.getAllCommunities();
+    for (CommunityVar comm : allComms) {
+      if (comm.getType() == CommunityVar.Type.REGEX) {
+        _regexCommWriter.println(comm.getRegex() + "_REGEX");
+      } else if (comm.getType() == CommunityVar.Type.OTHER) {
+        _regexCommWriter.println(comm.getRegex() + "_OTHER");
+      } else {
+        // do nothing for EXACT Type
+      }
+    }
+    _regexCommWriter.flush();
+    _regexCommWriter.close();
 
     // write all dst-ips
     SortedSet<IpWildcard> dstIps = _question.getDstIps();

@@ -8,6 +8,7 @@ import com.microsoft.z3.BoolExpr;
 import com.microsoft.z3.Context;
 import com.microsoft.z3.Expr;
 import com.microsoft.z3.Solver;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
@@ -81,6 +82,8 @@ class EncoderSlice {
   private Map<String, SymbolicRoute> _ospfRedistributed;
 
   private Table2<String, Protocol, Set<Prefix>> _originatedNetworks;
+
+  private PrintWriter _unusedCfwdWriter;
 
   /**
    * Create a new encoding slice
@@ -159,6 +162,11 @@ class EncoderSlice {
     // initialize _forwardsAcross via SymbolicDecision _dataForwarding
     // data_fwd(iface) = data_fwd(iface) and inbound acl(peer_iface)
     initForwardingAcross();
+  }
+
+  EncoderSlice(Encoder enc, HeaderSpace h, Graph graph, String sliceName, PrintWriter unusedCfwdWriter) {
+    this(enc, h, graph, sliceName);
+    _unusedCfwdWriter = unusedCfwdWriter;
   }
 
   // Add a variable to the encoding
@@ -1729,6 +1737,7 @@ class EncoderSlice {
         if (!constrained.contains(ge)) {
           BoolExpr cForward = _symbolicDecisions.getControlForwarding().get(router, ge);
           assert (cForward != null);
+          _unusedCfwdWriter.println(cForward);
           add(mkNot(cForward));
         }
       }
@@ -1896,6 +1905,7 @@ class EncoderSlice {
 
     // configure _isUsed to false via call ... only two parameters constructor method
     // configure _isUsed to true via call ... more than two parameters constructor method
+    // if (true) {
     if (vars.getIsUsed()) {
       if (proto.isConnected()) {
         Prefix p = iface.getConcreteAddress().getPrefix();
