@@ -117,6 +117,21 @@ public class LiteralCommunity extends CommunitySetExpr {
   private boolean _enableSmtVariable;
   private String _configVarPrefix;
 
+  private static String format(String str) {
+    String formatedStr = "";
+    for (char c : str.toCharArray()) {
+      switch (c) {
+        case ':':
+          formatedStr += "_";
+          break;
+        default:
+          formatedStr += c;
+          break;
+      }
+    }
+    return formatedStr;
+  }
+
   public void initSmtVariable(
       Context context, Solver solver, String configVarPrefix, boolean isTrue) {
     // assert that the literal community is not shared
@@ -157,6 +172,8 @@ public class LiteralCommunity extends CommunitySetExpr {
     }
 
     // init smt variable for literal community
+    String communityString = format(community.getCommunityString());
+    configVarPrefix += communityString + "_";
     community.initSmtVariable(context, solver, configVarPrefix, isTrue);
 
     // configure enable smt variable flag to true
