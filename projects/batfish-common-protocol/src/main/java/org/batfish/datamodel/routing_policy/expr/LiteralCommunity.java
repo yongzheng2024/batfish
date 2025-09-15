@@ -128,50 +128,45 @@ public class LiteralCommunity extends CommunitySetExpr {
     }
 
     // check and avoid shared object
-    if (_community.getEnableSmtVariable()) {
-      if (_community instanceof ExtendedCommunity) {
-        ExtendedCommunity extendedCommunity = (ExtendedCommunity) _community;
-        _community =
+    Community community = _community;
+    if (community.getEnableSmtVariable()) {
+      System.out.println("WARNING: LiteralCommunity:initSmtVariable found shared Community, cloning it.");
+
+      if (community instanceof ExtendedCommunity) {
+        ExtendedCommunity extendedCommunity = (ExtendedCommunity) community;
+        community =
             ExtendedCommunity.of(
                 extendedCommunity.getSubType(),
                 extendedCommunity.getGlobalAdministrator(),
                 extendedCommunity.getLocalAdministrator());
-      } else if (_community instanceof StandardCommunity) {
-        StandardCommunity standardCommunity = (StandardCommunity) _community;
-        _community = StandardCommunity.of(standardCommunity.asLong());
-      } else if (_community instanceof LargeCommunity) {
-        LargeCommunity largeCommunity = (LargeCommunity) _community;
-        _community =
+      } else if (community instanceof StandardCommunity) {
+        StandardCommunity standardCommunity = (StandardCommunity) community;
+        community = StandardCommunity.of(standardCommunity.asLong());
+      } else if (community instanceof LargeCommunity) {
+        LargeCommunity largeCommunity = (LargeCommunity) community;
+        community =
             LargeCommunity.of(
                 largeCommunity.getGlobalAdministrator(),
                 largeCommunity.getLocalData1(),
                 largeCommunity.getLocalData2());
       } else {
-        throw new BatfishException(
-            "Unimplemented community type: " + _community.getClass().getName());
+        // Community only has three subclasses
+        // do nothing
+        {}
       }
     }
 
     // init smt variable for literal community
-    _community.initSmtVariable(context, solver, configVarPrefix, isTrue);
+    community.initSmtVariable(context, solver, configVarPrefix, isTrue);
 
     // configure enable smt variable flag to true
-    _enableSmtVariable = isTrue;
+    _enableSmtVariable = true;
     _configVarPrefix = configVarPrefix;
   }
 
   @Override
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
     initSmtVariable(context, solver, configVarPrefix, true);
-  }
-
-  @Override
-  public boolean getEnableSmtVariable() {
-    return _enableSmtVariable;
-  }
-
-  public String getConfigVarPrefix() {
-    return _configVarPrefix;
   }
 
   public BoolExpr getConfigVarCommunity() {

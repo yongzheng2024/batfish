@@ -104,24 +104,29 @@ public class NamedCommunitySet extends CommunitySetExpr {
   }
 
   /** Add configuration constant - SMT symbolic variable */
-  private boolean _enableSmtVariable;
+  // private boolean _enableSmtVariable;
+  // private String _configVarPrefix;
 
   @Override
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix, boolean isTrue) {
-    // do nothing, just refer to the RouteFilterList object according to _name
+    // assert that the named community set is not shared
+    if (_enableSmtVariable) {
+      System.out.println("ERROR NamedCommunitySet:initSmtVariable");
+      System.out.println("Previous configVarPrefix: " + _configVarPrefix);
+      System.out.println("Current  configVarPrefix: " + configVarPrefix);
+      return;
+    }
 
-    // configure enable smt variable flag according to isTrue
-    _enableSmtVariable = isTrue;
+    // do nothing, just refer to the RouteFilterList object according to parameter _name
+
+    // configure enable smt variable flag to true
+    _enableSmtVariable = true;
+    _configVarPrefix = configVarPrefix;
   }
 
   @Override
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
     initSmtVariable(context, solver, configVarPrefix, true);
-  }
-
-  @Override
-  public boolean getEnableSmtVariable() {
-    return _enableSmtVariable;
   }
 
   /** Add get community expression string for configVarPrefix */

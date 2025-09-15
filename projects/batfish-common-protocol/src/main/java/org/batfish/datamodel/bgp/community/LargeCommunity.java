@@ -147,10 +147,10 @@ public final class LargeCommunity extends Community {
   }
 
   /** Add configuration constant - SMT symbolic variable */
-  private boolean _enableSmtVariable;
-  private String _configVarPrefix;
+  // private boolean _enableSmtVariable;
+  // private String _configVarPrefix;
 
-  private transient BoolExpr _configVarCommunity;
+  // private transient BoolExpr _configVarCommunity;
 
   @Override
   public void initSmtVariable(
@@ -179,21 +179,6 @@ public final class LargeCommunity extends Community {
   @Override
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
     initSmtVariable(context, solver, configVarPrefix, true);
-  }
-
-  @Override
-  public boolean getEnableSmtVariable() {
-    return _enableSmtVariable;
-  }
-
-  @Override
-  public String getConfigVarPrefix() {
-    return _configVarPrefix;
-  }
-
-  @Override
-  public BoolExpr getConfigVarCommunity() {
-    return _configVarCommunity;
   }
 
   /** Add get community string for configVarPrefix */

@@ -111,21 +111,20 @@ public final class LiteralCommunityConjunction extends CommunitySetExpr {
   }
 
   /** Add configuration constant - SMT symbolic variable */
+  // private boolean _enableSmtVariable;
+  // private String _configVarPrefix;
+
   @Override
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix, boolean isTrue) {
     // TODO: implement me
     {}  // do nothing
+
+    System.out.println("WARNING: LiteralCommunityConjunction:initSmtVariable is not implemented yet.");
   }
 
   @Override
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
     initSmtVariable(context, solver, configVarPrefix, true);
-  }
-
-  @Override
-  public boolean getEnableSmtVariable() {
-    // check here and fix when needed, annotated by yongzheng on 20250413
-    return false;
   }
 
   /** Add get community expression string for configVarPrefix */

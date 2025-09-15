@@ -116,8 +116,8 @@ public class LiteralCommunitySet extends CommunitySetExpr {
   }
 
   /** Add configuration constant - SMT symbolic variable */
-  private boolean _enableSmtVariable;
-  private String _configVarPrefix;
+  // private boolean _enableSmtVariable;
+  // private String _configVarPrefix;
 
   private static String format(String str) {
     String formatedStr = "";
@@ -135,7 +135,8 @@ public class LiteralCommunitySet extends CommunitySetExpr {
   }
 
   @Override
-  public void initSmtVariable(Context context, Solver solver, String configVarPrefix, boolean isTrue) {
+  public void initSmtVariable(
+      Context context, Solver solver, String configVarPrefix, boolean isTrue) {
     // assert that the literal community set is not shared
     if (_enableSmtVariable) {
       System.out.println("ERROR LiteralCommunitySet:initSmtVariable");
@@ -145,6 +146,8 @@ public class LiteralCommunitySet extends CommunitySetExpr {
     }
 
     for (Community community : _communities) {
+      System.out.println("WARNING: LiteralCommunitySet:initSmtVariable found shared Community, cloning it.");
+
       // check and avoid shared object
       if (community.getEnableSmtVariable()) {
         if (community instanceof ExtendedCommunity) {
@@ -165,8 +168,9 @@ public class LiteralCommunitySet extends CommunitySetExpr {
                     largeCommunity.getLocalData1(),
                     largeCommunity.getLocalData2());
         } else {
-          throw new BatfishException(
-              "Unimplemented community type: " + community.getClass().getName());
+          // Community only has three subclasses
+          // do nothing
+          {}
         }
       }
 
@@ -177,22 +181,13 @@ public class LiteralCommunitySet extends CommunitySetExpr {
     }
 
     // configure enable smt variable flag to true
-    _enableSmtVariable = isTrue;
+    _enableSmtVariable = true;
     _configVarPrefix = configVarPrefix;
   }
 
   @Override
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
     initSmtVariable(context, solver, configVarPrefix, true);
-  }
-
-  @Override
-  public boolean getEnableSmtVariable() {
-    return _enableSmtVariable;
-  }
-
-  public String getConfigVarPrefix() {
-    return _configVarPrefix;
   }
 
   /** Add get community expression string for configVarPrefix */

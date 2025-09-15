@@ -106,13 +106,26 @@ public abstract class Community implements Serializable, Comparable<Community> {
   }
 
   /** Add configuration constant - SMT symbolic variable */
+  protected boolean _enableSmtVariable;
+  protected String _configVarPrefix;
+
+  protected transient BoolExpr _configVarCommunity;
+
   public abstract void initSmtVariable(
       Context context, Solver solver, String configVarPrefix, boolean isTrue);
   public abstract void initSmtVariable(Context context, Solver solver, String configVarPrefix);
 
-  public abstract boolean getEnableSmtVariable();
-  public abstract String getConfigVarPrefix();
-  public abstract BoolExpr getConfigVarCommunity();
+  public boolean getEnableSmtVariable() {
+    return _enableSmtVariable;
+  }
+
+  public String getConfigVarPrefix() {
+    return _configVarPrefix;
+  }
+
+  public BoolExpr getConfigVarCommunity() {
+    return _configVarCommunity;
+  }
 
   /** Add get community string for configVarPrefix */
   public abstract String getCommunityString();

@@ -89,10 +89,20 @@ public abstract class CommunitySetExpr implements Serializable {
   public abstract boolean reducible();
 
   /** Add configuration constant - SMT symbolic variable */
+  protected boolean _enableSmtVariable;
+  protected String _configVarPrefix;
+
   public abstract void initSmtVariable(
       Context context, Solver solver, String configVarPrefix, boolean isTrue);
   public abstract void initSmtVariable(Context context, Solver solver, String configVarPrefix);
-  public abstract boolean getEnableSmtVariable();
+
+  public boolean getEnableSmtVariable() {
+    return _enableSmtVariable;
+  }
+
+  public String getConfigVarPrefix() {
+    return _configVarPrefix;
+  }
 
   /** Add get community expression string for configVarPrefix */
   public abstract String getCommunityExprString();

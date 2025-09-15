@@ -259,8 +259,8 @@ public class CommunityList extends CommunitySetExpr {
   }
 
   /** Add configuration constant - SMT symbolic variable */
-  private boolean _enableSmtVariable;
-  private String _configVarPrefix;
+  // private boolean _enableSmtVariable;
+  // private String _configVarPrefix;
 
   @Override
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix, boolean isTrue) {
@@ -275,6 +275,8 @@ public class CommunityList extends CommunitySetExpr {
     for (CommunityListLine line : _lines) {
       // check and avoid shared object
       if (line.getEnableSmtVariable()) {
+        System.out.println("WARNING: CommunityList:initSmtVariable found shared CommunityListLine, cloning it.");
+
         line = new CommunityListLine(line.getAction(), line.getMatchCondition());
       }
 
@@ -283,22 +285,13 @@ public class CommunityList extends CommunitySetExpr {
     }
 
     // configure enable smt variable flag to tue
-    _enableSmtVariable = isTrue;
+    _enableSmtVariable = true;
     _configVarPrefix = configVarPrefix;
   }
 
   @Override
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
     initSmtVariable(context, solver, configVarPrefix, true);
-  }
-
-  @Override
-  public boolean getEnableSmtVariable() {
-    return _enableSmtVariable;
-  }
-
-  public String getConfigVarPrefix() {
-    return _configVarPrefix;
   }
 
   /** Add get community expression string for configVarPrefix */

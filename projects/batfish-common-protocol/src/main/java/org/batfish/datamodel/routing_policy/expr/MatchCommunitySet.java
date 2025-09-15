@@ -8,6 +8,7 @@ import java.util.Objects;
 import java.util.Set;
 import org.batfish.common.BatfishException;
 import org.batfish.datamodel.BgpRoute;
+import org.batfish.datamodel.RegexCommunitySet;
 import org.batfish.datamodel.bgp.community.Community;
 import org.batfish.datamodel.routing_policy.Environment;
 import org.batfish.datamodel.routing_policy.Result;
@@ -83,23 +84,31 @@ public final class MatchCommunitySet extends BooleanExpr {
   }
 
   /** Add configuration constant - SMT symbolic variable */
+  private boolean _enableSmtVariable;
+  private String _configVarPrefix;
+
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
-    // check and avoid shared object
-    // assert that init smt variable for unimplemented community set type
-    if (_expr instanceof CommunityList) {
-      CommunityList communityList = (CommunityList) _expr;
-      if (communityList.getEnableSmtVariable()) {
-        communityList = new CommunityList(
-            communityList.getName(), communityList.getLines(), communityList.getInvertMatch());
-      }
-    } else if (_expr instanceof NamedCommunitySet) {
-      {}  // do nothing
-    } else {
-      throw new BatfishException(
-          "Unimplemented community set type: " + _expr.getClass().getName());
+    // assert that the community list line is not shared
+    if (_enableSmtVariable) {
+      System.out.println("ERROR MatchCommunitySet:initSmtVariable");
+      System.out.println("Previous configVarPrefix: " + _configVarPrefix);
+      System.out.println("Current  configVarPrefix: " + configVarPrefix);
+      return;
     }
 
     // init smt variable for community set configuration
     _expr.initSmtVariable(context, solver, configVarPrefix);
+
+    // configure enable smt variable flag to true
+    _enableSmtVariable = true;
+    _configVarPrefix = configVarPrefix;
+  }
+
+  public boolean getEnableSmtVariable() {
+    return _enableSmtVariable;
+  }
+
+  public String getConfigVarPrefix() {
+    return _configVarPrefix;
   }
 }
