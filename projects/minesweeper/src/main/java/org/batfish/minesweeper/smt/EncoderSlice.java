@@ -389,6 +389,12 @@ class EncoderSlice {
 
     for (ArrayList<LogicalEdge> es : les) {
       for (LogicalEdge le : es) {
+        // Skip loopback interfaces
+        if (le.getEdge().getStart().getName().startsWith("Loopback")) {
+          continue;
+        }
+
+        // Only consider import edges
         if (_logicalGraph.isEdgeUsed(conf, proto, le) && le.getEdgeType() == EdgeType.IMPORT) {
           eList.add(le);
         }
@@ -2367,7 +2373,13 @@ class EncoderSlice {
           for (LogicalEdge e : eList) {
             GraphEdge ge = e.getEdge();
 
+            // Skip unused edges
             if (!getGraph().isEdgeUsed(conf, proto, ge)) {
+              continue;
+            }
+
+            // Skip loopback interfaces
+            if (e.getEdge().getStart().getName().startsWith("Loopback")) {
               continue;
             }
 
@@ -2532,7 +2544,6 @@ class EncoderSlice {
   void computeEncoding() {
     addBoundConstraints();
     addCommunityConstraints();
-    // TODO: annotated by yongzheng on 20250319
     addTransferFunction();
     addHistoryConstraints();
 
