@@ -1475,7 +1475,10 @@ class TransferSSA {
         // Delete each community
         for (CommunityVar cvar : toDelete) {
           BoolExpr newValue = null;
-          if (cvar.getLiteralValue().getEnableSmtVariable()) {
+          if (cvar.getLiteralValue() != null && cvar.getLiteralValue().getEnableSmtVariable()) {
+            // NOTE: annotated by yongzheng2024 in 20250907
+            //       NullPointerException here
+            //       enableSmtVariable is true but configVarCommunity is null
             BoolExpr community = cvar.getLiteralValue().getConfigVarCommunity();
             BoolExpr community_origin = curP.getData().getCommunities().get(cvar);
             BoolExpr communityEqual = _enc.mkEq(community, community_origin);
@@ -1485,17 +1488,17 @@ class TransferSSA {
                     // communityEqual,
                     curP.getData().getCommunities().get(cvar),
                     // _enc.mkFalse());
-                    community);
+                    _enc.mkNot(community));
           } else {
             newValue =
                 _enc.mkIf(
                     curResult.getReturnAssignedValue(),
                     curP.getData().getCommunities().get(cvar),
                     _enc.mkFalse());
-            BoolExpr x = createBoolVariableWith(curP, cvar.getRegex(), newValue);
-            curP.getData().getCommunities().put(cvar, x);
-            curResult = curResult.addChangedVariable(cvar.getRegex(), x);
           }
+          BoolExpr x = createBoolVariableWith(curP, cvar.getRegex(), newValue);
+          curP.getData().getCommunities().put(cvar, x);
+          curResult = curResult.addChangedVariable(cvar.getRegex(), x);
         }
 
       } else if (stmt instanceof PrependAsPath) {
