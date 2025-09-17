@@ -1149,6 +1149,7 @@ class TransferSSA {
       return new MsPair<>(ret, null);
     }
 
+    // TODO: Improve this to avoid looping over all communities.
     for (Map.Entry<CommunityVar, BoolExpr> entry : p.getData().getCommunities().entrySet()) {
       CommunityVar cvar = entry.getKey();
       if (variableName.equals(cvar.getRegex())) {
@@ -1453,6 +1454,34 @@ class TransferSSA {
           BoolExpr x = createBoolVariableWith(curP, cvar.getRegex(), newValue);
           curP.getData().getCommunities().put(cvar, x);
           curResult = curResult.addChangedVariable(cvar.getRegex(), x);
+        }
+
+        // NOTE: set community to false for other community variables
+        for (CommunityVar cvar_other : curP.getData().getCommunities().keySet()) {
+          // Skip those communities that are set by this statement
+          if (comms.contains(cvar_other)) {
+            continue;
+          }
+          // Skip regex community variables
+          if (cvar_other.getType() == Type.REGEX) {
+            continue;
+          }
+
+          /*
+          if (cvar_other.getRegex().toString() == "2:2") {
+            continue;
+          }
+           */
+
+          // Set other community variables to false
+          BoolExpr newValue_other =
+              _enc.mkIf(
+                  curResult.getReturnAssignedValue(),
+                  curP.getData().getCommunities().get(cvar_other),
+                  _enc.mkFalse());
+          BoolExpr x_other = createBoolVariableWith(curP, cvar_other.getRegex(), newValue_other);
+          curP.getData().getCommunities().put(cvar_other, x_other);
+          curResult = curResult.addChangedVariable(cvar_other.getRegex(), x_other);
         }
 
       } else if (stmt instanceof DeleteCommunity) {
