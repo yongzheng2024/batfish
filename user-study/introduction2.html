@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Verification Background Knowledge - Understanding Subspecifications and Configuration Analysis</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+            font-size: 16px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 10px;
+        }
+
+        .content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-title {
+            color: #667eea;
+            margin: 30px 0 20px 0;
+            font-size: 1.8em;
+            font-weight: 600;
+            font-family: 'Times New Roman', 'Georgia', 'serif';
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .subsection-title {
+            color: #5a6fd8;
+            margin: 25px 0 15px 0;
+            font-size: 1.4em;
+            font-weight: 600;
+            font-family: 'Times New Roman', 'Georgia', 'serif';
+            border-bottom: 1px solid #5a6fd8;
+            padding-bottom: 8px;
+        }
+
+        .content-text {
+            margin: 6px 0;
+            text-align: justify;
+            font-size: 1.1em;
+            font-weight: 500;
+            font-family: 'Times New Roman', 'Georgia', 'serif';
+            line-height: 1.5;
+        }
+
+        .content-list {
+            margin: 8px 0;
+            padding-left: 0;
+            list-style: none;
+        }
+
+        .list-item {
+            margin: 4px 0;
+            padding-left: 20px;
+            position: relative;
+            font-weight: 500;
+            font-family: 'Times New Roman', 'Georgia', 'serif';
+        }
+
+        .list-item::before {
+            content: "•";
+            color: #667eea;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+
+        .image-container {
+            text-align: center;
+            margin: 10px 0;
+        }
+
+        .content-image {
+            max-width: 60%;
+            max-height: 300px;
+            height: auto;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .image-placeholder {
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            padding: 20px;
+            text-align: center;
+            color: #6c757d;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .code-block {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            font-family: 'Consolas', 'Monaco', 'Courier New', 'SF Mono', 'Roboto Mono', monospace;
+            font-size: 14px;
+            font-weight: 525;
+            line-height: 1.5;
+            overflow-x: auto;
+        }
+
+        .code-line {
+            margin: 2px 0;
+            color: #222;
+            font-weight: 525;
+        }
+
+        /* 配置字段样式 */
+        .config-field {
+            background: #667eea;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .config-field:hover {
+            background: #5a6fd8;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Line-level subspec 紫色高亮样式 */
+        .config-field.line-level {
+            background: #9c27b0;
+        }
+
+        .config-field.line-level:hover {
+            background: #8e24aa;
+        }
+
+        /* 分类高亮样式 */
+        .highlight-route-map {
+            background: #e3f2fd;
+            color: #1565c0;
+            padding: 1px 3px;
+            border-radius: 2px;
+            font-weight: bold;
+            border-left: 3px solid #2196f3;
+            box-shadow: 0 1px 2px rgba(33, 150, 243, 0.3);
+        }
+
+        .highlight-prefix-list {
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 1px 3px;
+            border-radius: 2px;
+            font-weight: bold;
+            border-left: 3px solid #4caf50;
+            box-shadow: 0 1px 2px rgba(76, 175, 80, 0.3);
+        }
+
+        .highlight-community-list {
+            background: #fff3e0;
+            color: #ef6c00;
+            padding: 1px 3px;
+            border-radius: 2px;
+            font-weight: bold;
+            border-left: 3px solid #ff9800;
+            box-shadow: 0 1px 2px rgba(255, 152, 0, 0.3);
+        }
+
+        /* Tooltip样式 */
+        .tooltip {
+            position: fixed;
+            background: #2c3e50;
+            color: white;
+            padding: 16px 20px;
+            border-radius: 10px;
+            font-size: 13px;
+            max-width: 450px;
+            z-index: 1000;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            pointer-events: none;
+            word-wrap: break-word;
+            line-height: 1.6;
+            border: 1px solid #34495e;
+        }
+
+        .tooltip.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .tooltip::after {
+            content: '';
+            position: absolute;
+            top: var(--arrow-top, 100%);
+            left: 20px;
+            border-width: 6px;
+            border-style: solid;
+            border-color: var(--arrow-border, #333 transparent transparent transparent);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .section-title {
+                font-size: 1.5em;
+            }
+            
+            .subsection-title {
+                font-size: 1.2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Network Verification Background Knowledge</h1>
+            <p>Understanding Subspecifications and Configuration Analysis</p>
+        </div>
+        
+        <div class="content">
+            <h2 class="section-title">Network Verification</h2>
+<p class="content-text">Network verification is the process of formally checking whether a network configuration satisfies specified network specification(s). To perform this verification, a very large logical formula is typically generated and fed into a solver, which produces a result of either verification passed or verification failed. However, because the logical formulas are extremely large and complex, it is generally infeasible to analyze them manually. As a result, this process is largely treated as a black box, aside from the encoding logic itself.</p>
+<h2 class="section-title">Logical Formulas</h2>
+<p class="content-text">A logical formula in this context is expressed using operators (op) and operands, which may be a variable (VAR), a concrete value (value), or another expression (expr). Formally, a formula can be represented as (op expr expr), where expr can itself be a variable, a value, or a nested expression. For examples:</p>
+<ul class="content-list">
+<li class="list-item">(> VAR 1) — VAR is greater than 1, i.e., VAR > 1.</li>
+<li class="list-item">(> 1 VAR) — VAR is less than 1, i.e., 1 > VAR.</li>
+<li class="list-item">(= VAR expr) — VAR is equal to expr, which could be another formula.</li>
+</ul>
+<p class="content-text">Logical formulas are constructed by gradually combining these basic expressions into larger formulas. The operators (op) may include:</p>
+<ul class="content-list">
+<li class="list-item">Integer comparisons: =, >, <, >=, <=</li>
+<li class="list-item">Boolean operations: and, or, not, => (implication)</li>
+<li class="list-item">Conditional expressions: ite (if-then-else)</li>
+<li class="list-item">Bit-vector operations: bvand, bvor, bvnot, etc.</li>
+</ul>
+<p class="content-text">By recursively combining these operators and expressions, complex formulas can encode the full semantics of network configurations, routing policies, and other protocol-specific behaviors.</p>
+<p class="content-text">In this user study, the network topology only have six devices, yet the logical formulas generated by Minesweeper consist of approximately 4000 lines, including both declaration and constraint statements.</p>
+<h2 class="section-title">Our Work: Explainable Network Verification via Subspecifications</h2>
+<p class="content-text">We focus on the scenario where verification has already succeeded. By combining the stable network state obtained from the simulator Batfish with the verified logical formulas generated by the verifier Minesweeper, we extract subspecifications—localized logical constraints for configuration fields under the stable state.</p>
+<p class="content-text">A subspecification describes the logical constraints that a configuration field (or a group of fields) must satisfy while all other configuration fields remain fixed to the values they had in the verified stable state. Importantly, a subspecification does not describe the meaning of the configuration itself; instead, it encodes the safe range within which the field can be modified without invalidating the previously verified network specification(s).</p>
+<p class="content-text">We consider two granularities in this user-study:</p>
+<ul class="content-list">
+<li class="list-item">Config-level subspecs: Constraints on a single configuration field, assuming all other fields remain unchanged.</li>
+<li class="list-item">Line-level subspecs: Constraints on all fields in a single configuration line (e.g., a prefix-list entry, a community-list entry), assuming all other lines remain unchanged.</li>
+</ul>
+<p class="content-text">Example: Inbound BGP route policy on R1:</p>
+<div class="code-block">
+<div class="code-line">!!! Inbound BGP route policy on R1 for routes learned from ISP1. !!!</div>
+<div class="code-line">route-map <span class="highlight-route-map">R1_IN_FROM_ISP1</span> permit 10</div>
+<div class="code-line">match ip address prefix-list <span class="highlight-prefix-list">isp1_network</span></div>
+<div class="code-line">set community <span class="config-field" data-subspec="(= VAR true)" data-subspec-name="Config_r1_RoutingPolicy_R1_IN_FROM_ISP1__Line1__add_community_400_100_community">400:100</span> additive</div>
+<div class="code-line">!</div>
+<div class="code-line">!</div>
+<div class="code-line">!!! Prefix-list Definitions on R1. !!!</div>
+<div class="code-line"><span class="config-field line-level" data-subspec="(= ((_ extract 31 8) |0_dst-ip|) #xc00002) AND (= (bvnot (bvor (bvnot |0_dst-ip|) (bvnot VAR_MASK))) (bvnot (bvor (bvnot VAR_IP) (bvnot VAR_MASK)))) AND (<= 24 VAR_END) AND (>= 24 VAR_START)" data-subspec-name="Config_r1_RouteFilterList_isp1_network__Line1">ip prefix-list</span> <span class="highlight-prefix-list">isp1_network</span> seq  5 <span class="config-field" data-subspec="(= VAR true)" data-subspec-name="Config_r1_RouteFilterList_isp1_network__Line1__192_0_2_0__action">permit</span> <span class="config-field" data-subspec="(= ((_ extract 31 8) VAR) #xc00002)" data-subspec-name="Config_r1_RouteFilterList_isp1_network__Line1__192_0_2_0__ip">192.0.2.0</span>/<span class="config-field" data-subspec="(= ((_ extract 31 8) |0_dst-ip|) #xc00002) AND (= (bvnot (bvor (bvnot |0_dst-ip|) (bvnot VAR))) (concat ((_ extract 31 30) VAR) #x00000 ((_ extract 9 9) VAR) #b000000000))" data-subspec-name="Config_r1_RouteFilterList_isp1_network__Line1__192_0_2_0__mask">24</span>    <span class="config-field" data-subspec="(>= 24 VAR)" data-subspec-name="Config_r1_RouteFilterList_isp1_network__Line1__192_0_2_0__prefix_range_start">ge 24</span></div>
+<div class="code-line"><span class="config-field line-level" data-subspec="No subspec found" data-subspec-name="Config_r1_RouteFilterList_isp1_network__Line2">ip prefix-list</span> <span class="highlight-prefix-list">isp1_network</span> seq 10 <span class="config-field" data-subspec="No subspec found" data-subspec-name="Config_r1_RouteFilterList_isp1_network__Line2__198_51_100_0__action">permit</span> <span class="config-field" data-subspec="No subspec found" data-subspec-name="Config_r1_RouteFilterList_isp1_network__Line2__198_51_100_0__ip">198.51.100.0</span>/<span class="config-field" data-subspec="No subspec found" data-subspec-name="Config_r1_RouteFilterList_isp1_network__Line2__198_51_100_0__mask">24</span> <span class="config-field" data-subspec="No subspec found" data-subspec-name="Config_r1_RouteFilterList_isp1_network__Line2__198_51_100_0__prefix_range_start">ge 24</span></div>
+</div>
+<p class="content-text">Line-level subspecs (highlighted in purple):</p>
+<ul class="content-list">
+<li class="list-item">If the subspec is empty, the entire line can be safely modified or deleted.</li>
+<li class="list-item">If it is non-empty, modifications within the subspec bounds are guaranteed to preserve the previously verified specification under the stable state.</li>
+<li class="list-item">If the modification goes beyond the subspec bounds, the specification may be violated, since the subspec captures constraints only under the stable state rather than the full verified specification.</li>
+</ul>
+<p class="content-text">Config-level subspecs (highlighted in blue):</p>
+<ul class="content-list">
+<li class="list-item">If the subspec is empty, the corresponding field can be freely modified (or deleted if it is the only field in the line).</li>
+<li class="list-item">If it is non-empty, modifications within the bounds are safe under the stable state.</li>
+<li class="list-item">Modifications outside the bounds may break the specification, because the constraints are derived from the stable state, not from the full global verified specification.</li>
+</ul>
+<p class="content-text">In summary, our subspecifications are guarantee for the network to converge to the same stable states; violaing the subspecifications may result in a different FIBs.  Thus, modifications within the subspec bounds are guaranteed to preserve the specification under the stable state, while modifications outside may potentially break it. For readability, we also shorten SMT variable names: VAR is used to denote config-level subspecs, and VAR_XXX is used to denote a related configuration field within line-level subspecs.</p>
+<h2 class="section-title">Subspecifications Examples</h2>
+<h3 class="subsection-title">prefix-list action (permit/deny)</h3>
+<div class="code-block">
+<div class="code-line">!!! Inbound BGP route policy on R1 for routes learned from ISP1. !!!</div>
+<div class="code-line">route-map <span class="highlight-route-map">R1_IN_FROM_ISP1</span> permit 10</div>
+<div class="code-line">match ip address prefix-list <span class="highlight-prefix-list">isp1_network</span></div>
+<div class="code-line">!</div>
+<div class="code-line">!</div>
+<div class="code-line">!!! Prefix-list Definition on R1. !!!</div>
+<div class="code-line">ip prefix-list <span class="highlight-prefix-list">isp1_network</span> seq  5 <span class="config-field" data-subspec="(= VAR true)" data-subspec-name="Config_r1_RouteFilterList_isp1_network__Line1__192_0_2_0__action">permit</span> 192.0.2.0/24 ge 24</div>
+<div class="code-line">!</div>
+<div class="code-line">!</div>
+<div class="code-line">!!! Inbound BGP route policy on R2 for routes learned from ISP2. !!!</div>
+<div class="code-line">route-map <span class="highlight-route-map">R2_IN_FROM_ISP2</span> permit 10</div>
+<div class="code-line">match ip address prefix-list <span class="highlight-prefix-list">isp2_network</span></div>
+<div class="code-line">!</div>
+<div class="code-line">!</div>
+<div class="code-line">!!! Prefix-list Definiation on R2. !!!</div>
+<div class="code-line">ip prefix-list <span class="highlight-prefix-list">isp2_network</span> seq 5 <span class="config-field" data-subspec="No subspec found" data-subspec-name="Config_r2_RouteFilterList_isp2_network__Line1__198_51_100_0__action">permit</span> 198.51.100.0/24 ge 24</div>
+</div>
+<p class="content-text">The explanation of the prefix-list action subspec:</p>
+<ul class="content-list">
+<li class="list-item">If the subspec is (= VAR true), the action must be set to permit to preserve the verified specification(s).</li>
+<li class="list-item">If the subspec is (= VAR false), the action must be set to deny to preserve the verified specification(s).</li>
+<li class="list-item">If the subspec is empty, the action can be freely set to either permit or deny while still preserving the verified specification(s).</li>
+</ul>
+<h3 class="subsection-title">community-list action (permit/deny)</h3>
+<div class="code-block">
+<div class="code-line">!!! Outbound BGP route policy on R1 applied to updates sent to ISP1. !!!</div>
+<div class="code-line">route-map <span class="highlight-route-map">R1_OUT_TO_ISP1</span> deny 10</div>
+<div class="code-line">match community <span class="highlight-community-list">500200</span></div>
+<div class="code-line">!</div>
+<div class="code-line">!</div>
+<div class="code-line">!!! Community-list Definition on R1. !!!</div>
+<div class="code-line">ip community-list <span class="highlight-community-list">500200</span> <span class="config-field" data-subspec="No subspec found" data-subspec-name="Config_r1_CommunityList_500200__Line1__exact_community_500_200_action">permit</span> 500:200</div>
+<div class="code-line">!</div>
+<div class="code-line">!</div>
+<div class="code-line">!!! Outbound BGP route policy on R2 applied to updates sent to ISP2. !!!</div>
+<div class="code-line">route-map <span class="highlight-route-map">R2_OUT_TO_ISP2</span> deny 10</div>
+<div class="code-line">match community <span class="highlight-community-list">400100</span></div>
+<div class="code-line">!</div>
+<div class="code-line">!</div>
+<div class="code-line">!!! Community-list Definition on R2. !!!</div>
+<div class="code-line">ip community-list <span class="highlight-community-list">400100</span> <span class="config-field" data-subspec="(= VAR true)" data-subspec-name="Config_r2_CommunityList_400100__Line1__exact_community_400_100_action">permit</span> 400:100</div>
+</div>
+<p class="content-text">The explanation of the community-list action subspec:</p>
+<ul class="content-list">
+<li class="list-item">If the subspec is (= VAR true), the action must be set to permit to preserve the verified specification(s).</li>
+<li class="list-item">If the subspec is (= VAR false), the action must be set to deny to preserve the verified specification(s).</li>
+<li class="list-item">If the subspec is empty, the action can be freely set to either permit or deny while still preserving the verified specification(s).</li>
+</ul>
+<h3 class="subsection-title">community-number</h3>
+<div class="code-block">
+<div class="code-line">!!! Outbound BGP route policy on R1 applied to updates sent to ISP1. !!!</div>
+<div class="code-line">route-map <span class="highlight-route-map">R1_OUT_TO_ISP1</span> deny 10</div>
+<div class="code-line">match community <span class="highlight-community-list">500200</span></div>
+<div class="code-line">!</div>
+<div class="code-line">!</div>
+<div class="code-line">!!! Community-list Definition on R1. !!!</div>
+<div class="code-line">ip community-list <span class="highlight-community-list">500200</span> permit <span class="config-field" data-subspec="No subspec found" data-subspec-name="Config_r1_CommunityList_500200__Line1__exact_community_500_200_community">500:200</span></div>
+<div class="code-line">!</div>
+<div class="code-line">!</div>
+<div class="code-line">!!! Outbound BGP route policy on R2 applied to updates sent to ISP2. !!!</div>
+<div class="code-line">route-map <span class="highlight-route-map">R2_OUT_TO_ISP2</span> deny 10</div>
+<div class="code-line">match community <span class="highlight-community-list">400100</span></div>
+<div class="code-line">!</div>
+<div class="code-line">!</div>
+<div class="code-line">!!! Community-list Definition on R2. !!!</div>
+<div class="code-line">ip community-list <span class="highlight-community-list">400100</span> permit <span class="config-field" data-subspec="(= VAR true)" data-subspec-name="Config_r2_CommunityList_400100__Line1__exact_community_400_100_community">400:100</span></div>
+</div>
+<p class="content-text">The explanation of the community-number subspec:</p>
+<ul class="content-list">
+<li class="list-item">In the network verification tool Minesweeper, each community-number is encoded as a Boolean variable, indicating whether the route is tagged with this exact community.</li>
+<li class="list-item">If the subspec is (= VAR true), the community-number must equal the original configured community-number (e.g., 500:200 or 400:100) to preserve the verified specification(s).</li>
+<li class="list-item">If the subspec is (= VAR false), the community-number must not equal the original configured community-number to preserve the verified specification(s).</li>
+<li class="list-item">If the subspec is empty, the community-number can be freely configured, and the verified specification(s) will still be preserved.</li>
+</ul>
+<h2 class="section-title">3. AS-path prepend cost</h2>
+<div class="code-block">
+<div class="code-line">!!! Outbound BGP route policy on R2 applied to updates sent to R3. !!!</div>
+<div class="code-line">route-map <span class="highlight-route-map">R2_OUT_TO_R3</span> permit 10</div>
+<div class="code-line">set as-path prepend <span class="config-field" data-subspec="(= VAR 1)" data-subspec-name="Config_r2_RoutingPolicy_R2_OUT_TO_R3_prepend_aspath_cost">200</span></div>
+</div>
+<p class="content-text">The explanation of the AS-path prepend cost subspec:</p>
+<ul class="content-list">
+<li class="list-item">In the network verification tool Minesweeper, each AS-path prepend cost is encoded as an integer variable, representing the number of times the AS is prepended to the AS-path.</li>
+<li class="list-item">If the subspec is (= VAR 1), the AS-path prepend cost must equal 1.</li>
+<li class="list-item">If the subspec is (>= VAR 1), the AS-path prepend cost must be greater than or equal to 1.</li>
+<li class="list-item">If the subspec is (<= VAR 1), the AS-path prepend cost must be less than or equal to 1.</li>
+<li class="list-item">If the subspec is empty, the AS-path prepend cost can be freely set without affecting the previously verified network specification(s).</li>
+</ul>
+<h3 class="subsection-title">IP address</h3>
+<div class="code-block">
+<div class="code-line">!!! Inbound BGP route policy on R1 for routes learned from ISP1. !!!</div>
+<div class="code-line">route-map <span class="highlight-route-map">R1_IN_FROM_ISP1</span> permit 10</div>
+<div class="code-line">match ip address prefix-list <span class="highlight-prefix-list">isp1_network</span></div>
+<div class="code-line">!</div>
+<div class="code-line">!</div>
+<div class="code-line">!!! Prefix-list Definitions on R1. !!!</div>
+<div class="code-line">ip prefix-list <span class="highlight-prefix-list">isp1_network</span> seq  5 permit <span class="config-field" data-subspec="(= ((_ extract 31 8) VAR) #xc00002)" data-subspec-name="Config_r1_RouteFilterList_isp1_network__Line1__192_0_2_0__ip">192.0.2.0</span>/24    ge 24</div>
+<div class="code-line">ip prefix-list <span class="highlight-prefix-list">isp1_network</span> seq 10 permit <span class="config-field" data-subspec="No subspec found" data-subspec-name="Config_r1_RouteFilterList_isp1_network__Line2__198_51_100_0__ip">198.51.100.0</span>/24 ge 24</div>
+</div>
+<p class="content-text">The explanation of the IP address subspec:</p>
+<ul class="content-list">
+<li class="list-item">In the network verification tool Minesweeper, each IP address is encoded as a 32-bit vector. The subspec ensures that the high-order bits of the destination IP match the configured prefix.</li>
+<li class="list-item">If the subspec is a formula such as (= ((_ extract 31 8) VAR) 0xc00002), the IP address must not exceed the bounds defined by the subspec to preserve the verified specification(s). In this case, the IP address must remain within the prefix 192.0.2.0/24.</li>
+<li class="list-item">If the subspec is empty, the IP address can be freely configured while still preserving the previously verified network specification(s).</li>
+</ul>
+<h3 class="subsection-title">IP prefix-length (mask)</h3>
+<div class="code-block">
+<div class="code-line">!!! Inbound BGP route policy on R1 for routes learned from ISP1. !!!</div>
+<div class="code-line">route-map <span class="highlight-route-map">R1_IN_FROM_ISP1</span> permit 10</div>
+<div class="code-line">match ip address prefix-list <span class="highlight-prefix-list">isp1_network</span></div>
+<div class="code-line">!</div>
+<div class="code-line">!</div>
+<div class="code-line">!!! Prefix-list Definitions on R1. !!!</div>
+<div class="code-line">ip prefix-list <span class="highlight-prefix-list">isp1_network</span> seq  5 permit 192.0.2.0/<span class="config-field" data-subspec="(= ((_ extract 31 8) |0_dst-ip|) #xc00002) AND (= (bvnot (bvor (bvnot |0_dst-ip|) (bvnot VAR))) (concat ((_ extract 31 30) VAR) #x00000 ((_ extract 9 9) VAR) #b000000000))" data-subspec-name="Config_r1_RouteFilterList_isp1_network__Line1__192_0_2_0__mask">24</span>    ge 24</div>
+<div class="code-line">ip prefix-list <span class="highlight-prefix-list">isp1_network</span> seq 10 permit 198.51.100.0/<span class="config-field" data-subspec="No subspec found" data-subspec-name="Config_r1_RouteFilterList_isp1_network__Line2__198_51_100_0__mask">24</span> ge 24</div>
+</div>
+<p class="content-text">The explanation of the IP prefix-length (mask) subspec:</p>
+<ul class="content-list">
+<li class="list-item">Each prefix-length (mask) is also encoded as a 32-bit vector in Minesweeper, and the subspec ensures that the mask matches the high-order bits of the IP address as intended.</li>
+<li class="list-item">If the subspec constrains is a formula such as (= ((_ extract 31 8) |0_dst-ip|) #xc00002) AND (= (bvnot (bvor (bvnot |0_dst-ip|) (bvnot VAR))) (concat ((_ extract 31 30) VAR) #x00000 ((_ extract 9 9) VAR) #b000000000)), the IP prefix-length must not exceed the bounds defined by the subspec to preserve the verified specification(s).</li>
+<li class="list-item">If the subspec is empty, the prefix-length can be freely configured without affecting the previously verified network specification(s).</li>
+</ul>
+<h3 class="subsection-title">IP prefix range</h3>
+<div class="code-block">
+<div class="code-line">!!! Inbound BGP route policy on R1 for routes learned from ISP1. !!!</div>
+<div class="code-line">route-map <span class="highlight-route-map">R1_IN_FROM_ISP1</span> permit 10</div>
+<div class="code-line">match ip address prefix-list <span class="highlight-prefix-list">isp1_network</span></div>
+<div class="code-line">!</div>
+<div class="code-line">!</div>
+<div class="code-line">!!! Prefix-list Definitions on R1. !!!</div>
+<div class="code-line">ip prefix-list <span class="highlight-prefix-list">isp1_network</span> seq  5 permit 192.0.2.0/24    <span class="config-field" data-subspec="(>= 24 VAR)" data-subspec-name="Config_r1_RouteFilterList_isp1_network__Line1__192_0_2_0__prefix_range_start">ge 24</span></div>
+<div class="code-line">ip prefix-list <span class="highlight-prefix-list">isp1_network</span> seq 10 permit 198.51.100.0/24 <span class="config-field" data-subspec="No subspec found" data-subspec-name="Config_r1_RouteFilterList_isp1_network__Line2__198_51_100_0__prefix_range_start">ge 24</span></div>
+</div>
+<p class="content-text">The explanation of the IP prefix range subspec:</p>
+<ul class="content-list">
+<li class="list-item">Minesweeper encodes the prefix range ge N as constraints on the lower bound of the prefix length, le N as constraints on the upper bound of the prefix x length, ensuring that the intended subnet coverage is respected.</li>
+<li class="list-item">If the subspec is (>= 24 VAR), the prefix range must satisfy the given lower bound to preserve the verified specification(s).</li>
+<li class="list-item">If the subspec is empty, the prefix range can be freely configured while still preserving the previously verified network specification(s).</li>
+</ul>
+        </div>
+    </div>
+
+    <script>
+        // 添加配置字段的tooltip功能
+        document.addEventListener('DOMContentLoaded', function() {
+            const fields = document.querySelectorAll('.config-field');
+            
+            fields.forEach(field => {
+                const tooltip = document.createElement('div');
+                tooltip.className = 'tooltip';
+                tooltip.innerHTML = field.getAttribute('data-subspec');
+                document.body.appendChild(tooltip);
+                
+                field.addEventListener('mouseenter', (e) => {
+                    const rect = field.getBoundingClientRect();
+                    const tooltipWidth = 450;
+                    const tooltipHeight = tooltip.offsetHeight;
+                    
+                    let left = rect.left + (rect.width / 2) - (tooltipWidth / 2);
+                    let top = rect.top - tooltipHeight - 15;
+                    
+                    if (left < 10) left = 10;
+                    if (left + tooltipWidth > window.innerWidth - 10) {
+                        left = window.innerWidth - tooltipWidth - 10;
+                    }
+                    
+                    if (top < 10) {
+                        top = rect.bottom + 15;
+                        tooltip.style.setProperty('--arrow-top', '-6px');
+                        tooltip.style.setProperty('--arrow-border', 'transparent transparent #2c3e50 transparent');
+                    } else {
+                        tooltip.style.setProperty('--arrow-top', '100%');
+                        tooltip.style.setProperty('--arrow-border', '#2c3e50 transparent transparent transparent');
+                    }
+                    
+                    tooltip.style.left = left + 'px';
+                    tooltip.style.top = top + 'px';
+                    tooltip.classList.add('show');
+                });
+                
+                field.addEventListener('mouseleave', () => {
+                    tooltip.classList.remove('show');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
