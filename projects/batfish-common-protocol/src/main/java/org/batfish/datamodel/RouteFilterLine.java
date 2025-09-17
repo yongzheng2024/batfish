@@ -126,10 +126,12 @@ public final class RouteFilterLine implements Serializable {
 
     // check and avoid shared object
     if (_ipWildcard.getEnableSmtVariable()) {
+      System.out.println("WARNING: RouteFilterLine:initSmtVariable found shared IpWildcard, cloning it.");
       _ipWildcard =
           IpWildcard.ipWithWildcardMask(_ipWildcard.getIp(), _ipWildcard.getWildcardMask());
     }
     if (_lengthRange.getEnableSmtVariable()) {
+      System.out.println("WARNING: RouteFilterLine:initSmtVariable found shared SubRange, cloning it.");
       _lengthRange = new SubRange(_lengthRange.getStart(), _lengthRange.getEnd());
     }
 
