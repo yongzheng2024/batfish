@@ -1716,7 +1716,7 @@ network_192_168_0_0
 10  [ip prefix-list](Config_r3_RouteFilterList_default_ips__Line1) default_ips seq 5 [permit](Config_r3_RouteFilterList_default_ips__Line1__0_0_0_0__action) 0.0.0.0/0 [le 32](Config_r3_RouteFilterList_default_ips__Line1__0_0_0_0__prefix_range_end)
 11  !
 12  [ip prefix-list](Config_r3_RouteFilterList_private_ips_1__Line1) private_ips_1 seq 5 [permit](Config_r3_RouteFilterList_private_ips_1__Line1__192_160_0_0__action) [192.168.0.0/12](Config_r3_RouteFilterList_private_ips_1__Line1__192_160_0_0__ip) [ge 12](Config_r3_RouteFilterList_private_ips_1__Line1__192_160_0_0__prefix_range_start)`,
-                question: `As part of routine maintenance, the network operator wants to clean up the export prefix-list at router R1 by removing unused entries. <br><br>Check the box next to <span style="color: red;">any line(s)</span> that can be safely removed without affecting the specification Customer Reachability.
+                question: `As part of routine maintenance, the network operator wants to clean up the export prefix-list at router R1 by removing unused entries. <br><br>Check the box next to <span style="color: red;">any line(s)</span> that can be safely removed without affecting the verified specification Customer Reachability.
 
 option1: [yes]
 \`\`\`diff
@@ -3107,7 +3107,7 @@ private_ips_3
 10  [ip prefix-list](Config_r3_RouteFilterList_default_ips__Line1) default_ips seq 5 [permit](Config_r3_RouteFilterList_default_ips__Line1__0_0_0_0__action) 0.0.0.0/0 [le 32](Config_r3_RouteFilterList_default_ips__Line1__0_0_0_0__prefix_range_end)
 11  !
 12  [ip prefix-list](Config_r3_RouteFilterList_private_ips_1__Line1) private_ips_1 seq 5 [permit](Config_r3_RouteFilterList_private_ips_1__Line1__192_160_0_0__action) [192.168.0.0/12](Config_r3_RouteFilterList_private_ips_1__Line1__192_160_0_0__ip) [ge 12](Config_r3_RouteFilterList_private_ips_1__Line1__192_160_0_0__prefix_range_start)`,
-                question: `If a network operator intends to modify the route-map R2_OUT_TO_R3 to support additional specification(s), we seek to determine whether the modified R2_OUT_TO_R3 still satisfies the previously original verified specification ECMP reachability. <br><br>Check the box next to <span style="color: red;">any line(s)</span> that, if modified, could preserve the original specification ECMP Reachability.
+                question: `If a network operator intends to modify the route-map R2_OUT_TO_R3 to support additional specification(s), we seek to determine whether the modified R2_OUT_TO_R3 still satisfies the previously original verified specification ECMP reachability. <br><br>Check the box next to <span style="color: red;">any line(s)</span> that, if modified, could preserve the verified specification ECMP Reachability.
 
 option1: [no]
 \`\`\`diff
@@ -3799,7 +3799,7 @@ private_ips_3
 10  [ip prefix-list](Config_r2_RouteFilterList_default_ips__Line1) default_ips seq 5 [permit](Config_r3_RouteFilterList_default_ips__Line1__0_0_0_0__action) 0.0.0.0/0 [le 32](Config_r3_RouteFilterList_default_ips__Line1__0_0_0_0__prefix_range_end)
 11  !
 12  [ip prefix-list](Config_r3_RouteFilterList_private_ips__Line1) private_ips seq 5 [permit](Config_r3_RouteFilterList_private_ips__Line1__192_168_0_0__action) [192.168.0.0/16](Config_r3_RouteFilterList_private_ips__Line1__192_168_0_0__ip) [ge 16](Config_r3_RouteFilterList_private_ips__Line1__192_168_0_0__prefix_range_start) [le 32](Config_r3_RouteFilterList_private_ips__Line1__192_168_0_0__prefix_range_end)`,
-                question: `The specification Private Prefix Filtering block all private IP address blocks originated from Customer. All following lines satisfy the specification. <br><br>Which one is <span style="color: red;">the most precise</span> in block private IP address blocks?
+                question: `The specification Private Prefix Filtering blocks the Customer subnets 192.168.128.0/24 and 192.168.129.0/24, originated from the private block 192.168.0.0/16. These subnets must not be advertised to router R3. <br><br>Check the box next to <span style="color: red;">any line(s)</span> that, if modified, could preserve the verified specification Private Prefix Filtering.
 
 option1: [no]
 \`\`\`
