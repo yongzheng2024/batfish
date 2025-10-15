@@ -8,8 +8,10 @@ import java.util.Objects;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+import javax.print.attribute.standard.Destination;
 
 import org.batfish.common.BatfishException;
+import org.batfish.datamodel.CommunityListLine;
 import org.batfish.datamodel.Prefix;
 import org.batfish.datamodel.routing_policy.Environment;
 import org.batfish.datamodel.routing_policy.Result;
@@ -92,22 +94,65 @@ public final class MatchPrefixSet extends BooleanExpr {
   }
 
   /** Add configuration constant - SMT symbolic variable */
+  private boolean _enableSmtVariable;
+  private String _configVarPrefix;
+
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
+    // assert that the ip wildcard is not shared object
+    if (_enableSmtVariable) {
+      if (_prefix instanceof DestinationNetwork) {
+        if (_configVarPrefix.contains("RoutingPolicy_BGP_COMMON_EXPORT_POLICY_default") &&
+            configVarPrefix.contains("RoutingPolicy_BGP_REDISTRIBUTION_default")) {
+          System.out.println("WARNING: MatchPrefixSet:initSmtVariable called twice, ignored.");
+          return;
+        }
+      }
+
+      throw new BatfishException("MatchPrefixSet.initSmtVariable: shared object.\n" +
+          "Previous configVarPrefix: " + _configVarPrefix + "\n" +
+          "Current  configVarPrefix: " + configVarPrefix);
+    }
+
     // check and avoid shared object
     // assert that init smt variable for unimplemented prefix set type
     if (_prefixSet instanceof ExplicitPrefixSet) {
       ExplicitPrefixSet explicitPrefixSet = (ExplicitPrefixSet) _prefixSet;
+
       if (explicitPrefixSet.getEnableSmtVariable()) {
+        System.out.println("WARNING: MatchPrefixSet:initSmtVariable: found shared PrefixSpace, cloning it.");
+
+        ExplicitPrefixSet prefixSetBackup = (ExplicitPrefixSet) _prefixSet;
         _prefixSet = new ExplicitPrefixSet(explicitPrefixSet.getPrefixSpace());
+
+        // add additional assert for using shared object
+        if (prefixSetBackup.getEnableSmtVariable() == _prefixSet.getEnableSmtVariable()) {
+          throw new BatfishException("MatchPrefixSet:initSmtVariable: " +
+              "cloning failed for shared object.");
+        }
       }
+
     } else if (_prefixSet instanceof NamedPrefixSet) {
+      // NamedPrefixSet namedPrefixSet = (NamedPrefixSet) _prefixSet;
       {}  // do nothing
+
     } else {
-      throw new BatfishException(
-          "Unimplemented prefix set type: " + _prefixSet.getClass().getName());
+      throw new BatfishException("MatchPrefixSet:initSmtVariable: Unimplemented prefix set type: " +
+          _prefixSet.getClass().getName());
     }
 
     // init smt variable for prefix set configuration
     _prefixSet.initSmtVariable(context, solver, configVarPrefix);
+
+    // configure enable smt variable flag to true
+    _enableSmtVariable = true;
+    _configVarPrefix = configVarPrefix;
+  }
+
+  public boolean getEnableSmtVariable() {
+    return _enableSmtVariable;
+  }
+
+  public String getConfigVarPrefix() {
+    return _configVarPrefix;
   }
 }

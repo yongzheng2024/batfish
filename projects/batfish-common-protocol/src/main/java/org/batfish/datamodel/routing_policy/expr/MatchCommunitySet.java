@@ -90,10 +90,15 @@ public final class MatchCommunitySet extends BooleanExpr {
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
     // assert that the community list line is not shared
     if (_enableSmtVariable) {
-      System.out.println("ERROR MatchCommunitySet:initSmtVariable");
-      System.out.println("Previous configVarPrefix: " + _configVarPrefix);
-      System.out.println("Current  configVarPrefix: " + configVarPrefix);
-      return;
+      throw new BatfishException("MatchCommunitySet.initSmtVariable: shared object.\n" +
+          "Previous configVarPrefix: " + _configVarPrefix + "\n" +
+          "Current  configVarPrefix: " + configVarPrefix);
+    }
+
+    // TODO: handle shared object case properly, now is just throw exception
+    if (_expr.getEnableSmtVariable()) {
+      throw new BatfishException(
+          "MatchCommunitySet.initSmtVariable: shared object CommunitySetExpr.");
     }
 
     // init smt variable for community set configuration

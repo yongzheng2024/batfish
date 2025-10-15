@@ -165,10 +165,9 @@ public final class SubRange implements Serializable, Comparable<SubRange> {
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
     // assert that the sub range is not shared
     if (_enableSmtVariable) {
-      System.out.println("ERROR SubRange:initSmtVariable");
-      System.out.println("Previous configVarPrefix: " + _configVarPrefix);
-      System.out.println("Current  configVarPrefix: " + configVarPrefix);
-      return;
+      throw new BatfishException("SubRange.initSmtVariable: shared object.\n" +
+          "Previous configVarPrefix: " + _configVarPrefix + "\n" +
+          "Current  configVarPrefix: " + configVarPrefix);
     }
 
     _configVarStart = context.mkIntConst(configVarPrefix + "prefix_range_start");

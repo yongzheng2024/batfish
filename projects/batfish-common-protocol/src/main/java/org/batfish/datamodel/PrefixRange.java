@@ -179,18 +179,37 @@ public final class PrefixRange implements Serializable, Comparable<PrefixRange> 
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
     // assert that the prefix range is not shared
     if (_enableSmtVariable) {
-      System.out.println("ERROR PrefixRange:initSmtVariable");
-      System.out.println("Previous configVarPrefix: " + _configVarPrefix);
-      System.out.println("Current  configVarPrefix: " + configVarPrefix);
-      return;
+      throw new BatfishException("PrefixRange.initSmtVariable: shared object.\n" +
+          "Previous configVarPrefix: " + _configVarPrefix + "\n" +
+          "Current  configVarPrefix: " + configVarPrefix);
     }
 
-    // check and avoid shared object
+    // check and avoid shared object for Prefix
     if (_prefix.getEnableSmtVariable()) {
+      System.out.println("WARNING: PrefixRange:initSmtVariable: " +
+          "found shared Prefix, cloning it.");
+
+      Prefix prefixBackup = _prefix;
       _prefix = Prefix.create(_prefix.getStartIp(), _prefix.getPrefixLength());
+
+      // add additional assert for using shared object
+      if (prefixBackup.getEnableSmtVariable() == _prefix.getEnableSmtVariable()) {
+        throw new BatfishException("PrefixRange:initSmtVariable: cloning failed for shared object");
+      }
     }
+
+    // check and avoid shared object for SubRange
     if (_lengthRange.getEnableSmtVariable()) {
+      System.out.println("WARNING: PrefixRange:initSmtVariable: " +
+          "found shared SubRange, cloning it.");
+
+      SubRange lengthRangeBackup = _lengthRange;
       _lengthRange = new SubRange(_lengthRange.getStart(), _lengthRange.getEnd());
+
+      // add additional assert for using shared object
+      if (lengthRangeBackup.getEnableSmtVariable() == _lengthRange.getEnableSmtVariable()) {
+        throw new BatfishException("PrefixRange:initSmtVariable: cloning failed for shared object");
+      }
     }
 
     // init smt variable for prefix and relevant length range configuration

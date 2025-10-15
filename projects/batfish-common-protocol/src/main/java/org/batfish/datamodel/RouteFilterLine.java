@@ -16,6 +16,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
+import org.batfish.common.BatfishException;
+
 /** A line in a {@link RouteFilterList}. */
 @ParametersAreNonnullByDefault
 public final class RouteFilterLine implements Serializable {
@@ -118,21 +120,40 @@ public final class RouteFilterLine implements Serializable {
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
     // assert the route filter list is not shared
     if (_enableSmtVariable) {
-      System.out.println("ERROR RouteFilterLine:initSmtVariable");
-      System.out.println("Previous configVarPrefix: " + _configVarPrefix);
-      System.out.println("Current  configVarPrefix: " + configVarPrefix);
-      return;
+      throw new BatfishException("RouteFilterLine.initSmtVariable: shared object.\n" +
+          "Previous configVarPrefix: " + _configVarPrefix + "\n" +
+          "Current  configVarPrefix: " + configVarPrefix);
     }
 
-    // check and avoid shared object
+    // check and avoid shared object for IpWildcard
     if (_ipWildcard.getEnableSmtVariable()) {
-      System.out.println("WARNING: RouteFilterLine:initSmtVariable found shared IpWildcard, cloning it.");
+      System.out.println("WARNING: RouteFilterLine:initSmtVariable: " +
+          "found shared IpWildcard, cloning it.");
+
+      IpWildcard ipWildcardBackup = _ipWildcard;
       _ipWildcard =
           IpWildcard.ipWithWildcardMask(_ipWildcard.getIp(), _ipWildcard.getWildcardMask());
+
+      // add additional assert for using shared object
+      if (ipWildcardBackup.getEnableSmtVariable() == _ipWildcard.getEnableSmtVariable()) {
+        throw new BatfishException("RouteFilterLine:initSmtVariable: " +
+            "cloning failed for shared object.");
+      }
     }
+
+    // check and avoid shared object for SubRange
     if (_lengthRange.getEnableSmtVariable()) {
-      System.out.println("WARNING: RouteFilterLine:initSmtVariable found shared SubRange, cloning it.");
+      System.out.println("WARNING: RouteFilterLine:initSmtVariable: " +
+          "found shared SubRange, cloning it.");
+
+      SubRange lengthRangeBackup = _lengthRange;
       _lengthRange = new SubRange(_lengthRange.getStart(), _lengthRange.getEnd());
+
+      // add additional assert for using shared object
+      if (lengthRangeBackup.getEnableSmtVariable() == _lengthRange.getEnableSmtVariable()) {
+        throw new BatfishException("RouteFilterLine:initSmtVariable: " +
+            "cloning failed for shared object.");
+      }
     }
 
     _configVarAction = context.mkBoolConst(configVarPrefix + "action");

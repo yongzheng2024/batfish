@@ -7,6 +7,7 @@ import javax.annotation.Nonnull;
 
 import com.microsoft.z3.Context;
 import com.microsoft.z3.Solver;
+import org.batfish.common.BatfishException;
 import org.batfish.datamodel.bgp.community.Community;
 import org.batfish.datamodel.routing_policy.Environment;
 import org.batfish.datamodel.visitors.CommunitySetExprVisitor;
@@ -80,10 +81,8 @@ public class EmptyCommunitySetExpr extends CommunitySetExpr {
 
   @Override
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix, boolean isTrue) {
-    // TODO: implement me
-    {}  // do nothing
-
-    System.out.println("WARNING: EmptyCommunitySetExpr:initSmtVariable is not implemented yet.");
+    // TODO: implement me when needed
+    throw new BatfishException("EmptyCommunitySetExpr:initSmtVariable: not implemented yet.");
   }
 
   @Override
@@ -95,6 +94,6 @@ public class EmptyCommunitySetExpr extends CommunitySetExpr {
   @Override
   public String getCommunityExprString() {
     // TODO: implement me when needed
-    return "";
+    throw new BatfishException("EmptyCommunitySetExpr:getCommunityExprString: not implemented yet.");
   }
 }

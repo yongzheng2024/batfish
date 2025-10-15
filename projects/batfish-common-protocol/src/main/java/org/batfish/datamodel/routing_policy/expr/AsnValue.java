@@ -8,6 +8,7 @@ import com.google.common.base.MoreObjects;
 import java.util.Objects;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import org.batfish.common.BatfishException;
 import org.batfish.datamodel.routing_policy.Environment;
 
 import com.microsoft.z3.Context;
@@ -66,12 +67,13 @@ public final class AsnValue extends LongExpr {
   @Override
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
     // TODO: implement me when needed
-    {}  // do nothing
+    throw new BatfishException("AsnValue:initSmtVariable: not implemented yet.");
   }
 
   /** Add get literal long value for configVarPrefix */
   @Override
   public String getLiteralLongString() {
-    return "";
+    // TODO: implement ne when needed
+    throw new BatfishException("AsnValue:getLiteralLongString: not implemented yet.");
   }
 }

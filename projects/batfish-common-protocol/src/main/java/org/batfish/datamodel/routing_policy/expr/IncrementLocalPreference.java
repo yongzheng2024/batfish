@@ -8,6 +8,7 @@ import com.microsoft.z3.ArithExpr;
 import com.microsoft.z3.BoolExpr;
 import com.microsoft.z3.Context;
 import com.microsoft.z3.Solver;
+import org.batfish.common.BatfishException;
 import org.batfish.datamodel.HasReadableLocalPreference;
 import org.batfish.datamodel.routing_policy.Environment;
 
@@ -74,8 +75,8 @@ public final class IncrementLocalPreference extends LongExpr {
   }
 
   /** Add configuration constant - SMT symbolic variable */
-  private boolean _enableSmtVariable;
-  private String _configVarPrefix;
+  // private boolean _enableSmtVariable;
+  // private String _configVarPrefix;
 
   private transient ArithExpr _configVarLocalpreference;
 
@@ -83,10 +84,9 @@ public final class IncrementLocalPreference extends LongExpr {
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
     // assert that the literal long value is not shared object
     if (_enableSmtVariable) {
-      System.out.println("ERROR IncrementLocalPreference:initSmtVariable");
-      System.out.println("Previous configVarPrefix: " + _configVarPrefix);
-      System.out.println("Current  configVarPrefix: " + configVarPrefix);
-      return;
+      throw new BatfishException("IncrementLocalPreference.initSmtVariable: shared object.\n" +
+          "Previous configVarPrefix: " + _configVarPrefix + "\n" +
+          "Current  configVarPrefix: " + configVarPrefix);
     }
 
     // init smt variable for literal long value
@@ -99,14 +99,6 @@ public final class IncrementLocalPreference extends LongExpr {
     // config enable smt variable flag to true
     _enableSmtVariable = true;
     _configVarPrefix = configVarPrefix;
-  }
-
-  public boolean getEnableSmtVariable() {
-    return _enableSmtVariable;
-  }
-
-  public String getConfigVarPrefix() {
-    return _configVarPrefix;
   }
 
   public ArithExpr getConfigVarLocalpreference() {

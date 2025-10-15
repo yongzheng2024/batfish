@@ -14,6 +14,7 @@ import java.util.Set;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+import org.batfish.common.BatfishException;
 import org.batfish.datamodel.Ip;
 
 import com.microsoft.z3.Context;
@@ -315,10 +316,9 @@ public final class ExtendedCommunity extends Community {
       Context context, Solver solver, String configVarPrefix, boolean isTrue) {
     // assert that the extended community is not shared
     if (_enableSmtVariable) {
-      System.out.println("ERROR ExtendedCommunity:initSmtVariable");
-      System.out.println("Previous configVarPrefix: " + _configVarPrefix);
-      System.out.println("Current  configVarPrefix: " + configVarPrefix);
-      return;
+      throw new BatfishException("ExtendedCommunity.initSmtVariable: shared object.\n" +
+          "Previous configVarPrefix: " + _configVarPrefix + "\n" +
+          "Current  configVarPrefix: " + configVarPrefix);
     }
 
     // NOTE: configVarPrefix including extended community string

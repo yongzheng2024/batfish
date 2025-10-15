@@ -20,5 +20,16 @@ public abstract class PrefixSetExpr implements Serializable {
   public abstract boolean matches(Prefix prefix, Environment environment);
 
   /** Add configuration constant - SMT symbolic variable */
+  protected boolean _enableSmtVariable;
+  protected String _configVarPrefix;
+
   public abstract void initSmtVariable(Context context, Solver solver, String configVarPrefix);
+
+  public boolean getEnableSmtVariable() {
+    return _enableSmtVariable;
+  }
+
+  public String getConfigVarPrefix() {
+    return _configVarPrefix;
+  }
 }

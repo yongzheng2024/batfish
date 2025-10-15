@@ -12,6 +12,7 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.SortedSet;
 import javax.annotation.Nonnull;
+import org.batfish.common.BatfishException;
 import org.batfish.datamodel.bgp.community.Community;
 import org.batfish.datamodel.routing_policy.Environment;
 import org.batfish.datamodel.visitors.CommunitySetExprVisitor;
@@ -19,6 +20,7 @@ import org.batfish.datamodel.visitors.VoidCommunitySetExprVisitor;
 
 import com.microsoft.z3.Context;
 import com.microsoft.z3.Solver;
+// import org.batfish.main.Batfish;
 
 /**
  * A {@link CommunitySetExpr} matching only community-sets that contain ALL of the communities
@@ -116,10 +118,8 @@ public final class LiteralCommunityConjunction extends CommunitySetExpr {
 
   @Override
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix, boolean isTrue) {
-    // TODO: implement me
-    {}  // do nothing
-
-    System.out.println("WARNING: LiteralCommunityConjunction:initSmtVariable is not implemented yet.");
+    // TODO: implement me when needed
+    throw new BatfishException("LiteralCommunityConjunction:initSmtVariable: not implemented yet.");
   }
 
   @Override
@@ -131,6 +131,7 @@ public final class LiteralCommunityConjunction extends CommunitySetExpr {
   @Override
   public String getCommunityExprString() {
     // TODO: implement me when needed
-    return "";
+    throw new BatfishException("LiteralCommunityConjunction:getCommunityExprString: " +
+        "not implemented yet.");
   }
 }

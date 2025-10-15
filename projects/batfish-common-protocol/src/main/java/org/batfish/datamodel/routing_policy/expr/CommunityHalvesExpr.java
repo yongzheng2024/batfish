@@ -11,11 +11,13 @@ import javax.annotation.Nonnull;
 
 import com.microsoft.z3.Context;
 import com.microsoft.z3.Solver;
+import org.batfish.common.BatfishException;
 import org.batfish.datamodel.bgp.community.Community;
 import org.batfish.datamodel.bgp.community.StandardCommunity;
 import org.batfish.datamodel.routing_policy.Environment;
 import org.batfish.datamodel.visitors.CommunitySetExprVisitor;
 import org.batfish.datamodel.visitors.VoidCommunitySetExprVisitor;
+// import org.batfish.main.Batfish;
 
 /**
  * A {@link CommunitySetExpr} that matches 32-bit community values via two separate {@link
@@ -121,10 +123,8 @@ public class CommunityHalvesExpr extends CommunitySetExpr {
 
   @Override
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix, boolean isTrue) {
-    // TODO: implement me
-    {}  // do nothing
-
-    System.out.println("WARNING: CommunityHalvesExpr:initSmtVariable is not implemented yet.");
+    // TODO: implement me when needed
+    throw new BatfishException("CommunityHalvesExpr:initSmtVariable: not implemented yet.");
   }
 
   @Override
@@ -136,6 +136,6 @@ public class CommunityHalvesExpr extends CommunitySetExpr {
   @Override
   public String getCommunityExprString() {
     // TODO: implement me when needed
-    return "";
+    throw new BatfishException("CommunityHalvesExpr:getCommunityExprString: not implemented yet.");
   }
 }

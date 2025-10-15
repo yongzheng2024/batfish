@@ -92,37 +92,44 @@ public class CommunityListLine implements Serializable {
       Context context, Solver solver, String configVarPrefix, boolean isTrue) {
     // assert that the community list line is not shared
     if (_enableSmtVariable) {
-      System.out.println("ERROR CommunityListLine:initSmtVariable");
-      System.out.println("Previous configVarPrefix: " + _configVarPrefix);
-      System.out.println("Current  configVarPrefix: " + configVarPrefix);
-      return;
+      throw new BatfishException("CommunityListLine.initSmtVariable: shared object.\n" +
+          "Previous configVarPrefix: " + _configVarPrefix + "\n" +
+          "Current  configVarPrefix: " + configVarPrefix);
     }
 
     // check and avoid shared object
-    CommunitySetExpr matchCondition = _matchCondition;
-    if (matchCondition.getEnableSmtVariable()) {
+    if (_matchCondition.getEnableSmtVariable()) {
       System.out.println("WARNING: CommunityListLine:initSmtVariable found shared CommunitySetExpr, cloning it.");
 
-      if (matchCondition instanceof NamedCommunitySet) {
-        NamedCommunitySet namedCommunitySet = (NamedCommunitySet) matchCondition;
-        matchCondition = new NamedCommunitySet(namedCommunitySet.getName());
-      } else if (matchCondition instanceof RegexCommunitySet) {
-        RegexCommunitySet regexCommunitySet = (RegexCommunitySet) matchCondition;
-        matchCondition = new RegexCommunitySet(regexCommunitySet.getRegex());
-      } else if (matchCondition instanceof LiteralCommunitySet) {
-        LiteralCommunitySet literalCommunitySet = (LiteralCommunitySet) matchCondition;
-        matchCondition = new LiteralCommunitySet(literalCommunitySet.getCommunities());
-      } else if (matchCondition instanceof LiteralCommunity) {
-        LiteralCommunity literalCommunity = (LiteralCommunity) matchCondition;
-        matchCondition = new LiteralCommunity(literalCommunity.getCommunity());
-      } else if (matchCondition instanceof CommunityList) {
-        CommunityList communityList = (CommunityList) matchCondition;
-        matchCondition =
+      CommunitySetExpr matchConditionBackup = _matchCondition;
+
+      if (_matchCondition instanceof NamedCommunitySet) {
+        NamedCommunitySet namedCommunitySet = (NamedCommunitySet) _matchCondition;
+        _matchCondition = new NamedCommunitySet(namedCommunitySet.getName());
+      } else if (_matchCondition instanceof RegexCommunitySet) {
+        RegexCommunitySet regexCommunitySet = (RegexCommunitySet) _matchCondition;
+        _matchCondition = new RegexCommunitySet(regexCommunitySet.getRegex());
+      } else if (_matchCondition instanceof LiteralCommunitySet) {
+        LiteralCommunitySet literalCommunitySet = (LiteralCommunitySet) _matchCondition;
+        _matchCondition = new LiteralCommunitySet(literalCommunitySet.getCommunities());
+      } else if (_matchCondition instanceof LiteralCommunity) {
+        LiteralCommunity literalCommunity = (LiteralCommunity) _matchCondition;
+        _matchCondition = new LiteralCommunity(literalCommunity.getCommunity());
+      } else if (_matchCondition instanceof CommunityList) {
+        CommunityList communityList = (CommunityList) _matchCondition;
+        _matchCondition =
             new CommunityList(
                 communityList.getName(), communityList.getLines(), communityList.getInvertMatch());
       } else {
         throw new BatfishException(
-            "Unimplemented community set type: " + matchCondition.getClass().getName());
+            "CommunityListLine:initSmtVariable: unimplemented community set type: " +
+            _matchCondition.getClass().getName());
+      }
+
+      // add additional assert for using shared object
+      if (matchConditionBackup.getEnableSmtVariable() == _matchCondition.getEnableSmtVariable()) {
+        throw new BatfishException(
+            "CommunityListLine:initSmtVariable: cloning failed for shared object.");
       }
     }
 
@@ -132,7 +139,7 @@ public class CommunityListLine implements Serializable {
         _configVarAction, context.mkBool(_action == LineAction.PERMIT));
     solver.add(configVarActionConstraint);
     // init smt variable for community set expr
-    matchCondition.initSmtVariable(context, solver, configVarPrefix, isTrue);
+    _matchCondition.initSmtVariable(context, solver, configVarPrefix, isTrue);
 
     // configure enable smt variable flag to true
     _enableSmtVariable = true;

@@ -14,6 +14,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
+import org.batfish.common.BatfishException;
+
 /**
  * Represents a large BGP community, as described in <a
  * href="https://tools.ietf.org/html/rfc8092">RFC8092</a>
@@ -157,10 +159,9 @@ public final class LargeCommunity extends Community {
       Context context, Solver solver, String configVarPrefix, boolean isTrue) {
     // assert that the large community is not shared
     if (_enableSmtVariable) {
-      System.out.println("ERROR LargeCommunity:initSmtVariable");
-      System.out.println("Previous configVarPrefix: " + _configVarPrefix);
-      System.out.println("Current  configVarPrefix: " + configVarPrefix);
-      return;
+      throw new BatfishException("LargeCommunity.initSmtVariable: shared object.\n" +
+          "Previous configVarPrefix: " + _configVarPrefix + "\n" +
+          "Current  configVarPrefix: " + configVarPrefix);
     }
 
     _configVarCommunity = context.mkBoolConst(configVarPrefix + "community");

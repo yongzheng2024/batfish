@@ -20,6 +20,8 @@ import com.microsoft.z3.BoolExpr;
 import com.microsoft.z3.ArithExpr;
 import com.microsoft.z3.BitVecExpr;
 
+import org.batfish.common.BatfishException;
+
 /** An IPv4 Prefix */
 @ParametersAreNonnullByDefault
 public final class Prefix implements Comparable<Prefix>, Serializable {
@@ -319,10 +321,9 @@ public final class Prefix implements Comparable<Prefix>, Serializable {
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
     // assert that the prefix is not shared
     if (_enableSmtVariable) {
-      System.out.println("ERROR Prefix:initSmtVariable");
-      System.out.println("Previous configVarPrefix: " + _configVarPrefix);
-      System.out.println("Current  configVarPrefix: " + configVarPrefix);
-      return;
+      throw new BatfishException("Prefix.initSmtVariable: shared object.\n" +
+          "Previous configVarPrefix: " + _configVarPrefix + "\n" +
+          "Current  configVarPrefix: " + configVarPrefix);
     }
 
     // FIXME: if prefix length is 0, then the encoding of ip / mask / length ?

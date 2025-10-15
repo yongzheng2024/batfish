@@ -3,6 +3,7 @@ package org.batfish.datamodel.routing_policy.expr;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.microsoft.z3.Context;
 import com.microsoft.z3.Solver;
+import org.batfish.common.BatfishException;
 import org.batfish.datamodel.routing_policy.Environment;
 
 public class VarLong extends LongExpr {
@@ -68,12 +69,13 @@ public class VarLong extends LongExpr {
   @Override
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
     // TODO: implement me when needed
-    {}  // do nothing
+    throw new BatfishException("VarLong:initSmtVariable: not implemented yet.");
   }
 
   /** Add get literal long value for configVarPrefix */
   @Override
   public String getLiteralLongString() {
-    return "";
+    // TODO: implement ne when needed
+    throw new BatfishException("VarLong:getLiteralLongString: not implemented yet.");
   }
 }

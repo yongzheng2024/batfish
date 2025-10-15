@@ -6,10 +6,15 @@ import java.io.Serializable;
 import java.util.Set;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
+import org.batfish.common.BatfishException;
 import org.batfish.datamodel.bgp.community.Community;
 import org.batfish.datamodel.routing_policy.Environment;
 import org.batfish.datamodel.visitors.CommunitySetExprVisitor;
 import org.batfish.datamodel.visitors.VoidCommunitySetExprVisitor;
+import org.batfish.datamodel.bgp.community.ExtendedCommunity;
+import org.batfish.datamodel.bgp.community.StandardCommunity;
+import org.batfish.datamodel.bgp.community.LargeCommunity;
 
 import com.microsoft.z3.Context;
 import com.microsoft.z3.Solver;
@@ -106,4 +111,23 @@ public abstract class CommunitySetExpr implements Serializable {
 
   /** Add get community expression string for configVarPrefix */
   public abstract String getCommunityExprString();
+
+  // clone a community
+  protected Community cloneCommunity(Community community) {
+    if (community instanceof ExtendedCommunity) {
+      ExtendedCommunity e = (ExtendedCommunity) community;
+      return ExtendedCommunity.of(
+          e.getSubType(), e.getGlobalAdministrator(), e.getLocalAdministrator());
+    } else if (community instanceof StandardCommunity) {
+      StandardCommunity s = (StandardCommunity) community;
+      return StandardCommunity.of(s.asLong());
+    } else if (community instanceof LargeCommunity) {
+      LargeCommunity l = (LargeCommunity) community;
+      return LargeCommunity.of(
+          l.getGlobalAdministrator(), l.getLocalData1(), l.getLocalData2());
+    }
+
+    // only has three subclasses of Community
+    throw new BatfishException("CommunitySetExpr:cloneCommunity: unknown community type.");
+  }
 }

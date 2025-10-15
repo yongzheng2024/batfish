@@ -11,6 +11,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 import com.microsoft.z3.Context;
 import com.microsoft.z3.Solver;
+import org.batfish.common.BatfishException;
 import org.batfish.datamodel.BgpRoute;
 import org.batfish.datamodel.bgp.community.Community;
 import org.batfish.datamodel.routing_policy.Environment;
@@ -78,6 +79,11 @@ public final class DeleteCommunity extends Statement {
   /** Add configuration constant - SMT symbolic variable */
   public void initSmtVariable(
       Context context, Solver solver, String configVarPrefix, boolean isTrue) {
+    // TODO: handle shared object case properly, now is just throw exception
+    if (_expr.getEnableSmtVariable()) {
+      throw new BatfishException(
+          "DeleteCommunity.initSmtVariable: shared object CommunitySetExpr.");
+    }
     _expr.initSmtVariable(context, solver, configVarPrefix, isTrue);
   }
 }

@@ -11,6 +11,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 import com.microsoft.z3.Context;
 import com.microsoft.z3.Solver;
+import org.batfish.common.BatfishException;
 import org.batfish.datamodel.routing_policy.Environment;
 
 import com.microsoft.z3.Context;
@@ -85,12 +86,13 @@ public final class Uint32HighLowExpr extends LongExpr {
   @Override
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
     // TODO: implement me when needed
-    {}  // do nothing
+    throw new BatfishException("Uint32HighLowExpr:initSmtVariable: not implemented yet.");
   }
 
   /** Add get literal long value for configVarPrefix */
   @Override
   public String getLiteralLongString() {
-    return "";
+    // TODO: implement ne when needed
+    throw new BatfishException("Uint32HighLowExpr:getLiteralLongString: not implemented yet.");
   }
 }

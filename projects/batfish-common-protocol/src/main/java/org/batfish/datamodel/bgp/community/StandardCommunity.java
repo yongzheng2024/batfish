@@ -14,6 +14,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import com.microsoft.z3.BoolExpr;
 import com.microsoft.z3.Context;
 import com.microsoft.z3.Solver;
+import org.batfish.common.BatfishException;
 import org.batfish.common.WellKnownCommunity;
 
 /**
@@ -192,10 +193,9 @@ public final class StandardCommunity extends Community {
       Context context, Solver solver, String configVarPrefix, boolean isTrue) {
     // assert that the standard community is not shared
     if (_enableSmtVariable) {
-      System.out.println("ERROR StandardCommunity:initSmtVariable");
-      System.out.println("Previous configVarPrefix: " + _configVarPrefix);
-      System.out.println("Current  configVarPrefix: " + configVarPrefix);
-      return;
+      throw new BatfishException("StandardCommunity.initSmtVariable: shared object.\n" +
+          "Previous configVarPrefix: " + _configVarPrefix + "\n" +
+          "Current  configVarPrefix: " + configVarPrefix);
     }
 
     _configVarCommunity = context.mkBoolConst(configVarPrefix + "community");

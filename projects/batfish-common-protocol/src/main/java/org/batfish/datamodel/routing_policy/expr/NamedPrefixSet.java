@@ -68,17 +68,11 @@ public final class NamedPrefixSet extends PrefixSetExpr {
   }
 
   /** Add configuration constant - SMT symbolic variable */
-  private boolean _enableSmtVariable;
-
   @Override
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
     // do nothing, just refer to the RouteFilterList object according to _name
 
     // configure the enable smt variable flag to true
     _enableSmtVariable = true;
-  }
-
-  public boolean getEnableSmtVariable() {
-    return _enableSmtVariable;
   }
 }

@@ -21,6 +21,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
+import org.batfish.common.BatfishException;
+
 /** An IP wildcard consisting of a IP address and a wildcard (also expressed as an IP address) */
 @ParametersAreNonnullByDefault
 public final class IpWildcard implements Serializable, Comparable<IpWildcard> {
@@ -263,10 +265,9 @@ public final class IpWildcard implements Serializable, Comparable<IpWildcard> {
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
     // assert that the ip wildcard is not shared object
     if (_enableSmtVariable) {
-      System.out.println("ERROR IpWildcard:initSmtVariable");
-      System.out.println("Previous configVarPrefix: " + _configVarPrefix);
-      System.out.println("Current  configVarPrefix: " + configVarPrefix);
-      return;
+      throw new BatfishException("IpWildcard.initSmtVariable: shared object.\n" +
+          "Previous configVarPrefix: " + _configVarPrefix + "\n" +
+          "Current  configVarPrefix: " + configVarPrefix);
     }
 
     long prefixIp = _ip.asLong();

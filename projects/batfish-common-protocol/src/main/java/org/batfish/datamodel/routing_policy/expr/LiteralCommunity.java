@@ -136,45 +136,31 @@ public class LiteralCommunity extends CommunitySetExpr {
       Context context, Solver solver, String configVarPrefix, boolean isTrue) {
     // assert that the literal community is not shared
     if (_enableSmtVariable) {
-      System.out.println("ERROR LiteralCommunity:initSmtVariable");
-      System.out.println("Previous configVarPrefix: " + _configVarPrefix);
-      System.out.println("Current  configVarPrefix: " + configVarPrefix);
-      return;
+      throw new BatfishException("LiteralCommunity.initSmtVariable: shared object.\n" +
+          "Previous configVarPrefix: " + _configVarPrefix + "\n" +
+          "Current  configVarPrefix: " + configVarPrefix);
     }
 
     // check and avoid shared object
-    Community community = _community;
-    if (community.getEnableSmtVariable()) {
-      System.out.println("WARNING: LiteralCommunity:initSmtVariable found shared Community, cloning it.");
+    if (_community.getEnableSmtVariable()) {
+      System.out.println("WARNING: LiteralCommunity:initSmtVariable: " +
+          "found shared Community, cloning it.");
 
-      if (community instanceof ExtendedCommunity) {
-        ExtendedCommunity extendedCommunity = (ExtendedCommunity) community;
-        community =
-            ExtendedCommunity.of(
-                extendedCommunity.getSubType(),
-                extendedCommunity.getGlobalAdministrator(),
-                extendedCommunity.getLocalAdministrator());
-      } else if (community instanceof StandardCommunity) {
-        StandardCommunity standardCommunity = (StandardCommunity) community;
-        community = StandardCommunity.of(standardCommunity.asLong());
-      } else if (community instanceof LargeCommunity) {
-        LargeCommunity largeCommunity = (LargeCommunity) community;
-        community =
-            LargeCommunity.of(
-                largeCommunity.getGlobalAdministrator(),
-                largeCommunity.getLocalData1(),
-                largeCommunity.getLocalData2());
-      } else {
-        // Community only has three subclasses
-        // do nothing
-        {}
+      Community communityBackup = _community;
+      // clone community shared object
+      _community = cloneCommunity(_community);
+
+      // add additional assert for using shared object
+      if (communityBackup.getEnableSmtVariable() == _community.getEnableSmtVariable()) {
+        throw new BatfishException("LiteralCommunity:initSmtVariable: " +
+            "cloning failed for shared object.");
       }
     }
 
     // init smt variable for literal community
-    String communityString = format(community.getCommunityString());
+    String communityString = format(_community.getCommunityString());
     configVarPrefix += communityString + "_";
-    community.initSmtVariable(context, solver, configVarPrefix, isTrue);
+    _community.initSmtVariable(context, solver, configVarPrefix, isTrue);
 
     // configure enable smt variable flag to true
     _enableSmtVariable = true;

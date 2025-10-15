@@ -24,5 +24,16 @@ public abstract class LongExpr implements Serializable {
   public abstract void initSmtVariable(Context context, Solver solver, String configVarPrefix);
 
   /** Add get literal long value for configVarPrefix */
+  protected boolean _enableSmtVariable;
+  protected String _configVarPrefix;
+
   public abstract String getLiteralLongString();
+
+  public boolean getEnableSmtVariable() {
+    return _enableSmtVariable;
+  }
+
+  public String getConfigVarPrefix() {
+    return _configVarPrefix;
+  }
 }

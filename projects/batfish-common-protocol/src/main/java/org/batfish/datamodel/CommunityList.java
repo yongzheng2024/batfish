@@ -25,6 +25,7 @@ import javax.annotation.Nullable;
 
 import com.microsoft.z3.Context;
 import com.microsoft.z3.Solver;
+import org.batfish.common.BatfishException;
 import org.batfish.datamodel.bgp.community.Community;
 import org.batfish.datamodel.routing_policy.Environment;
 import org.batfish.datamodel.routing_policy.expr.CommunitySetExpr;
@@ -266,22 +267,31 @@ public class CommunityList extends CommunitySetExpr {
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix, boolean isTrue) {
     // assert that the community list is not shared
     if (_enableSmtVariable) {
-      System.out.println("ERROR CommunityList:initSmtVariable");
-      System.out.println("Previous configVarPrefix: " + _configVarPrefix);
-      System.out.println("Current  configVarPrefix: " + configVarPrefix);
-      return;
+      throw new BatfishException("CommunityList.initSmtVariable: shared object.\n" +
+          "Previous configVarPrefix: " + _configVarPrefix + "\n" +
+          "Current  configVarPrefix: " + configVarPrefix);
     }
 
-    for (CommunityListLine line : _lines) {
+    for (int i = 0; i < _lines.size(); ++i) {
       // check and avoid shared object
-      if (line.getEnableSmtVariable()) {
-        System.out.println("WARNING: CommunityList:initSmtVariable found shared CommunityListLine, cloning it.");
+      if (_lines.get(i).getEnableSmtVariable()) {
+        System.out.println("WARNING: CommunityList:initSmtVariable: " +
+            "found shared CommunityListLine, cloning it.");
 
-        line = new CommunityListLine(line.getAction(), line.getMatchCondition());
+        CommunityListLine lineBackup = _lines.get(i);
+        CommunityListLine line =
+            new CommunityListLine(lineBackup.getAction(), lineBackup.getMatchCondition());
+        _lines.set(i, line);
+
+        // add additional assert for using shared object
+        if (lineBackup.getEnableSmtVariable() == _lines.get(i).getEnableSmtVariable()) {
+          throw new BatfishException(
+              "CommunityList:initSmtVariable: cloning failed for shared object");
+        }
       }
 
       // init smt variable for community list line
-      line.initSmtVariable(context, solver, configVarPrefix, isTrue);
+      _lines.get(i).initSmtVariable(context, solver, configVarPrefix, isTrue);
     }
 
     // configure enable smt variable flag to tue

@@ -16,6 +16,7 @@ import com.microsoft.z3.Context;
 import com.microsoft.z3.Solver;
 import com.microsoft.z3.ArithExpr;
 import com.microsoft.z3.BoolExpr;
+import org.batfish.common.BatfishException;
 import org.batfish.datamodel.routing_policy.Environment;
 
 @ParametersAreNonnullByDefault
@@ -90,10 +91,9 @@ public final class MultipliedAs extends AsPathListExpr {
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
     // assert that the prefix is not shared
     if (_enableSmtVariable) {
-      System.out.println("ERROR Prefix:initSmtVariable");
-      System.out.println("Previous configVarPrefix: " + _configVarPrefix);
-      System.out.println("Current  configVarPrefix: " + configVarPrefix);
-      return;
+      throw new BatfishException("MultipliedAs.initSmtVariable: shared object.\n" +
+          "Previous configVarPrefix: " + _configVarPrefix + "\n" +
+          "Current  configVarPrefix: " + configVarPrefix);
     }
 
     LiteralInt li = (LiteralInt) _number;

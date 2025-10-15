@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.microsoft.z3.Context;
 import com.microsoft.z3.Solver;
 import org.batfish.common.BatfishException;
+import org.batfish.datamodel.CommunityListLine;
 import org.batfish.datamodel.Prefix;
 import org.batfish.datamodel.PrefixSpace;
 import org.batfish.datamodel.routing_policy.Environment;
@@ -71,28 +72,27 @@ public class ExplicitPrefixSet extends PrefixSetExpr {
   }
 
   /** Add configuration constant - SMT symbolic variable */
-  private boolean _enableSmtVariable;
-  private String _configVarPrefix;
-
   @Override
   public final void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
     // assert that the prefix set is not shared
     if (_enableSmtVariable) {
-      System.out.println("ERROR ExplicitPrefixSet:initSmtVariable");
-      System.out.println("Previous configVarPrefix: " + _configVarPrefix);
-      System.out.println("Current  configVarPrefix: " + configVarPrefix);
-      return;
+      throw new BatfishException("ExplicitPrefixSet.initSmtVariable: shared object.\n" +
+          "Previous configVarPrefix: " + _configVarPrefix + "\n" +
+          "Current  configVarPrefix: " + configVarPrefix);
     }
 
     // check and avoid shared object
     if (_prefixSpace.getEnableSmtVariable()) {
+      System.out.println("WARNING: ExplicitPrefixSet:initSmtVariable: " +
+          "found shared PrefixSpace, cloning it.");
+
       PrefixSpace prefixSpaceBackup = _prefixSpace;
       _prefixSpace = new PrefixSpace(_prefixSpace.getPrefixRanges());
 
       // add additional assert for using shared object
-      // if (prefixSpaceBackup == _prefixSpace) {
       if (prefixSpaceBackup.getEnableSmtVariable() == _prefixSpace.getEnableSmtVariable()) {
-        throw new BatfishException("ERROR ExplicitPrefixSet:initSmtVariable use shared object");
+        throw new BatfishException("ExplicitPrefixSet:initSmtVariable: " +
+            "cloning failed for shared object");
       }
     }
 
@@ -102,13 +102,5 @@ public class ExplicitPrefixSet extends PrefixSetExpr {
     // configure the enable smt variable flag to true
     _enableSmtVariable = true;
     _configVarPrefix = configVarPrefix;
-  }
-
-  public boolean getEnableSmtVariable() {
-    return _enableSmtVariable;
-  }
-
-  public String getConfigVarPrefix() {
-    return _configVarPrefix;
   }
 }

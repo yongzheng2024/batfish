@@ -17,6 +17,7 @@ import javax.annotation.Nonnull;
 
 import com.microsoft.z3.Context;
 import com.microsoft.z3.Solver;
+import org.batfish.common.BatfishException;
 import org.batfish.datamodel.CommunityList;
 import org.batfish.datamodel.CommunityListLine;
 import org.batfish.datamodel.LineAction;
@@ -25,6 +26,7 @@ import org.batfish.datamodel.bgp.community.StandardCommunity;
 import org.batfish.datamodel.routing_policy.Environment;
 import org.batfish.datamodel.visitors.CommunitySetExprVisitor;
 import org.batfish.datamodel.visitors.VoidCommunitySetExprVisitor;
+
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -87,10 +89,8 @@ public final class CommunityListTest {
 
     @Override
     public void initSmtVariable(Context context, Solver solver, String configVarPrefix, boolean isTrue) {
-      // TODO: implement me
-      {}  // do nothing
-
-      System.out.println("WARNING: UnsupportedCommunitySetExpr:initSmtVariable is not implemented yet.");
+      // TODO: implement me when needed
+      throw new BatfishException("UnsupportedCommunitySetExpr:initSmtVariable: not implemented yet.");
     }
 
     @Override
@@ -102,7 +102,7 @@ public final class CommunityListTest {
     @Override
     public String getCommunityExprString() {
       // TODO: implement me when needed
-      return "";
+      throw new BatfishException("UnsupportedCommunitySetExpr:getCommunityExprString: not implemented yet.");
     }
   }
 

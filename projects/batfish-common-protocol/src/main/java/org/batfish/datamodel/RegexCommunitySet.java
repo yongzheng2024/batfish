@@ -14,6 +14,7 @@ import javax.annotation.Nonnull;
 import com.microsoft.z3.BoolExpr;
 import com.microsoft.z3.Context;
 import com.microsoft.z3.Solver;
+import org.batfish.common.BatfishException;
 import org.batfish.datamodel.bgp.community.Community;
 import org.batfish.datamodel.routing_policy.Environment;
 import org.batfish.datamodel.routing_policy.expr.CommunitySetExpr;
@@ -124,10 +125,9 @@ public final class RegexCommunitySet extends CommunitySetExpr {
       Context context, Solver solver, String configVarPrefix, boolean isTrue) {
     // assert that the regex community set is not shared
     if (_enableSmtVariable) {
-      System.out.println("ERROR RegexCommunitySet:initSmtVariable");
-      System.out.println("Previous configVarPrefix: " + _configVarPrefix);
-      System.out.println("Current  configVarPrefix: " + configVarPrefix);
-      return;
+      throw new BatfishException("RegexCommunitySet.initSmtVariable: shared object.\n" +
+          "Previous configVarPrefix: " + _configVarPrefix + "\n" +
+          "Current  configVarPrefix: " + configVarPrefix);
     }
 
     // init smt variable for regex community set

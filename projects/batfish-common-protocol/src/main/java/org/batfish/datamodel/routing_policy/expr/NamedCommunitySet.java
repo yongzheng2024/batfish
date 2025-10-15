@@ -9,6 +9,7 @@ import javax.annotation.Nonnull;
 
 import com.microsoft.z3.Context;
 import com.microsoft.z3.Solver;
+import org.batfish.common.BatfishException;
 import org.batfish.datamodel.bgp.community.Community;
 import org.batfish.datamodel.routing_policy.Environment;
 import org.batfish.datamodel.visitors.CommunitySetExprVisitor;
@@ -111,10 +112,9 @@ public class NamedCommunitySet extends CommunitySetExpr {
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix, boolean isTrue) {
     // assert that the named community set is not shared
     if (_enableSmtVariable) {
-      System.out.println("ERROR NamedCommunitySet:initSmtVariable");
-      System.out.println("Previous configVarPrefix: " + _configVarPrefix);
-      System.out.println("Current  configVarPrefix: " + configVarPrefix);
-      return;
+      throw new BatfishException("NamedCommunitySet.initSmtVariable: shared object.\n" +
+          "Previous configVarPrefix: " + _configVarPrefix + "\n" +
+          "Current  configVarPrefix: " + configVarPrefix);
     }
 
     // do nothing, just refer to the RouteFilterList object according to parameter _name
