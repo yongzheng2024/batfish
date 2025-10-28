@@ -76,8 +76,9 @@ public class SmtReachabilityTest {
         }
 
         // read the configurations from the filesystem
-        // String configPath = "/home/deza/codes/batfish/benchmarks/FatTrees/sp4/";
-        String configPath = "/home/deza/codes/batfish/networks/test_examples/network_4";
+        String configPath = "/home/deza/codes/batfish/networks/userstudy_network";
+        // String configPath = "/home/deza/codes/batfish/networks/userstudy_network_accessment";
+        // String configPath = "/home/deza/codes/batfish/benchmarks/FatTrees/fattree4pol";
         TestrigText _testrig = loadConfigurations(configPath);
         _batfish = BatfishTestUtils.getBatfishFromTestrigText(_testrig, _temp);
 
@@ -97,10 +98,50 @@ public class SmtReachabilityTest {
     @Test
     public void testReachability() {
         final ReachabilityQuestion question = new ReachabilityQuestion();
-        question.setIngressNodeRegex("customer1");
+        // Specification 01: Qualification test 1
+        question.setIngressNodeRegex("customer");
         question.setFinalNodeRegex("isp1");
-        question.setFinalIfaceRegex("GigabitEthernet3/0");
-        question.setNegate(true);
+        question.setFinalIfaceRegex("GigabitEthernet1/0");
+
+        // Specification 02: Qualification test 2
+        // question.setIngressNodeRegex("customer");
+        // question.setFinalNodeRegex("isp1");
+        // question.setFinalIfaceRegex("GigabitEthernet2/0");
+        // question.setNegate(true);
+
+        // Specification 1: Customer reachability
+        // question.setIngressNodeRegex("customer");
+        // question.setFinalNodeRegex("isp1");
+        // question.setFinalIfaceRegex("GigabitEthernet1/0");
+
+        // Specification 2: No transit
+        // question.setIngressNodeRegex("isp2");
+        // question.setFinalNodeRegex("isp1");
+        // question.setFinalIfaceRegex("GigabitEthernet1/0");
+        // question.setNegate(true);
+        //
+        // question.setIngressNodeRegex("isp1");
+        // question.setFinalNodeRegex("isp2");
+        // question.setFinalIfaceRegex("GigabitEthernet1/0");
+        // question.setNegate(true);
+
+        // Specification 3: ECMP reachability
+        // question.setIngressNodeRegex("r3");
+        // question.setFinalNodeRegex("isp2");
+        // question.setFinalIfaceRegex("GigabitEthernet1/0");
+
+        // Specification 4: Private prefix filtering
+        // question.setIngressNodeRegex("r3");
+        // question.setFinalNodeRegex("customer");
+        // question.setFinalIfaceRegex("GigabitEthernet1/0");
+        // question.setNegate(true);
+        //
+        // question.setIngressNodeRegex("r3");
+        // question.setFinalNodeRegex("customer");
+        // question.setFinalIfaceRegex("GigabitEthernet2/0");
+        // question.setNegate(true);
+
+        // other examples - fattree
         // question.setIngressNodeRegex("core-0");
         // question.setFinalNodeRegex("edge-10");
         // question.setFinalIfaceRegex("Ethernet0");
@@ -141,7 +182,7 @@ public class SmtReachabilityTest {
      */
     /*
     @Test
-    public void testBoundedLength() {
+    public void testBlackhole() {
         final BlackholeQuestion question = new BlackholeQuestion();
         // question.setIngressNodeRegex("customer1");
         // question.setFinalNodeRegex("isp1");
