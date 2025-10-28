@@ -1366,9 +1366,9 @@ public class Encoder {
         RoutingPolicy routingPolicy = routingPolicyEntry.getValue();
 
         // exclude other routing policy with configuration constants -> SMT symbolic variables
-        // if (policyName.contains("default")) {
-        //   continue;
-        // }
+        if (policyName.contains("default")) {
+          continue;
+        }
 
         // TODO: write smt symbolic variable name to configs_to_variables file
         //       annotated by yongzheng on 20250407
