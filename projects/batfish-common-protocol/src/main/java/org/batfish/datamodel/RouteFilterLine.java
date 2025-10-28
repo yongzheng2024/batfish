@@ -161,6 +161,14 @@ public final class RouteFilterLine implements Serializable {
     _ipWildcard.initSmtVariable(context, solver, configVarPrefix);
     _lengthRange.initSmtVariable(context, solver, configVarPrefix);
 
+    // add relevant configuration constant constraint (ge / le / eq with prefix length)
+    BoolExpr rangeStartGePrefixLength =
+        context.mkGe(_lengthRange.getConfigVarStart(), _ipWildcard.getConfigVarLength());
+    BoolExpr rangeEndGePrefixLength =
+        context.mkGe(_lengthRange.getConfigVarEnd(), _ipWildcard.getConfigVarLength());
+    solver.add(rangeStartGePrefixLength);
+    solver.add(rangeEndGePrefixLength);
+
     // add relevant configuration constant constraint
     BoolExpr configVarActionConstraint = context.mkEq(
             _configVarAction, context.mkBool(_action == LineAction.PERMIT));

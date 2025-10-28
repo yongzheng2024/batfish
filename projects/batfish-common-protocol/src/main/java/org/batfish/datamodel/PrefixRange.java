@@ -14,6 +14,7 @@ import com.google.common.base.Preconditions;
 
 import com.microsoft.z3.Context;
 import com.microsoft.z3.Solver;
+import com.microsoft.z3.BoolExpr;
 
 public final class PrefixRange implements Serializable, Comparable<PrefixRange> {
 
@@ -218,6 +219,14 @@ public final class PrefixRange implements Serializable, Comparable<PrefixRange> 
     _prefix.initSmtVariable(context, solver, configVarPrefix + format(prefixIpStr) + "__");
     _lengthRange.initSmtVariable(
         context, solver, configVarPrefix + format(prefixIpStr) + "__");
+
+    // add relevant configuration constant constraint (ge / le / eq with prefix length)
+    BoolExpr rangeStartGePrefixLength =
+        context.mkGe(_lengthRange.getConfigVarStart(), _prefix.getConfigVarLength());
+    BoolExpr rangeEndGePrefixLength =
+        context.mkGe(_lengthRange.getConfigVarEnd(), _prefix.getConfigVarLength());
+    solver.add(rangeStartGePrefixLength);
+    solver.add(rangeEndGePrefixLength);
 
     // configure enable smt variable flag to true
     _enableSmtVariable = true;
