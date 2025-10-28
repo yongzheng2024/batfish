@@ -1337,6 +1337,7 @@ public class Encoder {
           CommunitySetExpr communitySetExpr = line.getMatchCondition();
           String communityExprString = format(line.getMatchCondition().getCommunityExprString());
 
+          // FIXME: handle other community type if needed
           if (communitySetExpr instanceof RegexCommunitySet) {
             // TODO: add formated regex community expression
             // configVarPrefix += "regex_community_" + communityExprString + "_";
@@ -1351,7 +1352,8 @@ public class Encoder {
             _configWriter.println("    + " + configVarPrefix + "action");
             _configWriter.println("    + " + configVarPrefix + "community");
           } else {
-            throw new BatfishException("Unimplemented feature " + communitySetExpr.getClass());
+            throw new BatfishException("Encoder:initConfigurationConstraints: " +
+                "Unimplemented feature " + communitySetExpr.getClass());
           }
 
           // add line index

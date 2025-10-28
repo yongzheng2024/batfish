@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import javax.annotation.Nullable;
+import org.batfish.common.BatfishException;
 import org.batfish.datamodel.BgpActivePeerConfig;
 import org.batfish.datamodel.Configuration;
 import org.batfish.datamodel.HeaderSpace;
@@ -461,8 +462,11 @@ class EncoderSlice {
 
     assert (p.getPrefixLength() <= lower && lower <= upper);
 
-    // TODO: check here, i.e. p.getEnableSmtVariable and r.getEnableSmtVariable
-    //       annotated by yongzheng on 20250413
+    // both or neither enable SMT variable
+    if (p.getEnableSmtVariable() != r.getEnableSmtVariable()) {
+      throw new BatfishException(
+          "Inconsistent enableSmtVariable flags in Prefix and PrefixRange");
+    }
 
     // well formed prefix
     if (p.getEnableSmtVariable() && r.getEnableSmtVariable()) {
@@ -471,9 +475,16 @@ class EncoderSlice {
       BoolExpr lowerBitsMatch = firstBitsEqual(
           _symbolicPacket.getDstIp(), configVarIp, configVarMask, pfx, len);
       if (lower == upper) {
+        // NOTE: add additional constraint here for traceability
+        //       by yongzheng2024
+        // ArithExpr configVarRangeStart = r.getConfigVarStart();
+        // BoolExpr equalLen = mkEq(prefixLen, configVarRangeStart);
+        // return mkAnd(equalLen, lowerBitsMatch);
         ArithExpr configVarRangeStart = r.getConfigVarStart();
-        BoolExpr equalLen = mkEq(prefixLen, configVarRangeStart);
-        return mkAnd(equalLen, lowerBitsMatch);
+        ArithExpr configVarRangeEnd = r.getConfigVarEnd();
+        BoolExpr equalLenStart = mkEq(prefixLen, configVarRangeStart);
+        BoolExpr equalLenEnd = mkEq(prefixLen, configVarRangeEnd);
+        return mkAnd(equalLenStart, equalLenEnd, lowerBitsMatch);
       } else {
         ArithExpr configVarRangeStart = r.getConfigVarStart();
         ArithExpr configVarRangeEnd = r.getConfigVarEnd();
@@ -481,6 +492,7 @@ class EncoderSlice {
         BoolExpr lengthUpperBound = mkLe(prefixLen, configVarRangeEnd);
         return mkAnd(lengthLowerBound, lengthUpperBound, lowerBitsMatch);
       }
+
     } else {
       BoolExpr lowerBitsMatch = firstBitsEqual(_symbolicPacket.getDstIp(), pfx, len);
       if (lower == upper) {
@@ -512,22 +524,27 @@ class EncoderSlice {
   private BoolExpr firstBitsEqual(
       BitVecExpr x, BitVecExpr configVarIp, BitVecExpr configVarMask, long y, int n) {
     assert (n >= 0 && n <= 32);
-    if (n == 0) {
-      // FIXME: check here and implement it when needed
-      //        annotated by yongzheng on 20250407
-      return mkTrue();
-    }
-    int m = 0;
-    for (int i = 0; i < n; i++) {
-      m |= (1 << (31 - i));
-    }
+
+    // FIXME: check here and implement it when needed
+    //        annotated by yongzheng on 20250407
+    // if (n == 0) {
+    //   return mkTrue();
+    // }
 
     return mkEq(getCtx().mkBVAND(x, configVarMask), getCtx().mkBVAND(configVarIp, configVarMask));
   }
 
   BoolExpr isRelevantFor(Prefix p, BitVecExpr be) {
     long pfx = p.getStartIp().asLong();
-    return firstBitsEqual(be, pfx, p.getPrefixLength());
+    int len = p.getPrefixLength();
+
+    if (p.getEnableSmtVariable()) {
+      BitVecExpr configVarIp = p.getConfigVarIp();
+      BitVecExpr configVarMask = p.getConfigVarMask();
+      return firstBitsEqual(be, configVarIp, configVarMask, pfx, len);
+    } else {
+      return firstBitsEqual(be, pfx, len);
+    }
   }
 
   @Nullable
@@ -1968,6 +1985,7 @@ class EncoderSlice {
 
         BoolExpr acc = mkNot(vars.getPermitted());
         for (StaticRoute sr : srs) {
+          // FIXME: prefix should symbolic configuration
           Prefix p = sr.getNetwork();
           BoolExpr relevant =
               mkAnd(
@@ -2163,6 +2181,9 @@ class EncoderSlice {
       String router,
       boolean usedExport,
       Set<Prefix> originations) {
+
+    // FIXME: when originations has multiple prefixes, the export function seems incorrect.
+    //        annotated by yongzheng2024 on 20251009
 
     SymbolicRoute vars = e.getSymbolicRecord();
 

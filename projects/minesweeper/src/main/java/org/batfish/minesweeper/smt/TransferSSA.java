@@ -207,6 +207,16 @@ class TransferSSA {
     List<RouteFilterLine> lines = new ArrayList<>(x.getLines());
     Collections.reverse(lines);
 
+    // both or neither enable SMT variable
+    boolean allEnableSmtVariable =
+        Iterables.all(lines, RouteFilterLine::getEnableSmtVariable);
+    boolean noneEnableSmtVariable =
+        Iterables.all(lines, r -> !r.getEnableSmtVariable());
+    if (!(allEnableSmtVariable || noneEnableSmtVariable)) {
+      throw new BatfishException(
+          "Inconsistent enableSmtVariable flags in List<RouteFilterLine>");
+    }
+
     for (RouteFilterLine line : lines) {
       if (!line.getIpWildcard().isPrefix()) {
         throw new BatfishException("non-prefix IpWildcards are unsupported");
@@ -251,12 +261,23 @@ class TransferSSA {
         return result.setReturnValue(_enc.mkTrue());
       }
 
+      // both or neither enable SMT variable
+      boolean allEnableSmtVariable =
+          Iterables.all(ranges, PrefixRange::getEnableSmtVariable);
+      boolean noneEnableSmtVariable =
+          Iterables.all(ranges, r -> !r.getEnableSmtVariable());
+      if (!(allEnableSmtVariable || noneEnableSmtVariable)) {
+        throw new BatfishException(
+            "Inconsistent enableSmtVariable flags in Set<PrefixRange>");
+      }
+
       // This is a total hack to deal with the fact that
       // we keep only a single FIB entry. Since BGP exporting a network
       // depends on the existence of an IGP route, we become more precise
       // by checking for static/connected/OSPF routes specifically.
       if (ranges.size() == 1) {
         for (PrefixRange r : ranges) {
+          // FIXME: added by yongzheng2024 on 20251006
           int start = r.getLengthRange().getStart();
           int end = r.getLengthRange().getEnd();
           Prefix pfx = r.getPrefix();
@@ -271,7 +292,15 @@ class TransferSSA {
               Set<Prefix> oconn = _enc.getOriginatedNetworks().get(router, Protocol.CONNECTED);
               boolean hasStatic = ostatic != null && ostatic.contains(pfx);
               boolean hasConnected = oconn != null && oconn.contains(pfx);
-              ArithExpr originLength = _enc.mkInt(pfx.getPrefixLength());
+
+              // NOTE: modify here to support symbolic prefix length for traceability
+              //       by yongzheng2024
+              ArithExpr originLength;
+              if (pfx.getEnableSmtVariable()) {
+                originLength = pfx.getConfigVarLength();
+              } else {
+                originLength = _enc.mkInt(pfx.getPrefixLength());
+              }
 
               if (hasStatic || hasConnected) {
                 BoolExpr directRoute = _enc.isRelevantFor(originLength, r);
@@ -1262,12 +1291,13 @@ class TransferSSA {
         }
 
       } else if (stmt instanceof If) {
-        // TODO: I have not understand this code
-        //       annotated by yongzheng on 20250408
         curP.debug("If");
         If i = (If) stmt;
         TransferResult<BoolExpr, BoolExpr> r = compute(i.getGuard(), curP);
         curResult = curResult.addChangedVariables(r);
+        // NOTE: simplify guard, and lose branches constraints that are impossible
+        //       annotated by yongzheng2024 on 20251021
+        // BoolExpr guard = (BoolExpr) r.getReturnValue();  // temporarily disable simplification
         BoolExpr guard = (BoolExpr) r.getReturnValue().simplify();
         String str = guard.toString();
 
