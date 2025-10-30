@@ -25,6 +25,14 @@ $ ./tools/bazel_test_SmtReachabilityTest.sh
 
 ---
 
+### <b>Core Project Layout</b>
+
+* `projects/` —— source code
+* `networks/` —— network configuration files
+* `smts/` —— generated SMT encoding files
+
+---
+
 ### <b>Configure IntelliJ IDEA</b>
 
 Install the following plugins in IntelliJ IDEA:
