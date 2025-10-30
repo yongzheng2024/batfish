@@ -1,24 +1,25 @@
 #!/bin/bash
+set -e  # stop the script on any error (a command exits with a non-zero status)
 
-set -euo pipefail
+# For Mac
+if [ "Darwin" = $(uname -s) ]; then
+    if ! [ -x "$(command -v greadlink)"  ]; then
+        brew install coreutils
+    fi
+    BIN_PATH=$(greadlink -f "$0")
+    ROOT_DIR=$(dirname $(dirname "$BIN_PATH"))
+# For Linux
+else
+    BIN_PATH=$(readlink -f "$0")
+    ROOT_DIR=$(dirname $(dirname "$BIN_PATH"))
+fi
 
 BAZEL="bazelisk"
 
-if ! type "${BAZEL}" &> /dev/null; then
-  echo "This script works better with bazelisk. Use 'go get github.com/bazelbuild/bazelisk' to get it.'"
-  echo
-  BAZEL="bazel"
-fi
-
-if [ "${1-}" = "-d" ]
-then
-  DEBUG="--jvm_flag=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5009 --jvm_flag=-ea"
-else
-  DEBUG=
-fi
-
-# test `SmtReachabilityTest`
-TARGET="//projects/allinone:smt_tests"
-FLAGS="--test_filter=org.batfish.minesweeper.smt.SmtReachabilityTest#"
-${BAZEL} build ${TARGET}
-${BAZEL} test ${TARGET} ${FLAGS}
+TARGET_EXPRESSION="//projects/allinone:smt_tests"
+BAZEL_COMMAND="test"
+BAZEL_FLAGS=(
+    "--test_filter=org.batfish.minesweeper.smt.SmtReachabilityTest#"
+    "--cache_test_results=no"
+)
+${BAZEL} ${BAZEL_COMMAND} ${TARGET_EXPRESSION} ${BAZEL_FLAGS}
