@@ -4,6 +4,7 @@ Batfish/Minesweeper require the following software dependencies:
 
 * OpenJDK 11
 * Bazel
+* Z3
 
 To install these dependencies, simply run the following command.
 > This script has been tested on Ubuntu 22.04 and Ubuntu 24.04.

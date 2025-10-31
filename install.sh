@@ -53,6 +53,34 @@ install_for_linux() {
     sudo chmod +x /usr/local/bin/bazelisk
     sudo ln -sf /usr/local/bin/bazelisk /usr/local/bin/bazel
 
+    # Install Z3
+    echo "[*] Installing Z3 ..."
+    # Z3 download URL and relevant local archive file and relevant directory
+    Z3_VERSION="4.14.0"
+    Z3_OS="x64-glibc-2.35"
+    Z3_BASENAME="z3-${Z3_VERSION}-${Z3_OS}"
+    Z3_URL="https://github.com/Z3Prover/z3/releases/download/z3-${Z3_VERSION}/${Z3_BASENAME}.zip"
+    Z3_ARCHIVE="${Z3_BASENAME}.zip"
+    Z3_DIR="${Z3_BASENAME}"
+    # Z3 shared library directory
+    Z3_BIN_DIR="/usr/bin"
+    Z3_INCLUDE_DIR="/usr/include"
+    Z3_LIB_DIR="/usr/lib"
+
+    # install Z3
+    wget "$Z3_URL"
+    unzip "$Z3_ARCHIVE"
+    sudo cp "$Z3_DIR/bin/z3" "$Z3_BIN_DIR/z3"
+    sudo find "$Z3_DIR/include" -type f -exec cp {} "$Z3_INCLUDE_DIR" \;
+    # sudo rsync -a "$Z3_DIR/include/" "$Z3_INCLUDE_DIR/" 
+    sudo cp "$Z3_DIR/bin/libz3java.so" "$Z3_LIB_DIR/libz3java.so"
+    sudo cp "$Z3_DIR/bin/libz3.so" "$Z3_LIB_DIR/libz3.so"
+    sudo cp "$Z3_DIR/bin/com.microsoft.z3.jar" "$Z3_LIB_DIR/com.microsoft.z3.jar"
+    sudo chmod 755 "$Z3_LIB_DIR/libz3java.so"
+    sudo chmod 755 "$Z3_LIB_DIR/libz3.so"
+    rm -r "$Z3_ARCHIVE"
+    rm -r "$Z3_DIR" 
+
     echo "[✓] Linux installation completed!"
 }
 
