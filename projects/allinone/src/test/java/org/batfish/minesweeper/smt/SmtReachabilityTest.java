@@ -39,6 +39,8 @@ import java.util.SortedMap;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+import com.google.devtools.build.runfiles.Runfiles;
+
 public class SmtReachabilityTest {
     @Rule public TemporaryFolder _temp = new TemporaryFolder();
 
@@ -76,9 +78,10 @@ public class SmtReachabilityTest {
         }
 
         // read the configurations from the filesystem
-        String configPath = "/home/deza/codes/batfish/networks/userstudy_network";
-        // String configPath = "/home/deza/codes/batfish/networks/userstudy_network_accessment";
-        // String configPath = "/home/deza/codes/batfish/benchmarks/FatTrees/fattree4pol";
+        Runfiles runfiles = Runfiles.create();
+        String configPath = runfiles.rlocation("batfish/networks/userstudy_network");
+        // String configPath = runfiles.rlocation("batfish/networks/userstudy_network_accessment");
+        // String configPath = runfiles.rlocation("batfish/benchmarks/FatTrees/fattree4pol");
         TestrigText _testrig = loadConfigurations(configPath);
         _batfish = BatfishTestUtils.getBatfishFromTestrigText(_testrig, _temp);
 

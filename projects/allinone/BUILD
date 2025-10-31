@@ -235,6 +235,10 @@ junit_tests(
         "src/test/java/org/batfish/minesweeper/smt/*.java",
     ]),
     tags = ["z3"],
+    data = [
+        "//networks:all",
+        "//benchmarks:all",
+    ],
     deps = [
         "//projects/batfish",
         "//projects/batfish:batfish_testlib",
@@ -245,6 +249,7 @@ junit_tests(
         "@maven//:com_google_guava_guava",
         "@maven//:junit_junit",
         "@maven//:org_hamcrest_hamcrest",
+        "@bazel_tools//tools/java/runfiles",
     ],
 )
 
