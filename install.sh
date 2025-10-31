@@ -84,6 +84,7 @@ install_for_linux() {
 
 install_for_macos() {
     # TODO ...
+    echo ""
 }
 
 update_bazelrc_for_linux() {
@@ -106,6 +107,7 @@ EOF
 
 update_bazelrc_for_macos() {
     # TODO ...
+    echo ""
 }
 
 case "$OS" in
