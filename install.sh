@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e  # stop the script on any error (a command exits with a non-zero status)
 
+OS=$(uname -s)
+ARCH=$(uname -m)
+
 # For Mac
 if [ "Darwin" = ${OS} ]; then
     if ! [ -x "$(command -v greadlink)"  ]; then
@@ -17,12 +20,7 @@ fi
 SMT_PATH="${ROOT_DIR}/smts"
 BAZELRC_PATH="${ROOT_DIR}/.bazelrc"
 
-
-OS=$(uname -s)
-ARCH=$(uname -m)
-
 echo "Detected system: ${OS} (${ARCH})"
-
 
 install_for_linux() {
     echo "[*] Installing dependencies for Linux ..."
@@ -53,8 +51,6 @@ install_for_linux() {
     sudo chmod +x /usr/local/bin/bazelisk
     sudo ln -sf /usr/local/bin/bazelisk /usr/local/bin/bazel
 
-    # Install Z3
-    echo "[*] Installing Z3 ..."
     # Z3 download URL and relevant local archive file and relevant directory
     Z3_VERSION="4.14.0"
     Z3_OS="x64-glibc-2.35"
@@ -62,12 +58,14 @@ install_for_linux() {
     Z3_URL="https://github.com/Z3Prover/z3/releases/download/z3-${Z3_VERSION}/${Z3_BASENAME}.zip"
     Z3_ARCHIVE="${Z3_BASENAME}.zip"
     Z3_DIR="${Z3_BASENAME}"
+
     # Z3 shared library directory
     Z3_BIN_DIR="/usr/bin"
     Z3_INCLUDE_DIR="/usr/include"
     Z3_LIB_DIR="/usr/lib"
 
-    # install Z3
+    # Install Z3
+    echo "[*] Installing Z3 ..."
     wget "$Z3_URL"
     unzip "$Z3_ARCHIVE"
     sudo cp "$Z3_DIR/bin/z3" "$Z3_BIN_DIR/z3"
@@ -82,6 +80,10 @@ install_for_linux() {
     rm -r "$Z3_DIR" 
 
     echo "[✓] Linux installation completed!"
+}
+
+install_for_macos() {
+    # TODO ...
 }
 
 update_bazelrc_for_linux() {
@@ -100,6 +102,10 @@ build --sandbox_writable_path=${SMT_PATH}/ \\
 EOF
 
     echo "[✓] .bazelrc updated successfully!"
+}
+
+update_bazelrc_for_macos() {
+    # TODO ...
 }
 
 case "$OS" in
