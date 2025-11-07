@@ -80,6 +80,7 @@ public class SmtReachabilityTest {
         // read the configurations from the filesystem
         Runfiles runfiles = Runfiles.create();
         String configPath = runfiles.rlocation("batfish/networks/userstudy_network");
+        // String configPath = runfiles.rlocation("batfish/networks/userstudy_network_backup");
         // String configPath = runfiles.rlocation("batfish/networks/userstudy_network_accessment");
         // String configPath = runfiles.rlocation("batfish/benchmarks/FatTrees/fattree4pol");
         TestrigText _testrig = loadConfigurations(configPath);
@@ -102,9 +103,9 @@ public class SmtReachabilityTest {
     public void testReachability() {
         final ReachabilityQuestion question = new ReachabilityQuestion();
         // Specification 01: Qualification test 1
-        question.setIngressNodeRegex("customer");
-        question.setFinalNodeRegex("isp1");
-        question.setFinalIfaceRegex("GigabitEthernet1/0");
+        // question.setIngressNodeRegex("customer");
+        // question.setFinalNodeRegex("isp1");
+        // question.setFinalIfaceRegex("GigabitEthernet1/0");
 
         // Specification 02: Qualification test 2
         // question.setIngressNodeRegex("customer");
@@ -115,33 +116,45 @@ public class SmtReachabilityTest {
         // Specification 1: Customer reachability
         // question.setIngressNodeRegex("customer");
         // question.setFinalNodeRegex("isp1");
-        // question.setFinalIfaceRegex("GigabitEthernet1/0");
+        // IpWildcard ipWildcard = IpWildcard.parse("192.0.2.0/24");
+        // question.setDstIps(Set.of(ipWildcard));
 
         // Specification 2: No transit
         // question.setIngressNodeRegex("isp2");
         // question.setFinalNodeRegex("isp1");
-        // question.setFinalIfaceRegex("GigabitEthernet1/0");
+        // IpWildcard ipWildcard = IpWildcard.parse("192.0.2.0/24");
+        // question.setDstIps(Set.of(ipWildcard));
+        // question.setNegate(true);
+        //
+        // question.setIngressNodeRegex("isp2");
+        // question.setFinalNodeRegex("isp1");
+        // IpWildcard ipWildcard = IpWildcard.parse("198.51.100.0/24");
+        // question.setDstIps(Set.of(ipWildcard));
         // question.setNegate(true);
         //
         // question.setIngressNodeRegex("isp1");
         // question.setFinalNodeRegex("isp2");
-        // question.setFinalIfaceRegex("GigabitEthernet1/0");
+        // IpWildcard ipWildcard = IpWildcard.parse("203.0.113.0/24");
+        // question.setDstIps(Set.of(ipWildcard));
         // question.setNegate(true);
 
         // Specification 3: ECMP reachability
-        // question.setIngressNodeRegex("r3");
-        // question.setFinalNodeRegex("isp2");
-        // question.setFinalIfaceRegex("GigabitEthernet1/0");
+        question.setIngressNodeRegex("r3");
+        question.setFinalNodeRegex("isp2");
+        IpWildcard ipWildcard = IpWildcard.parse("203.0.113.0/24");
+        question.setDstIps(Set.of(ipWildcard));
 
         // Specification 4: Private prefix filtering
         // question.setIngressNodeRegex("r3");
         // question.setFinalNodeRegex("customer");
-        // question.setFinalIfaceRegex("GigabitEthernet1/0");
+        // IpWildcard ipWildcard = IpWildcard.parse("192.168.128.0/24");
+        // question.setDstIps(Set.of(ipWildcard));
         // question.setNegate(true);
         //
         // question.setIngressNodeRegex("r3");
         // question.setFinalNodeRegex("customer");
-        // question.setFinalIfaceRegex("GigabitEthernet2/0");
+        // IpWildcard ipWildcard = IpWildcard.parse("192.168.129.0/24");
+        // question.setDstIps(Set.of(ipWildcard));
         // question.setNegate(true);
 
         // other examples - fattree
