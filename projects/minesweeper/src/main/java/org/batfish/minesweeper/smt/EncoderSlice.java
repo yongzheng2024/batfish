@@ -85,6 +85,8 @@ class EncoderSlice {
   private Table2<String, Protocol, Set<Prefix>> _originatedNetworks;
 
   private PrintWriter _unusedCfwdWriter;
+  private PrintWriter _historyEnumWriter;
+  private String _historyEnumRecords = "";
 
   /**
    * Create a new encoding slice
@@ -165,9 +167,12 @@ class EncoderSlice {
     initForwardingAcross();
   }
 
-  EncoderSlice(Encoder enc, HeaderSpace h, Graph graph, String sliceName, PrintWriter unusedCfwdWriter) {
+  EncoderSlice(Encoder enc, HeaderSpace h, Graph graph, String sliceName,
+               PrintWriter unusedCfwdWriter, PrintWriter historyEnumWriter) {
     this(enc, h, graph, sliceName);
     _unusedCfwdWriter = unusedCfwdWriter;
+    _historyEnumWriter = historyEnumWriter;
+    _historyEnumWriter.println(_historyEnumRecords);
   }
 
   // Add a variable to the encoding
@@ -641,6 +646,15 @@ class EncoderSlice {
             new SymbolicRoute(this, name, router, Protocol.BEST, _optimizations, h, false);
         getAllSymbolicRecords().add(evBest);
         _symbolicDecisions.getBestNeighbor().put(router, evBest);
+        // record history enum firstly, then write all records together
+        // _historyEnumWriter.println("|" + historyName + "|");
+        _historyEnumRecords += "|"+ historyName + "| (" + h._numBits + ") \n";
+        Map<Protocol, BitVecExpr> historyMap = h.getValueMap();
+        for (Protocol p : allProtos) {
+          BitVecExpr bve = historyMap.get(p);
+          // _historyEnumWriter.println(p.name() + " : " + bve);
+          _historyEnumRecords += "\t" + p.name() + " : " + bve + "\n";
+        }
       }
 
       // Best per protocol

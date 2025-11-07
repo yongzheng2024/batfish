@@ -157,4 +157,8 @@ class SymbolicEnum<T> {
     result = 31 * result + _numBits;
     return result;
   }
+
+  public Map<T, BitVecExpr> getValueMap() {
+    return _valueMap;
+  }
 }

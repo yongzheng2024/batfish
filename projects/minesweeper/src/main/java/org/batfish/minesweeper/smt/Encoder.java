@@ -151,6 +151,7 @@ public class Encoder {
   PrintWriter _regexCommWriter;
   PrintWriter _dstipsWriter;
   PrintWriter _unusedCfwdWriter;
+  PrintWriter _historyEnumWriter;
   PrintWriter _propertiesVarWriter;
 
   /**
@@ -344,9 +345,11 @@ public class Encoder {
    */
   private void initSlices(HeaderSpace h, Graph g) {
     if (g.getIbgpNeighbors().isEmpty() || !_modelIgp) {
-      _slices.put(MAIN_SLICE_NAME, new EncoderSlice(this, h, g, "", _unusedCfwdWriter));
+      _slices.put(MAIN_SLICE_NAME,
+          new EncoderSlice(this, h, g, "", _unusedCfwdWriter, _historyEnumWriter));
     } else {
-      _slices.put(MAIN_SLICE_NAME, new EncoderSlice(this, h, g, MAIN_SLICE_NAME, _unusedCfwdWriter));
+      _slices.put(MAIN_SLICE_NAME,
+          new EncoderSlice(this, h, g, MAIN_SLICE_NAME, _unusedCfwdWriter, _historyEnumWriter));
     }
 
     if (_modelIgp) {
@@ -386,7 +389,8 @@ public class Encoder {
           // TODO: create domains once
           Graph gNew = new Graph(g.getBatfish(), g.getSnapshot(), null, g.getDomain(router));
           String sliceName = "SLICE-" + router + "_";
-          EncoderSlice slice = new EncoderSlice(this, hs, gNew, sliceName, _unusedCfwdWriter);
+          EncoderSlice slice =
+              new EncoderSlice(this, hs, gNew, sliceName, _unusedCfwdWriter, _historyEnumWriter);
           _slices.put(sliceName, slice);
 
           // TODO: annotated by yongzheng on 20250319
@@ -977,6 +981,8 @@ public class Encoder {
     // flush and close file print writer
     _unusedCfwdWriter.flush();
     _unusedCfwdWriter.close();
+    _historyEnumWriter.flush();
+    _historyEnumWriter.close();
   }
 
   private void initOutput() {
@@ -990,7 +996,8 @@ public class Encoder {
     String outputEbgpNeighborFileName = _outputDirectoryName + "/0_ebgp_neighbors.txt";
     String outputRegexCommFileName = _outputDirectoryName + "/0_regex_communities.txt";
     String outputDstipsFileName = _outputDirectoryName + "/0_dst_ips.txt";
-    String outputunusedCfwdFileName = _outputDirectoryName + "/0_unused_control_forwarding.txt";
+    String outputUnusedCfwdFileName = _outputDirectoryName + "/0_unused_control_forwarding.txt";
+    String outputHistoryEnumFileName = _outputDirectoryName + "/0_overall_history_enum.txt";
     String outputPropertiesVarFileName = _outputDirectoryName + "/0_properties_variables.txt";
 
     File outputSmtFile = new File(outputSmtFileName);
@@ -1000,7 +1007,8 @@ public class Encoder {
     File outputEbgpNeighborFile = new File(outputEbgpNeighborFileName);
     File outputRegexCommFile = new File(outputRegexCommFileName);
     File outputDstipsFile = new File(outputDstipsFileName);
-    File outputunusedCfwdFile = new File(outputunusedCfwdFileName);
+    File outputUnusedCfwdFile = new File(outputUnusedCfwdFileName);
+    File outputHistoryEnumFile = new File(outputHistoryEnumFileName);
     File outputPropertiesVarFile = new File(outputPropertiesVarFileName);
 
     try {
@@ -1011,7 +1019,8 @@ public class Encoder {
       _ebgpneighborWriter = new PrintWriter(new FileWriter(outputEbgpNeighborFile, true));
       _regexCommWriter = new PrintWriter(new FileWriter(outputRegexCommFile, true));
       _dstipsWriter = new PrintWriter(new FileWriter(outputDstipsFile, true));
-      _unusedCfwdWriter = new PrintWriter(new FileWriter(outputunusedCfwdFile, true));
+      _unusedCfwdWriter = new PrintWriter(new FileWriter(outputUnusedCfwdFile, true));
+      _historyEnumWriter = new PrintWriter(new FileWriter(outputHistoryEnumFile, true));
       _propertiesVarWriter = new PrintWriter(new FileWriter(outputPropertiesVarFile, true));
     } catch (IOException e) {
       System.err.println("Error: Unable to create file: " + e.getMessage());
