@@ -1745,12 +1745,12 @@ class EncoderSlice {
             // NOTE: modified by yongzheng2024 in 20250905
             // * if the graph edge is destination ports, then always send out
             // * otherwise, send out only if dstIp does not match the interface ip
-            // connectedWillSend = mkNot(mkEq(_symbolicPacket.getDstIp(), val));
-            if (getEncoder().getDestPorts().contains(ge)) {
-              connectedWillSend = mkTrue();
-            } else {
-              connectedWillSend = mkNot(mkEq(_symbolicPacket.getDstIp(), val));
-            }
+            connectedWillSend = mkNot(mkEq(_symbolicPacket.getDstIp(), val));
+            // if (getEncoder().getDestPorts().contains(ge)) {
+            //   connectedWillSend = mkTrue();
+            // } else {
+            //   connectedWillSend = mkNot(mkEq(_symbolicPacket.getDstIp(), val));
+            // }
           } else {
             Ip ip = other.getStart().getConcreteAddress().getIp();
             BitVecExpr val = getCtx().mkBV(ip.asLong(), 32);
@@ -1784,6 +1784,8 @@ class EncoderSlice {
         for (GraphEdge ge : getGraph().getEdgeMap().get(router)) {
           BoolExpr cForward = _symbolicDecisions.getControlForwarding().get(router, ge);
           assert (cForward != null);
+          // TODO: write the unused control-forwarding to file
+          // _unusedCfwdWriter.println(cForward);
           add(mkNot(cForward));
         }
       } else {
@@ -1806,6 +1808,8 @@ class EncoderSlice {
               if (expr != null) {
                 add(mkImplies(mkNot(expr), mkNot(cForward)));
               } else {
+                // TODO: write the unused control-forwarding to file
+                // _unusedCfwdWriter.println(cForward);
                 add(mkNot(cForward));
               }
             }
