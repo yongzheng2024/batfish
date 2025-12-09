@@ -1486,7 +1486,8 @@ class TransferSSA {
           curResult = curResult.addChangedVariable(cvar.getRegex(), x);
         }
 
-        // NOTE: set community to false for other community variables
+        // BUGFIX: set community to false for other community variables
+        // NOTE: added by yongzheng2024 on 20251204
         for (CommunityVar cvar_other : curP.getData().getCommunities().keySet()) {
           // Skip those communities that are set by this statement
           if (comms.contains(cvar_other)) {
@@ -1496,12 +1497,6 @@ class TransferSSA {
           if (cvar_other.getType() == Type.REGEX) {
             continue;
           }
-
-          /*
-          if (cvar_other.getRegex().toString() == "2:2") {
-            continue;
-          }
-           */
 
           // Set other community variables to false
           BoolExpr newValue_other =

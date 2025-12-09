@@ -79,11 +79,23 @@ public class SmtReachabilityTest {
 
         // read the configurations from the filesystem
         Runfiles runfiles = Runfiles.create();
-        // String configPath = runfiles.rlocation("batfish/networks/userstudy_network");
-        // String configPath = runfiles.rlocation("batfish/networks/userstudy_network_backup");
-        String configPath = runfiles.rlocation("batfish/networks/userstudy_network_accessment");
-        // String configPath = runfiles.rlocation("batfish/networks/userstudy_network_accessment_backup");
+
+        String configPath = runfiles.rlocation("batfish/networks/userstudy_network");
+        // String configPath = runfiles.rlocation("batfish/networks/userstudy_network_accessment");
+        // String configPath = runfiles.rlocation("batfish/networks/userstudy_network_accessment_intro");
+        // String configPath = runfiles.rlocation("batfish/networks/userstudy_network_coursera");
+
+        // -------------------------------------------------------------
+
+        // String configPath = runfiles.rlocation("batfish/networks/testing_networks/sub-prefixes_0001");
+        // String configPath = runfiles.rlocation("batfish/networks/testing_networks/sub-prefixes_0002");
+        // String configPath = runfiles.rlocation("batfish/networks/testing_networks/deny_permit");
+        // String configPath = runfiles.rlocation("batfish/networks/testing_networks/deny_community");
+
+        // -------------------------------------------------------------
+
         // String configPath = runfiles.rlocation("batfish/benchmarks/FatTrees/fattree4pol");
+
         TestrigText _testrig = loadConfigurations(configPath);
         _batfish = BatfishTestUtils.getBatfishFromTestrigText(_testrig, _temp);
 
@@ -104,10 +116,10 @@ public class SmtReachabilityTest {
     public void testReachability() {
         final ReachabilityQuestion question = new ReachabilityQuestion();
         // Specification 1: Customer reachability
-        // question.setIngressNodeRegex("customer");
-        // question.setFinalNodeRegex("isp1");
-        // IpWildcard ipWildcard = IpWildcard.parse("192.0.2.0/24");
-        // question.setDstIps(Set.of(ipWildcard));
+        question.setIngressNodeRegex("customer");
+        question.setFinalNodeRegex("isp1");
+        IpWildcard ipWildcard = IpWildcard.parse("198.51.100.0/24");
+        question.setDstIps(Set.of(ipWildcard));
 
         // Specification 2: No transit
         // question.setIngressNodeRegex("isp2");
@@ -164,13 +176,13 @@ public class SmtReachabilityTest {
 
         // -------------------------------------------------------------
 
-        // Specification 01: Qualification test 1 (backup)
+        // Specification 01: Qualification test 1 (for introduction)
         // question.setIngressNodeRegex("customer");
         // question.setFinalNodeRegex("isp1");
         // IpWildcard ipWildcard = IpWildcard.parse("10.0.0.0/8");
         // question.setDstIps(Set.of(ipWildcard));
 
-        // Specification 02: Qualification test 2 (backup)
+        // Specification 02: Qualification test 2 (for introduction)
         // question.setIngressNodeRegex("customer");
         // question.setFinalNodeRegex("isp1");
         // IpWildcard ipWildcard = IpWildcard.parse("192.168.0.0/16");
@@ -179,10 +191,42 @@ public class SmtReachabilityTest {
 
         // -------------------------------------------------------------
 
+        // Specification 01: Coursera test 1
+        // question.setIngressNodeRegex("r1");
+        // question.setFinalNodeRegex("customer");
+        // IpWildcard ipWildcard = IpWildcard.parse("172.16.0.0/12");
+        // question.setDstIps(Set.of(ipWildcard));
+        // question.setNegate(true);
+
+        // Specification 02: Coursera test 2
+        // question.setIngressNodeRegex("r1");
+        // question.setFinalNodeRegex("customer");
+        // IpWildcard ipWildcard = IpWildcard.parse("192.168.0.0/16");
+        // question.setDstIps(Set.of(ipWildcard));
+        // question.setNegate(true);
+
+        // -------------------------------------------------------------
+
+        // sub-prefixes
+        // question.setIngressNodeRegex("r2");
+        // question.setFinalNodeRegex("isp1");
+        // IpWildcard ipWildcard = IpWildcard.parse("10.0.0.0/8");
+        // question.setDstIps(Set.of(ipWildcard));
+
+        // -------------------------------------------------------------
+
+        // deny-permit and permit-permit
+        // question.setIngressNodeRegex("customer");
+        // question.setFinalNodeRegex("isp1");
+        // IpWildcard ipWildcard = IpWildcard.parse("192.168.0.0/16");
+        // question.setDstIps(Set.of(ipWildcard));
+
+        // -------------------------------------------------------------
+
         // other examples - fattree
         // question.setIngressNodeRegex("core-0");
         // question.setFinalNodeRegex("edge-10");
-        // question.setFinalIfaceRegex("Ethernet0");
+        // // question.setFinalIfaceRegex("Ethernet0");
         // IpWildcard ipWildcard = IpWildcard.parse("70.0.10.0/24");
         // question.setDstIps(Set.of(ipWildcard));
 
