@@ -1386,6 +1386,8 @@ public class Encoder {
         List<Statement> statements = routingPolicy.getStatements();
         String configVarPrefix =
             "Config_" + hostName + "_RoutingPolicy_" + format(policyName) + "_";
+        // NOTE: Improve SMT variable names compatibility with line numbers
+        configVarPrefix += "_Line0__";
         initConfigurationConstants(statements, configVarPrefix);
       }
     }
