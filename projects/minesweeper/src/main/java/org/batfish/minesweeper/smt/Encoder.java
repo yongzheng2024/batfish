@@ -886,6 +886,8 @@ public class Encoder {
     // System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
 
     long start = System.currentTimeMillis();
+    // NOTE: Temporarily set status to UNSATISFIABLE for generateting SMT file only
+    // Status status = Status.UNSATISFIABLE;
     Status status = _solver.check();
     long time = System.currentTimeMillis() - start;
 
