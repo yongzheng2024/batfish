@@ -225,19 +225,20 @@ public abstract class BgpRib<R extends BgpRoute<?, ?>> extends AbstractRib<R> {
    */
   @VisibleForTesting
   int bestPathComparator(R lhs, R rhs) {
+    // NOTE: Skip the arrival order tie breaker and directly proceed routerID comparison
     // Skip arrival order unless requested, only applies if both routes are eBGP.
-    if (_tieBreaker == BgpTieBreaker.ARRIVAL_ORDER
-        && lhs.getProtocol() == RoutingProtocol.BGP
-        && rhs.getProtocol() == RoutingProtocol.BGP) {
-      int result =
-          Comparator.<R, Long>comparing(
-                  r -> _logicalArrivalTime.getOrDefault(r, _logicalClock),
-                  Comparator.reverseOrder())
-              .compare(lhs, rhs);
-      if (result != 0) {
-        return result;
-      }
-    }
+    // if (_tieBreaker == BgpTieBreaker.ARRIVAL_ORDER
+    //     && lhs.getProtocol() == RoutingProtocol.BGP
+    //     && rhs.getProtocol() == RoutingProtocol.BGP) {
+    //   int result =
+    //       Comparator.<R, Long>comparing(
+    //               r -> _logicalArrivalTime.getOrDefault(r, _logicalClock),
+    //               Comparator.reverseOrder())
+    //           .compare(lhs, rhs);
+    //   if (result != 0) {
+    //     return result;
+    //   }
+    // }
 
     // Continue with remaining tie breakers
     return
