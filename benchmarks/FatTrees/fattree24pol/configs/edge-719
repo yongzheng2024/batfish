@@ -158,21 +158,21 @@ interface Serial11
   no negotiation auto
   no cdp enable
 !
-interface Ethernet0
-  ip address 70.2.207.0/31
-  media-type gbic
-  speed 1000
-  duplex full
-  no negotiation auto
-  no cdp enable
+!interface Ethernet0
+!  ip address 70.2.207.0/31
+!  media-type gbic
+!  speed 1000
+!  duplex full
+!  no negotiation auto
+!  no cdp enable
 !
-interface Ethernet1
-  ip address 70.2.207.2/31
-  media-type gbic
-  speed 1000
-  duplex full
-  no negotiation auto
-  no cdp enable
+!interface Ethernet1
+!  ip address 70.2.207.2/31
+!  media-type gbic
+!  speed 1000
+!  duplex full
+!  no negotiation auto
+!  no cdp enable
 !
 ip community-list standard list1 permit 2:23
 ip community-list standard list2 permit 5:23
