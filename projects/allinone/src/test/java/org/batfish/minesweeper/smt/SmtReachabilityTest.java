@@ -80,10 +80,12 @@ public class SmtReachabilityTest {
         // read the configurations from the filesystem
         Runfiles runfiles = Runfiles.create();
 
-        String configPath = runfiles.rlocation("batfish/networks/userstudy_network");
+        // String configPath = runfiles.rlocation("batfish/networks/userstudy_network");
+        // String configPath = runfiles.rlocation("batfish/networks/userstudy_network_hard");
         // String configPath = runfiles.rlocation("batfish/networks/userstudy_network_accessment");
         // String configPath = runfiles.rlocation("batfish/networks/userstudy_network_accessment_intro");
         // String configPath = runfiles.rlocation("batfish/networks/userstudy_network_coursera");
+        // String configPath = runfiles.rlocation("batfish/networks/symbolic_configuration_network");
 
         // -------------------------------------------------------------
 
@@ -95,6 +97,13 @@ public class SmtReachabilityTest {
         // -------------------------------------------------------------
 
         // String configPath = runfiles.rlocation("batfish/benchmarks/FatTrees/fattree4pol");
+        // String configPath = runfiles.rlocation("batfish/benchmarks/FatTrees/fattree8pol");
+        // String configPath = runfiles.rlocation("batfish/benchmarks/FatTrees/fattree12pol");
+        // String configPath = runfiles.rlocation("batfish/benchmarks/FatTrees/fattree16pol");
+        // String configPath = runfiles.rlocation("batfish/benchmarks/FatTrees/fattree20pol");
+        // String configPath = runfiles.rlocation("batfish/benchmarks/FatTrees/fattree24pol");
+        // String configPath = runfiles.rlocation("batfish/benchmarks/FatTrees/fattree28pol");
+        // String configPath = runfiles.rlocation("batfish/benchmarks/FatTrees/fattree32pol");
 
         TestrigText _testrig = loadConfigurations(configPath);
         _batfish = BatfishTestUtils.getBatfishFromTestrigText(_testrig, _temp);
@@ -115,11 +124,12 @@ public class SmtReachabilityTest {
     @Test
     public void testReachability() {
         final ReachabilityQuestion question = new ReachabilityQuestion();
+
         // Specification 1: Customer reachability
-        question.setIngressNodeRegex("customer");
-        question.setFinalNodeRegex("isp1");
-        IpWildcard ipWildcard = IpWildcard.parse("198.51.100.0/24");
-        question.setDstIps(Set.of(ipWildcard));
+        // question.setIngressNodeRegex("customer");
+        // question.setFinalNodeRegex("isp1");
+        // IpWildcard ipWildcard = IpWildcard.parse("198.51.100.0/24");
+        // question.setDstIps(Set.of(ipWildcard));
 
         // Specification 2: No transit
         // question.setIngressNodeRegex("isp2");
@@ -196,14 +206,6 @@ public class SmtReachabilityTest {
         // question.setFinalNodeRegex("customer");
         // IpWildcard ipWildcard = IpWildcard.parse("172.16.0.0/12");
         // question.setDstIps(Set.of(ipWildcard));
-        // question.setNegate(true);
-
-        // Specification 02: Coursera test 2
-        // question.setIngressNodeRegex("r1");
-        // question.setFinalNodeRegex("customer");
-        // IpWildcard ipWildcard = IpWildcard.parse("192.168.0.0/16");
-        // question.setDstIps(Set.of(ipWildcard));
-        // question.setNegate(true);
 
         // -------------------------------------------------------------
 
@@ -223,12 +225,55 @@ public class SmtReachabilityTest {
 
         // -------------------------------------------------------------
 
-        // other examples - fattree
-        // question.setIngressNodeRegex("core-0");
-        // question.setFinalNodeRegex("edge-10");
-        // // question.setFinalIfaceRegex("Ethernet0");
-        // IpWildcard ipWildcard = IpWildcard.parse("70.0.10.0/24");
+        // FatTree benchmarks - fattree04pol
+        // question.setIngressNodeRegex(".*");
+        // question.setFinalNodeRegex("edge-19");
+        // IpWildcard ipWildcard = IpWildcard.parse("70.0.19.0/24");
         // question.setDstIps(Set.of(ipWildcard));
+
+        // FatTree benchmarks - fattree08pol
+        // question.setIngressNodeRegex(".*");
+        // question.setFinalNodeRegex("edge-79");
+        // IpWildcard ipWildcard = IpWildcard.parse("70.0.79.0/24");
+        // question.setDstIps(Set.of(ipWildcard));
+
+        // FatTree benchmarks - fattree12pol
+        // question.setIngressNodeRegex(".*");
+        // question.setFinalNodeRegex("edge-179");
+        // IpWildcard ipWildcard = IpWildcard.parse("70.0.179.0/24");
+        // question.setDstIps(Set.of(ipWildcard));
+
+        // FatTree benchmarks - fattree16pol
+        // question.setIngressNodeRegex(".*");
+        // question.setFinalNodeRegex("edge-319");
+        // IpWildcard ipWildcard = IpWildcard.parse("70.1.63.0/24");
+        // question.setDstIps(Set.of(ipWildcard));
+
+        // FatTree benchmarks - fattree20pol
+        // question.setIngressNodeRegex(".*");
+        // question.setFinalNodeRegex("edge-499");
+        // IpWildcard ipWildcard = IpWildcard.parse("70.1.243.0/24");
+        // question.setDstIps(Set.of(ipWildcard));
+
+        // FatTree benchmarks - fattree24pol
+        // question.setIngressNodeRegex(".*");
+        // question.setFinalNodeRegex("edge-719");
+        // IpWildcard ipWildcard = IpWildcard.parse("70.2.207.0/24");
+        // question.setDstIps(Set.of(ipWildcard));
+
+        // FatTree benchmarks - fattree28pol
+        // question.setIngressNodeRegex(".*");
+        // question.setFinalNodeRegex("edge-979");
+        // IpWildcard ipWildcard = IpWildcard.parse("70.3.211.0/24");
+        // question.setDstIps(Set.of(ipWildcard));
+
+        // FatTree benchmarks - fattree32pol
+        // question.setIngressNodeRegex(".*");
+        // question.setFinalNodeRegex("edge-1279");
+        // IpWildcard ipWildcard = IpWildcard.parse("70.4.255.0/24");
+        // question.setDstIps(Set.of(ipWildcard));
+
+        // -------------------------------------------------------------
 
         final AnswerElement answer = Answerer.create(question, _batfish).answer(_batfish.getSnapshot());
         assertThat(answer, instanceOf(SmtReachabilityAnswerElement.class));
