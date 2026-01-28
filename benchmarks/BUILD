@@ -6,8 +6,8 @@ filegroup(
 )
 
 filegroup(
-    name = "USCarrier",
-    srcs = glob(["USCarrier/**"]),
+    name = "Lines",
+    srcs = glob(["Lines/**"]),
 )
 
 filegroup(
@@ -23,6 +23,11 @@ filegroup(
 filegroup(
     name = "Columbus",
     srcs = glob(["Columbus/**"]),
+)
+
+filegroup(
+    name = "USCarrier",
+    srcs = glob(["USCarrier/**"]),
 )
 
 filegroup(
