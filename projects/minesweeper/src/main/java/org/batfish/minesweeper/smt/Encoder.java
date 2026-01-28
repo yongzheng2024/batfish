@@ -93,6 +93,181 @@ import org.batfish.datamodel.bgp.community.StandardCommunity;
 import org.batfish.datamodel.bgp.community.LargeCommunity;
 
 /**
+ * Data class to store RouteFilterList rule information for Trie matching.
+ */
+class RouteFilterRuleInfo {
+  private final int _lineIndex;
+  private final LineAction _action;
+  private final int _prefixLength;
+  private final int _minLen;
+  private final int _maxLen;
+  private final String _configVarLinePrefix;
+
+  public RouteFilterRuleInfo(
+      int lineIndex, LineAction action, int prefixLength, int minLen, int maxLen,
+      String configVarLinePrefix) {
+    _lineIndex = lineIndex;
+    _action = action;
+    _prefixLength = prefixLength;
+    _minLen = minLen;
+    _maxLen = maxLen;
+    _configVarLinePrefix = configVarLinePrefix;
+  }
+
+  public int getLineIndex() { return _lineIndex; }
+  public LineAction getAction() { return _action; }
+  public int getPrefixLength() { return _prefixLength; }
+  public int getMinLen() { return _minLen; }
+  public int getMaxLen() { return _maxLen; }
+  public String getConfigVarLinePrefix() { return _configVarLinePrefix; }
+
+  @Override
+  public String toString() {
+    String rangeStr = "";
+    if (_minLen > _prefixLength) {
+      rangeStr += " ge " + _minLen;
+    }
+    if (_maxLen < 32 || (_minLen == _prefixLength && _maxLen > _prefixLength)) {
+      rangeStr += " le " + _maxLen;
+    }
+    return "seq " + _lineIndex + " " + _action.name().toLowerCase() + rangeStr;
+  }
+}
+
+/**
+ * A custom 01-Trie (Binary Prefix Trie) for matching IP prefixes against RouteFilterList rules.
+ * Each node stores a list of RouteFilterRuleInfo that are defined at that prefix.
+ * Matching collects all rules along the path and returns the one with smallest lineIndex
+ * that satisfies the ge/le length constraints.
+ */
+class PrefixRuleTrie {
+  private final TrieNode _root;
+
+  public PrefixRuleTrie() {
+    _root = new TrieNode();
+  }
+
+  /**
+   * Internal trie node. Uses ArrayList for rules since we iterate through all rules
+   * and order matters for collecting along the path.
+   */
+  private static class TrieNode {
+    TrieNode[] children = new TrieNode[2]; // 0 = left, 1 = right
+    ArrayList<RouteFilterRuleInfo> rules = new ArrayList<>();
+  }
+
+  /**
+   * Insert a rule into the trie at the given prefix.
+   * @param prefix The IP prefix (e.g., 10.0.0.0/8)
+   * @param rule The rule info to store at this prefix
+   */
+  public void insert(Prefix prefix, RouteFilterRuleInfo rule) {
+    TrieNode node = _root;
+    long ip = prefix.getStartIp().asLong();
+    int prefixLen = prefix.getPrefixLength();
+
+    // Traverse/create nodes for each bit of the prefix (from MSB to LSB)
+    for (int i = 31; i >= 32 - prefixLen; i--) {
+      int bit = (int) ((ip >> i) & 1);
+      if (node.children[bit] == null) {
+        node.children[bit] = new TrieNode();
+      }
+      node = node.children[bit];
+    }
+
+    // Add rule at the terminal node for this prefix
+    node.rules.add(rule);
+  }
+
+  /**
+   * Match a query prefix against all rules in the trie.
+   * Traverses from root to the query prefix, checking each node's rules
+   * and keeping track of the best match (smallest lineIndex that satisfies ge/le).
+   *
+   * @param queryPrefix The prefix to match (e.g., 192.168.1.0/24)
+   * @return The matching rule with smallest lineIndex, or null if no match
+   */
+  public RouteFilterRuleInfo match(Prefix queryPrefix) {
+    RouteFilterRuleInfo bestMatch = null;
+    TrieNode node = _root;
+    long ip = queryPrefix.getStartIp().asLong();
+    int queryLen = queryPrefix.getPrefixLength();
+
+    // Check rules at root (if any rules are defined at 0.0.0.0/0)
+    bestMatch = updateBestMatch(bestMatch, node.rules, queryLen);
+
+    // Traverse the trie following the query prefix bits
+    for (int i = 31; i >= 32 - queryLen; i--) {
+      int bit = (int) ((ip >> i) & 1);
+      if (node.children[bit] == null) {
+        break; // No more specific prefix in trie
+      }
+      node = node.children[bit];
+      // Check rules at this node and update best match
+      bestMatch = updateBestMatch(bestMatch, node.rules, queryLen);
+    }
+
+    return bestMatch;
+  }
+
+  /**
+   * Helper method to update best match from a list of rules.
+   */
+  private RouteFilterRuleInfo updateBestMatch(
+      RouteFilterRuleInfo currentBest, ArrayList<RouteFilterRuleInfo> rules, int queryLen) {
+    for (RouteFilterRuleInfo rule : rules) {
+      // Check if query prefix length falls within [minLen, maxLen]
+      if (queryLen >= rule.getMinLen() && queryLen <= rule.getMaxLen()) {
+        if (currentBest == null || rule.getLineIndex() < currentBest.getLineIndex()) {
+          currentBest = rule;
+        }
+      }
+    }
+    return currentBest;
+  }
+
+  /**
+   * Match a query prefix and return the count of matching rules (for debugging).
+   * @param queryPrefix The prefix to match
+   * @return Number of rules that match (prefix is ancestor and ge/le satisfied)
+   */
+  public int matchCount(Prefix queryPrefix) {
+    int count = 0;
+    TrieNode node = _root;
+    long ip = queryPrefix.getStartIp().asLong();
+    int queryLen = queryPrefix.getPrefixLength();
+
+    // Count matching rules at root
+    count += countMatchingRules(node.rules, queryLen);
+
+    // Traverse the trie
+    for (int i = 31; i >= 32 - queryLen; i--) {
+      int bit = (int) ((ip >> i) & 1);
+      if (node.children[bit] == null) {
+        break;
+      }
+      node = node.children[bit];
+      count += countMatchingRules(node.rules, queryLen);
+    }
+
+    return count;
+  }
+
+  /**
+   * Helper method to count matching rules.
+   */
+  private int countMatchingRules(ArrayList<RouteFilterRuleInfo> rules, int queryLen) {
+    int count = 0;
+    for (RouteFilterRuleInfo rule : rules) {
+      if (queryLen >= rule.getMinLen() && queryLen <= rule.getMaxLen()) {
+        count++;
+      }
+    }
+    return count;
+  }
+}
+
+/**
  * A class responsible for building a symbolic encoding of the entire network. The encoder does this
  * by maintaining a collection of encoding slices, where each slice encodes the forwarding behavior
  * for a particular packet.
@@ -153,6 +328,7 @@ public class Encoder {
   PrintWriter _unusedCfwdWriter;
   PrintWriter _historyEnumWriter;
   PrintWriter _propertiesVarWriter;
+  PrintWriter _keyPrefixlistWriter;
 
   /**
    * Create an encoder object that will consider all packets in the provided headerspace.
@@ -887,8 +1063,8 @@ public class Encoder {
 
     long start = System.currentTimeMillis();
     // NOTE: Temporarily set status to UNSATISFIABLE for generating SMT file only
-    // Status status = _solver.check();
-    Status status = Status.UNSATISFIABLE;
+    // Status status = Status.UNSATISFIABLE;
+    Status status = _solver.check();
     long time = System.currentTimeMillis() - start;
 
     VerificationStats stats = null;
@@ -1001,6 +1177,7 @@ public class Encoder {
     String outputUnusedCfwdFileName = _outputDirectoryName + "/0_unused_control_forwarding.txt";
     String outputHistoryEnumFileName = _outputDirectoryName + "/0_overall_history_enum.txt";
     String outputPropertiesVarFileName = _outputDirectoryName + "/0_properties_variables.txt";
+    String outputKeyPrefixlistFileName = _outputDirectoryName + "/0_key_prefixlists.txt";
 
     File outputSmtFile = new File(outputSmtFileName);
     File outputConstFile = new File(outputConstFileName);
@@ -1012,18 +1189,20 @@ public class Encoder {
     File outputUnusedCfwdFile = new File(outputUnusedCfwdFileName);
     File outputHistoryEnumFile = new File(outputHistoryEnumFileName);
     File outputPropertiesVarFile = new File(outputPropertiesVarFileName);
+    File outputKeyPrefixlistFile = new File(outputKeyPrefixlistFileName);
 
     try {
-      _smtWriter = new PrintWriter(new FileWriter(outputSmtFile, true));
-      _constWriter = new PrintWriter(new FileWriter(outputConstFile, true));
-      _configWriter = new PrintWriter(new FileWriter(outputConfigFile, true));
-      _hostnameWriter = new PrintWriter(new FileWriter(outputHostnameFile, true));
-      _ebgpneighborWriter = new PrintWriter(new FileWriter(outputEbgpNeighborFile, true));
-      _regexCommWriter = new PrintWriter(new FileWriter(outputRegexCommFile, true));
-      _dstipsWriter = new PrintWriter(new FileWriter(outputDstipsFile, true));
-      _unusedCfwdWriter = new PrintWriter(new FileWriter(outputUnusedCfwdFile, true));
-      _historyEnumWriter = new PrintWriter(new FileWriter(outputHistoryEnumFile, true));
-      _propertiesVarWriter = new PrintWriter(new FileWriter(outputPropertiesVarFile, true));
+      _smtWriter = new PrintWriter(new FileWriter(outputSmtFile, true), true);
+      _constWriter = new PrintWriter(new FileWriter(outputConstFile, true), true);
+      _configWriter = new PrintWriter(new FileWriter(outputConfigFile, true), true);
+      _hostnameWriter = new PrintWriter(new FileWriter(outputHostnameFile, true), true);
+      _ebgpneighborWriter = new PrintWriter(new FileWriter(outputEbgpNeighborFile, true), true);
+      _regexCommWriter = new PrintWriter(new FileWriter(outputRegexCommFile, true), true);
+      _dstipsWriter = new PrintWriter(new FileWriter(outputDstipsFile, true), true);
+      _unusedCfwdWriter = new PrintWriter(new FileWriter(outputUnusedCfwdFile, true), true);
+      _historyEnumWriter = new PrintWriter(new FileWriter(outputHistoryEnumFile, true), true);
+      _propertiesVarWriter = new PrintWriter(new FileWriter(outputPropertiesVarFile, true), true);
+      _keyPrefixlistWriter = new PrintWriter(new FileWriter(outputKeyPrefixlistFile, true), true);
     } catch (IOException e) {
       System.err.println("Error: Unable to create file: " + e.getMessage());
     }
@@ -1304,13 +1483,19 @@ public class Encoder {
         // write route filter list name to configs_to_variables file
         _configWriter.println("  * " + "ip prefix-list / access-list: " + routerFilterListName);
 
+        // Build custom PrefixRuleTrie to store rule info
+        PrefixRuleTrie trie = new PrefixRuleTrie();
+
         int lineIndex = 1;
         for (RouteFilterLine line : lines) {
+          Prefix linePrefix = line.getIpWildcard().toPrefix();
+          int pLen = linePrefix.getPrefixLength();
+          int minLen = line.getLengthRange().getStart();
+          int maxLen = line.getLengthRange().getEnd();
+
           long prefixIp = line.getIpWildcard().getIp().asLong();
           String prefixIpStr = longToIpString(prefixIp);
-          // String configVarPrefix =
-          //     "Config_" + hostName + "_RouteFilterList_" + format(routerFilterListName) +
-          //     "__" + format(prefixIpStr) + "__";
+          // Keep the original configVarPrefix for SMT variable initialization (with full details)
           String configVarPrefix =
               "Config_" + hostName + "_RouteFilterList_" + format(routerFilterListName) +
               "__Line" + lineIndex + "__" + format(prefixIpStr) + "__";
@@ -1329,8 +1514,40 @@ public class Encoder {
           _configWriter.println("    + " + configVarPrefix + "prefix_range_start");
           _configWriter.println("    + " + configVarPrefix + "prefix_range_end");
 
+          String configVarLinePrefix =
+              "Config_" + hostName + "_RouteFilterList_" + format(routerFilterListName) +
+              "__Line" + lineIndex;
+          // Add rule info to trie (with configVarPrefix)
+          RouteFilterRuleInfo ruleInfo = new RouteFilterRuleInfo(
+              lineIndex, line.getAction(), pLen, minLen, maxLen, configVarLinePrefix);
+          trie.insert(linePrefix, ruleInfo);
+
           // add line index
           lineIndex++;
+        }
+
+        // Match Question's DstIps against this prefix list's trie
+        if (_question != null && _question.getHeaderSpace() != null) {
+          IpSpace dstIpSpace = _question.getHeaderSpace().getDstIps();
+          if (dstIpSpace instanceof IpWildcardSetIpSpace) {
+            IpWildcardSetIpSpace wildcardSet = (IpWildcardSetIpSpace) dstIpSpace;
+            // Match whitelist IPs
+            for (IpWildcard ipw : wildcardSet.getWhitelist()) {
+              Prefix queryPrefix = ipw.toPrefix();
+              RouteFilterRuleInfo bestMatch = trie.match(queryPrefix);
+              if (bestMatch != null) {
+                _keyPrefixlistWriter.println(bestMatch.getConfigVarLinePrefix());
+              }
+            }
+            // Match blacklist IPs
+            for (IpWildcard ipw : wildcardSet.getBlacklist()) {
+              Prefix queryPrefix = ipw.toPrefix();
+              RouteFilterRuleInfo bestMatch = trie.match(queryPrefix);
+              if (bestMatch != null) {
+                _keyPrefixlistWriter.println(bestMatch.getConfigVarLinePrefix());
+              }
+            }
+          }
         }
       }
 
