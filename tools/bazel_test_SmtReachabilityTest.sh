@@ -21,5 +21,6 @@ BAZEL_COMMAND="test"
 BAZEL_FLAGS=(
     "--test_filter=org.batfish.minesweeper.smt.SmtReachabilityTest#"
     "--cache_test_results=no"
+    "--test_timeout=999999"
 )
-${BAZEL} ${BAZEL_COMMAND} ${TARGET_EXPRESSION} ${BAZEL_FLAGS}
+${BAZEL} ${BAZEL_COMMAND} ${TARGET_EXPRESSION} "${BAZEL_FLAGS[@]}"
