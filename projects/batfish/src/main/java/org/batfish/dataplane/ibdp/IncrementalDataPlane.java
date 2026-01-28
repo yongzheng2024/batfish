@@ -52,6 +52,14 @@ public final class IncrementalDataPlane implements Serializable, DataPlane {
     return _bgpRoutes;
   }
 
+  /**
+   * Return ALL routes in the BGP rib for each node/VRF, including local/redistributed routes.
+   */
+  @Nonnull
+  public Table<String, String, Set<Bgpv4Route>> getBgpRoutesAll() {
+    return _bgpRoutesAll;
+  }
+
   @Override
   @Nonnull
   public Table<String, String, Set<EvpnRoute<?, ?>>> getEvpnRoutes() {
@@ -102,6 +110,7 @@ public final class IncrementalDataPlane implements Serializable, DataPlane {
   /////////////////////////
 
   @Nonnull private final Table<String, String, Set<Bgpv4Route>> _bgpRoutes;
+  @Nonnull private final Table<String, String, Set<Bgpv4Route>> _bgpRoutesAll;
   @Nonnull private final Map<String, Map<String, Fib>> _fibs;
   @Nonnull private final ForwardingAnalysis _forwardingAnalysis;
   @Nonnull private final Table<String, String, Set<EvpnRoute<?, ?>>> _evpnRoutes;
@@ -123,6 +132,7 @@ public final class IncrementalDataPlane implements Serializable, DataPlane {
     Map<String, Configuration> configs = DataplaneUtil.computeConfigurations(nodes);
     // Order of initialization matters:
     _bgpRoutes = DataplaneUtil.computeBgpRoutes(nodes);
+    _bgpRoutesAll = DataplaneUtil.computeAllBgpRoutes(nodes);
     _evpnRoutes = DataplaneUtil.computeEvpnRoutes(nodes);
     _ribs = DataplaneUtil.computeRibs(nodes);
     _fibs = DataplaneUtil.computeFibs(nodes);

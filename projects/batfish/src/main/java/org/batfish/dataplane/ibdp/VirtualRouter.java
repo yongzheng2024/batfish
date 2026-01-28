@@ -1188,6 +1188,11 @@ public final class VirtualRouter {
     return _bgpRoutingProcess == null ? ImmutableSet.of() : _bgpRoutingProcess.getV4Routes();
   }
 
+  /** Get all BGP routes (received + local). */
+  Set<Bgpv4Route> getAllBgpRoutes() {
+    return _bgpRoutingProcess == null ? ImmutableSet.of() : _bgpRoutingProcess.getAllV4Routes();
+  }
+
   /** Get the number of best-path BGP routes. To be used during dataplane computation only */
   int getNumBgpBestPaths() {
     return _bgpRoutingProcess == null ? 0 : _bgpRoutingProcess.getBestPathRoutes().size();

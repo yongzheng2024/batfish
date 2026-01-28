@@ -98,6 +98,7 @@ import org.batfish.common.BatfishException;
 import org.batfish.common.BatfishException.BatfishStackTrace;
 import org.batfish.common.BatfishLogger;
 import org.batfish.common.BfConsts;
+import org.batfish.dataplane.ibdp.IncrementalDataPlane;
 import org.batfish.common.CleanBatfishException;
 import org.batfish.common.CompletionMetadata;
 import org.batfish.common.CoordConsts;
@@ -814,23 +815,31 @@ public class Batfish extends PluginConsumer implements IBatfish {
     ComputeDataPlaneResult result = getDataPlanePlugin().computeDataPlane(snapshot);
 
     // Define table header format and header (column widths)
-    String format = "%-12s %-10s %-20s %-15s %-20s%n";
-    String header = String.format(format, "Node", "VRF", "Network", "ASPath", "Communities");
+    String format = "%-12s %-10s %-20s %-30s %-30s %-10s %-10s%n";
+    String header = String.format(format, "Node", "VRF", "Network", "ASPath", "Communities", "Localpreference", "Med");
 
     // Print column headers
     writer.print(header);
     // Print a horizontal divider line
     writer.println(repeatChar('=', header.length()));
 
+    // Get BGP routes (try to get ALL routes if possible, otherwise just received routes)
+    Table<String, String, Set<Bgpv4Route>> bgpRoutes = result._dataPlane.getBgpRoutes();
+    if (result._dataPlane instanceof IncrementalDataPlane) {
+        bgpRoutes = ((IncrementalDataPlane) result._dataPlane).getBgpRoutesAll();
+    }
+
     // Iterate over each route entry and print fields
-    for (Table.Cell<String, String, Set<Bgpv4Route>> route : result._dataPlane.getBgpRoutes().cellSet()) {
+    for (Table.Cell<String, String, Set<Bgpv4Route>> route : bgpRoutes.cellSet()) {
       String hostname = route.getRowKey();
       String vrfname = route.getColumnKey();
       for (Bgpv4Route r : route.getValue()) {
         String network = r.getNetwork().toString();
         String asPath = r.getAsPath().toString();
         String communities = r.getCommunities().getCommunities().toString();
-        writer.printf(format, hostname, vrfname, network, asPath, communities);
+        Long localPreference = r.getLocalPreference();
+        Long med = r.getMetric();
+        writer.printf(format, hostname, vrfname, network, asPath, communities, localPreference, med);
       }
     }
 

@@ -77,6 +77,20 @@ public final class DataplaneUtil {
   }
 
   @Nonnull
+  static Table<String, String, Set<Bgpv4Route>> computeAllBgpRoutes(Map<String, Node> nodes) {
+    ImmutableTable.Builder<String, String, Set<Bgpv4Route>> table = ImmutableTable.builder();
+
+    nodes.forEach(
+        (hostname, node) ->
+            node.getVirtualRouters()
+                .forEach(
+                    vr -> {
+                      table.put(hostname, vr.getName(), vr.getAllBgpRoutes());
+                    }));
+    return table.build();
+  }
+
+  @Nonnull
   static Table<String, String, Set<EvpnRoute<?, ?>>> computeEvpnRoutes(Map<String, Node> nodes) {
     ImmutableTable.Builder<String, String, Set<EvpnRoute<?, ?>>> table = ImmutableTable.builder();
     nodes.forEach(
