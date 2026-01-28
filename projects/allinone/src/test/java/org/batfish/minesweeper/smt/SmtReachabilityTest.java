@@ -105,16 +105,31 @@ public class SmtReachabilityTest {
         // String configPath = runfiles.rlocation("batfish/benchmarks/FatTrees/fattree28pol");
         // String configPath = runfiles.rlocation("batfish/benchmarks/FatTrees/fattree32pol");
 
+        // -------------------------------------------------------------
+
+        // String configPath = runfiles.rlocation("batfish/benchmarks/Lines/line10");
+        // String configPath = runfiles.rlocation("batfish/benchmarks/Lines/line100");
+        // String configPath = runfiles.rlocation("batfish/benchmarks/Lines/line1000");
+        // String configPath = runfiles.rlocation("batfish/benchmarks/Lines/line5000");
+        // String configPath = runfiles.rlocation("batfish/benchmarks/Lines/line10000");
+
+        // -------------------------------------------------------------
+
+        // String configPath = runfiles.rlocation("batfish/benchmarks/Bics/bgp");
+        // String configPath = runfiles.rlocation("batfish/benchmarks/Columbus/bgp");
+        // String configPath = runfiles.rlocation("batfish/benchmarks/USCarrier/bgp");
+        String configPath = runfiles.rlocation("batfish/benchmarks/Internet2/");
+
         TestrigText _testrig = loadConfigurations(configPath);
         _batfish = BatfishTestUtils.getBatfishFromTestrigText(_testrig, _temp);
 
-         // compute data plane for printing RIBs before
-         _batfish.computeDataPlane(_batfish.getSnapshot(), _bgpRouteWriter);
-         // print RIBs of the data plane in formal format
-         RoutesQuestion routesQuestion = new RoutesQuestion();
-         RoutesAnswerer routesAnswerer = new RoutesAnswerer(routesQuestion, _batfish);
-         AnswerElement routesAnswer = routesAnswerer.answer(_batfish.getSnapshot());
-         RibPrinter.printRouteTable(routesAnswer, _dataPlaneWriter);
+        // compute data plane for printing RIBs before
+        _batfish.computeDataPlane(_batfish.getSnapshot(), _bgpRouteWriter);
+        // print RIBs of the data plane in formal format
+        RoutesQuestion routesQuestion = new RoutesQuestion();
+        RoutesAnswerer routesAnswerer = new RoutesAnswerer(routesQuestion, _batfish);
+        AnswerElement routesAnswer = routesAnswerer.answer(_batfish.getSnapshot());
+        RibPrinter.printRouteTable(routesAnswer, _dataPlaneWriter);
     }
 
     /**
@@ -272,6 +287,73 @@ public class SmtReachabilityTest {
         // question.setFinalNodeRegex("edge-1279");
         // IpWildcard ipWildcard = IpWildcard.parse("70.4.255.0/24");
         // question.setDstIps(Set.of(ipWildcard));
+
+        // -------------------------------------------------------------
+
+        // Line benchmarks - line10
+        // question.setIngressNodeRegex("customer");
+        // question.setFinalNodeRegex("isp1");
+        // IpWildcard ipWildcard = IpWildcard.parse("10.2.2.0/24");
+        // question.setDstIps(Set.of(ipWildcard));
+        // question.setNegate(true);
+
+        // Line benchmarks - line100
+        // question.setIngressNodeRegex("customer");
+        // question.setFinalNodeRegex("isp1");
+        // IpWildcard ipWildcard = IpWildcard.parse("10.2.2.0/24");
+        // question.setDstIps(Set.of(ipWildcard));
+        // question.setNegate(true);
+
+        // Line benchmarks - line1000
+        // question.setIngressNodeRegex("customer");
+        // question.setFinalNodeRegex("isp1");
+        // IpWildcard ipWildcard = IpWildcard.parse("10.2.2.0/24");
+        // question.setDstIps(Set.of(ipWildcard));
+        // question.setNegate(true);
+
+        // Line benchmarks - line5000
+        // question.setIngressNodeRegex("customer");
+        // question.setFinalNodeRegex("isp1");
+        // IpWildcard ipWildcard = IpWildcard.parse("10.2.2.0/24");
+        // question.setDstIps(Set.of(ipWildcard));
+        // question.setNegate(true);
+
+        // Line benchmarks - line10000
+        // question.setIngressNodeRegex("customer");
+        // question.setFinalNodeRegex("isp1");
+        // IpWildcard ipWildcard = IpWildcard.parse("10.2.2.0/24");
+        // question.setDstIps(Set.of(ipWildcard));
+        // question.setNegate(true);
+
+        // -------------------------------------------------------------
+
+        // Bics benchmarks
+        // question.setIngressNodeRegex(".*");
+        // question.setFinalNodeRegex("geneva");
+        // IpWildcard ipWildcard = IpWildcard.parse("200.1.58.0/24");
+        // question.setDstIps(Set.of(ipWildcard));
+
+        // Columbus benchmarks
+        // question.setIngressNodeRegex(".*");
+        // question.setFinalNodeRegex("grenada");
+        // IpWildcard ipWildcard = IpWildcard.parse("200.2.55.0/24");
+        // question.setDstIps(Set.of(ipWildcard));
+        //
+        // question.setIngressNodeRegex(".*");
+        // question.setFinalNodeRegex("peerstttvincent_15");
+        // IpWildcard ipWildcard = IpWildcard.parse("128.0.15.0/24");
+        // question.setDstIps(Set.of(ipWildcard));
+
+        // USCarrier benchmarks
+        // question.setIngressNodeRegex(".*");
+        // question.setFinalNodeRegex("georgetown");
+        // IpWildcard ipWildcard = IpWildcard.parse("200.4.232.0/24");
+        // question.setDstIps(Set.of(ipWildcard));
+
+        // Internet2 benchmarks
+        question.setIngressNodeRegex(".*");
+        question.setFinalNodeRegex(".*");
+        question.setFinalIfaceRegex(".*");
 
         // -------------------------------------------------------------
 
