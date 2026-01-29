@@ -37,6 +37,7 @@ import org.batfish.minesweeper.utils.Tuple;
 
 import java.util.ArrayList;
 import java.util.stream.Collectors;
+import java.util.regex.Pattern;
 import org.batfish.common.BatfishException;
 import org.batfish.datamodel.routing_policy.RoutingPolicy;
 import org.batfish.datamodel.routing_policy.expr.AsPathListExpr;
@@ -330,6 +331,15 @@ public class Encoder {
   PrintWriter _propertiesVarWriter;
   PrintWriter _keyPrefixlistWriter;
 
+  private Map<String, Map<String, Set<String>>> _communityToConfigVars;
+  PrintWriter _communityToConfigVarsWriter;
+  private Set<String> _matchedCommunities;
+  PrintWriter _unmatchedCommunitiesWriter;
+  private Map<String, String> _formattedToMatchString;
+  private List<String> _warnings;
+
+
+
   /**
    * Create an encoder object that will consider all packets in the provided headerspace.
    *
@@ -400,6 +410,10 @@ public class Encoder {
     _question = q;
     _slices = new HashMap<>();
     _sliceReachability = new HashMap<>();
+    _communityToConfigVars = new HashMap<>();
+    _matchedCommunities = new HashSet<>();
+    _formattedToMatchString = new HashMap<>();
+    _warnings = new ArrayList<>();
 
     HashMap<String, String> cfg = new HashMap<>();
 
@@ -1178,6 +1192,9 @@ public class Encoder {
     String outputHistoryEnumFileName = _outputDirectoryName + "/0_overall_history_enum.txt";
     String outputPropertiesVarFileName = _outputDirectoryName + "/0_properties_variables.txt";
     String outputKeyPrefixlistFileName = _outputDirectoryName + "/0_key_prefixlists.txt";
+    String outputCommunityToConfigVarsFileName = _outputDirectoryName + "/0_community_to_config_vars.txt";
+    String outputUnmatchedCommunitiesFileName = _outputDirectoryName + "/0_unmatched_communities.txt";
+
 
     File outputSmtFile = new File(outputSmtFileName);
     File outputConstFile = new File(outputConstFileName);
@@ -1190,6 +1207,9 @@ public class Encoder {
     File outputHistoryEnumFile = new File(outputHistoryEnumFileName);
     File outputPropertiesVarFile = new File(outputPropertiesVarFileName);
     File outputKeyPrefixlistFile = new File(outputKeyPrefixlistFileName);
+    File outputCommunityToConfigVarsFile = new File(outputCommunityToConfigVarsFileName);
+    File outputUnmatchedCommunitiesFile = new File(outputUnmatchedCommunitiesFileName);
+
 
     try {
       _smtWriter = new PrintWriter(new FileWriter(outputSmtFile, true), true);
@@ -1203,6 +1223,9 @@ public class Encoder {
       _historyEnumWriter = new PrintWriter(new FileWriter(outputHistoryEnumFile, true), true);
       _propertiesVarWriter = new PrintWriter(new FileWriter(outputPropertiesVarFile, true), true);
       _keyPrefixlistWriter = new PrintWriter(new FileWriter(outputKeyPrefixlistFile, true), true);
+      _communityToConfigVarsWriter = new PrintWriter(new FileWriter(outputCommunityToConfigVarsFile, true), true);
+      _unmatchedCommunitiesWriter = new PrintWriter(new FileWriter(outputUnmatchedCommunitiesFile, true), true);
+
     } catch (IOException e) {
       System.err.println("Error: Unable to create file: " + e.getMessage());
     }
@@ -1611,6 +1634,9 @@ public class Encoder {
       }
     }
 
+    // TODO: implement static analysis main function
+    printCommunityToConfigVarsMapping();
+    printUnmatchedCommunities();
 
     // System.out.println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
     // System.out.println(_solver.toString());
@@ -1700,7 +1726,7 @@ public class Encoder {
             "set_localpreference_" + localPreferenceValue);
 
       } else if (stmt instanceof AddCommunity) {
-        // TODO: check here and implement when needed
+        // TODO: add community to map: <key community; value set of Config_XXX>by yaxuan
         AddCommunity ac = (AddCommunity) stmt;
         CommunitySetExpr communitySetExpr = ac.getExpr();
         if (communitySetExpr instanceof LiteralCommunitySet) {
@@ -1710,23 +1736,35 @@ public class Encoder {
           // write smt symbolic variable name to configs_to_variables file
           for (Community community : communities) {
             String communityString = format(community.getCommunityString());
-            _configWriter.println(
-                "    + " + configVarPrefix + "add_community_" + communityString + "_community");
+            String matchString = community.matchString();
+              _formattedToMatchString.put(communityString, matchString);
+            String configVarName = configVarPrefix + "add_community_" + communityString + "_community";
+              _configWriter.println("    + " + configVarName);
+            _communityToConfigVars
+                      .computeIfAbsent(communityString, k -> new HashMap<>())
+                      .computeIfAbsent("ADD", k -> new HashSet<>())
+                      .add(configVarName);
           }
         } else if (communitySetExpr instanceof LiteralCommunity) {
           LiteralCommunity lc = (LiteralCommunity) communitySetExpr;
           String communityString = format(lc.getCommunity().getCommunityString());
+          String matchString = lc.getCommunity().matchString();
+              _formattedToMatchString.put(communityString, matchString);
+          String configVarName = configVarPrefix + "add_community_" + communityString + "_community";
           ac.initSmtVariable(
               _ctx, _solver, configVarPrefix + "add_community_" + communityString + "_", true);
           // write smt symbolic variable name to configs_to_variables file
-          _configWriter.println(
-              "    + " + configVarPrefix + "add_community_" + communityString + "_community");
+          _configWriter.println("    + " + configVarName);
+          _communityToConfigVars
+                    .computeIfAbsent(communityString, k -> new HashMap<>())
+                    .computeIfAbsent("ADD", k -> new HashSet<>())
+                    .add(configVarName);
         } else {
           throw new BatfishException("Unimplemented feature " + communitySetExpr.getClass());
         }
 
       } else if (stmt instanceof SetCommunity) {
-        // TODO: check here and implement when needed
+        // TODO: add community to map: <key community; value set of Config_XXX>by yaxuan
         SetCommunity sc = (SetCommunity) stmt;
         CommunitySetExpr communitySetExpr = sc.getExpr();
         if (communitySetExpr instanceof LiteralCommunitySet) {
@@ -1736,17 +1774,29 @@ public class Encoder {
           // write smt symbolic variable name to configs_to_variables file
           for (Community community : communities) {
             String communityString = format(community.getCommunityString());
-            _configWriter.println(
-                "    + " + configVarPrefix + "set_community_" + communityString + "_community");
+            String matchString = community.matchString();
+               _formattedToMatchString.put(communityString, matchString);
+            String configVarName = configVarPrefix + "set_community_" + communityString + "_community";
+            _configWriter.println("    + " + configVarName);
+            _communityToConfigVars
+                      .computeIfAbsent(communityString, k -> new HashMap<>())
+                      .computeIfAbsent("SET", k -> new HashSet<>())
+                      .add(configVarName);
           }
         } else if (communitySetExpr instanceof LiteralCommunity) {
           LiteralCommunity lc = (LiteralCommunity) communitySetExpr;
           String communityString = format(lc.getCommunity().getCommunityString());
+          String matchString = lc.getCommunity().matchString();
+             _formattedToMatchString.put(communityString, matchString);
+          String configVarName = configVarPrefix + "set_community_" + communityString + "_community";
           sc.initSmtVariable(
               _ctx, _solver, configVarPrefix + "set_community_" + communityString + "_", true);
           // write smt symbolic variable name to configs_to_variables file
-            _configWriter.println(
-                "    + " + configVarPrefix + "set_community_" + communityString + "_community");
+            _configWriter.println("    + " + configVarName);
+            _communityToConfigVars
+                    .computeIfAbsent(communityString, k -> new HashMap<>())
+                    .computeIfAbsent("SET", k -> new HashSet<>())
+                    .add(configVarName);
         } else {
           throw new BatfishException("Unimplemented feature " + communitySetExpr.getClass());
         }
@@ -1912,18 +1962,28 @@ public class Encoder {
       // TODO: check here and implement it when needed
       MatchCommunitySet mcs = (MatchCommunitySet) expr;
       // mcs.initSmtVariable(_ctx, _solver, configVarPrefix);
+      String hostName = extractHostNameFromConfigVarPrefix(configVarPrefix);
+      Configuration currentConfig = hostName != null ? _graph.getConfigurations().get(hostName) : null;
 
       CommunitySetExpr communitySetExpr = mcs.getExpr();
       if (communitySetExpr instanceof NamedCommunitySet) {
         mcs.initSmtVariable(_ctx, _solver, configVarPrefix + "named_community_set_");
+        collectCommunitiesFromNamedCommunitySet(((NamedCommunitySet) communitySetExpr).getName(), currentConfig);
+        //collectCommunitiesFromNamedCommunitySet(((NamedCommunitySet) communitySetExpr).getName());
       } else if (communitySetExpr instanceof RegexCommunitySet) {
         mcs.initSmtVariable(_ctx, _solver, configVarPrefix + "regex_community_set_");
+        collectCommunitiesFromRegexCommunitySet((RegexCommunitySet) communitySetExpr);
       } else if ( communitySetExpr instanceof LiteralCommunitySet) {
         mcs.initSmtVariable(_ctx, _solver, configVarPrefix + "exact_community_set_");
+          ((LiteralCommunitySet) communitySetExpr).getCommunities().forEach(c ->
+                  _matchedCommunities.add(format(c.getCommunityString())));
       } else if (communitySetExpr instanceof LiteralCommunity) {
         mcs.initSmtVariable(_ctx, _solver, configVarPrefix + "exact_community_");
+        _matchedCommunities.add(format(((LiteralCommunity) communitySetExpr).getCommunity().getCommunityString()));
       } else if (communitySetExpr instanceof CommunityList) {
         mcs.initSmtVariable(_ctx, _solver, configVarPrefix + "community_list_");
+        collectCommunitiesFromCommunityList((CommunityList) communitySetExpr, currentConfig);
+        //collectCommunitiesFromCommunityList((CommunityList) communitySetExpr);
       } else {
         // Unimplemented subclasses of CommunitySetExpr:
         // * LiteralCommunityConjunction
@@ -1961,6 +2021,136 @@ public class Encoder {
     // String msg = String.format("Unimplemented feature %s", expr.toString());
     // throw new BatfishException(msg);
   }
+
+private void collectCommunitiesFromNamedCommunitySet(String name, Configuration currentConfig) {
+    collectCommunitiesFromNamedCommunitySet(name, currentConfig, new HashSet<>());
+}
+
+    private void collectCommunitiesFromNamedCommunitySet(String name, Configuration currentConfig, Set<String> visited) {
+        if (visited.contains(name)) return;
+        visited.add(name);
+
+        // 从当前设备的配置中查找
+        if (currentConfig != null) {
+            CommunityList cl = currentConfig.getCommunityLists().get(name);
+            if (cl != null) {
+                collectCommunitiesFromCommunityList(cl, currentConfig, visited);
+                return;
+            }
+        }
+
+        // 如果当前设备找不到，记录警告（不从其他设备查找，因为不是真正匹配的）
+        if (currentConfig != null) {
+            _warnings.add("CommunityList '" + name + "' not found in configuration '" +
+                    currentConfig.getHostname() + "'");
+        } else {
+            _warnings.add("CommunityList '" + name + "' not found (currentConfig is null)");
+        }
+    }
+
+    private void collectCommunitiesFromCommunityList(CommunityList cl, Configuration currentConfig) {
+        collectCommunitiesFromCommunityList(cl, currentConfig, new HashSet<>());
+    }
+
+    private void collectCommunitiesFromCommunityList(CommunityList cl, Configuration currentConfig, Set<String> visited) {
+        for (CommunityListLine line : cl.getLines()) {
+            CommunitySetExpr expr = line.getMatchCondition();
+            if (expr instanceof LiteralCommunitySet) {
+                ((LiteralCommunitySet) expr).getCommunities().forEach(c ->
+                        _matchedCommunities.add(format(c.getCommunityString())));
+            } else if (expr instanceof LiteralCommunity) {
+                _matchedCommunities.add(format(((LiteralCommunity) expr).getCommunity().getCommunityString()));
+            } else if (expr instanceof NamedCommunitySet) {
+                collectCommunitiesFromNamedCommunitySet(((NamedCommunitySet) expr).getName(), currentConfig, visited);
+            } else if (expr instanceof CommunityList) {
+                collectCommunitiesFromCommunityList((CommunityList) expr, currentConfig, visited);
+            } else if (expr instanceof RegexCommunitySet) {
+                collectCommunitiesFromRegexCommunitySet((RegexCommunitySet) expr);
+            }
+        }
+    }
+
+    private void collectCommunitiesFromRegexCommunitySet(RegexCommunitySet rcs) {
+        Pattern pattern = Pattern.compile(rcs.getRegex());
+        for (String formattedCommunity : _communityToConfigVars.keySet()) {
+            String matchString = _formattedToMatchString.get(formattedCommunity);
+            if (matchString != null && pattern.matcher(matchString).find()) {
+                _matchedCommunities.add(formattedCommunity);
+            }
+        }
+    }
+    private String extractHostNameFromConfigVarPrefix(String configVarPrefix) {
+        if (configVarPrefix == null || !configVarPrefix.startsWith("Config_")) {
+            return null;
+        }
+        // 找到第一个 "_" 后的位置
+        int start = "Config_".length();
+        int end = configVarPrefix.indexOf("_", start);
+        if (end == -1) {
+            return null;
+        }
+        return configVarPrefix.substring(start, end);
+    }
+
+    private void printCommunityToConfigVarsMapping() {
+        if (_communityToConfigVars == null || _communityToConfigVars.isEmpty()) {
+            _communityToConfigVarsWriter.close();
+            return;
+        }
+
+        for (String community : new TreeSet<>(_communityToConfigVars.keySet())) {
+            Map<String, Set<String>> opMap = _communityToConfigVars.get(community);
+            _communityToConfigVarsWriter.println("Community: " + community);
+
+            if (opMap.containsKey("ADD")) {
+                _communityToConfigVarsWriter.println("  Operation: ADD");
+                for (String var : new TreeSet<>(opMap.get("ADD"))) {
+                    _communityToConfigVarsWriter.println("    - " + var);
+                }
+            }
+
+            if (opMap.containsKey("SET")) {
+                _communityToConfigVarsWriter.println("  Operation: SET");
+                for (String var : new TreeSet<>(opMap.get("SET"))) {
+                    _communityToConfigVarsWriter.println("    - " + var);
+                }
+            }
+
+            _communityToConfigVarsWriter.println();
+        }
+
+        _communityToConfigVarsWriter.close();
+    }
+    private void printUnmatchedCommunities() {
+        Set<String> unmatched = new TreeSet<>(_communityToConfigVars.keySet());
+        if (_matchedCommunities != null) {
+            unmatched.removeAll(_matchedCommunities);
+        }
+
+        if (unmatched.isEmpty()) {
+            _unmatchedCommunitiesWriter.println("All communities are matched.");
+        } else {
+            for (String community : unmatched) {
+                Map<String, Set<String>> opMap = _communityToConfigVars.get(community);
+                _unmatchedCommunitiesWriter.println("Community: " + community);
+                if (opMap.containsKey("ADD")) {
+                    opMap.get("ADD").forEach(var -> _unmatchedCommunitiesWriter.println("  ADD: " + var));
+                }
+                if (opMap.containsKey("SET")) {
+                    opMap.get("SET").forEach(var -> _unmatchedCommunitiesWriter.println("  SET: " + var));
+                }
+                _unmatchedCommunitiesWriter.println();
+            }
+        }
+        if (!_warnings.isEmpty()) {
+            _unmatchedCommunitiesWriter.println("--- Warnings ---");
+            for (String w : _warnings) {
+                _unmatchedCommunitiesWriter.println(w);
+            }
+        }
+        _unmatchedCommunitiesWriter.close();
+    }
+
 
   public PrintWriter getPropertiesVarWriter() {
     return _propertiesVarWriter;
