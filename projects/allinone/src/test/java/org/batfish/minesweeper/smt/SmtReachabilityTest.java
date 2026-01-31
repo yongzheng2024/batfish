@@ -141,10 +141,10 @@ public class SmtReachabilityTest {
         final ReachabilityQuestion question = new ReachabilityQuestion();
 
         // Specification 1: Customer reachability
-        // question.setIngressNodeRegex("customer");
-        // question.setFinalNodeRegex("isp1");
-        // IpWildcard ipWildcard = IpWildcard.parse("198.51.100.0/24");
-        // question.setDstIps(Set.of(ipWildcard));
+        question.setIngressNodeRegex("customer");
+        question.setFinalNodeRegex("isp1");
+        IpWildcard ipWildcard = IpWildcard.parse("198.51.100.0/24");
+        question.setDstIps(Set.of(ipWildcard));
 
         // Specification 2: No transit
         // question.setIngressNodeRegex("isp2");

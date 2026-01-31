@@ -106,6 +106,12 @@ public final class MatchPrefixSet extends BooleanExpr {
           System.out.println("WARNING: MatchPrefixSet:initSmtVariable called twice, ignored.");
           return;
         }
+        // Handle shared MatchPrefixSet in PEER_EXPORT_POLICY routes
+        if (_configVarPrefix.contains("PEER_EXPORT_POLICY") &&
+            configVarPrefix.contains("PEER_EXPORT_POLICY")) {
+          System.out.println("WARNING: MatchPrefixSet:initSmtVariable called twice for PEER_EXPORT_POLICY, ignored.");
+          return;
+        }
       }
 
       throw new BatfishException("MatchPrefixSet.initSmtVariable: shared object.\n" +

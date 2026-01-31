@@ -85,6 +85,7 @@ import org.batfish.datamodel.routing_policy.statement.SetNextHop;
 import org.batfish.datamodel.routing_policy.statement.SetOrigin;
 import org.batfish.datamodel.routing_policy.statement.SetOspfMetricType;
 import org.batfish.datamodel.routing_policy.statement.Statement;
+import org.batfish.datamodel.routing_policy.communities.SetCommunities;
 import org.batfish.datamodel.routing_policy.statement.Statements.StaticStatement;
 
 import org.batfish.datamodel.bgp.community.Community;
@@ -1430,9 +1431,13 @@ public class Encoder {
       GraphEdge ge = entry.getKey();
       BgpActivePeerConfig bgpConfig = entry.getValue();
 
+      // Handle null cases for getEnd() and getRemoteAsns()
+      String endInterfaceName = ge.getEnd() != null ? ge.getEnd().getName() : "null";
+      String remoteAsns = bgpConfig.getRemoteAsns() != null ? bgpConfig.getRemoteAsns().toString() : "null";
+      
       String ebgpNeighborPair =
           ge.getRouter() + "," + ge.getStart().getName() + " (" + bgpConfig.getLocalAs() + ") -> " +
-          ge.getPeer() + "," + ge.getEnd().getName() + " (" + bgpConfig.getRemoteAsns() + ")";
+          ge.getPeer() + "," + endInterfaceName + " (" + remoteAsns + ")";
       _ebgpneighborWriter.println(ebgpNeighborPair);
     }
     _ebgpneighborWriter.flush();
@@ -1794,6 +1799,10 @@ public class Encoder {
         {}  // do nothing
 
       } else if (stmt instanceof SetNextHop) {
+        // TODO: implement me
+        {}  // do nothing
+
+      } else if (stmt instanceof SetCommunities) {
         // TODO: implement me
         {}  // do nothing
 
