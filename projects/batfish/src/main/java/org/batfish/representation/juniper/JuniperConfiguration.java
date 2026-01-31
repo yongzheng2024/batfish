@@ -723,6 +723,45 @@ public final class JuniperConfiguration extends VendorConfiguration {
             : MultipathEquivalentAsPathMatchMode.FIRST_AS;
     proc.setMultipathEquivalentAsPathMatchMode(multipathEquivalentAsPathMatchMode);
 
+    // Set BGP redistribution policy so main RIB routes (e.g. static) can be redistributed into BGP.
+    // Juniper uses the same export policy chain for redistribution when sending to peers.
+    List<String> redistributionExportPolicies = new ArrayList<>(mg.getExportPolicies());
+    if (redistributionExportPolicies.isEmpty()) {
+      routingInstance.getIpBgpGroups().values().stream()
+          .filter(ig -> !ig.getExportPolicies().isEmpty())
+          .findFirst()
+          .ifPresent(ig -> redistributionExportPolicies.addAll(ig.getExportPolicies()));
+    }
+    if (redistributionExportPolicies.isEmpty()) {
+      routingInstance.getNamedBgpGroups().values().stream()
+          .filter(ng -> !ng.getExportPolicies().isEmpty())
+          .findFirst()
+          .ifPresent(ng -> redistributionExportPolicies.addAll(ng.getExportPolicies()));
+    }
+    if (!redistributionExportPolicies.isEmpty()) {
+      String redistributionPolicyName = "~BGP_REDISTRIBUTION_POLICY:" + vrfName + "~";
+      List<BooleanExpr> redistributionPolicyCalls = new ArrayList<>();
+      for (String exportPolicyName : redistributionExportPolicies) {
+        PolicyStatement exportPolicy =
+            _masterLogicalSystem.getPolicyStatements().get(exportPolicyName);
+        if (exportPolicy != null) {
+          setPolicyStatementReferent(exportPolicyName);
+          redistributionPolicyCalls.add(new CallExpr(exportPolicyName));
+        }
+      }
+      if (!redistributionPolicyCalls.isEmpty()) {
+        RoutingPolicy redistributionPolicy = new RoutingPolicy(redistributionPolicyName, _c);
+        redistributionPolicy.getStatements().add(new SetDefaultPolicy(DEFAULT_BGP_EXPORT_POLICY_NAME));
+        If redistributionConditional = new If();
+        redistributionConditional.setGuard(new FirstMatchChain(redistributionPolicyCalls));
+        redistributionConditional.getTrueStatements().add(Statements.ExitAccept.toStaticStatement());
+        redistributionConditional.getFalseStatements().add(Statements.ExitReject.toStaticStatement());
+        redistributionPolicy.getStatements().add(redistributionConditional);
+        _c.getRoutingPolicies().put(redistributionPolicyName, redistributionPolicy);
+        proc.setRedistributionPolicy(redistributionPolicyName);
+      }
+    }
+
     return proc;
   }
 
