@@ -362,14 +362,20 @@ public class PrefixSpace implements Serializable {
           "Current  configVarPrefix: " + configVarPrefix);
     }
 
-    // check and avoid shared object
+    // check and avoid shared object for SubRange
     for (PrefixRange prefixRange : getPrefixRanges()) {
-      // Currently, SMT variables for shared PrefixRange objects are not supported.
-      // If a PrefixRange has already been initialized (shared), throw an exception
-      // to prevent unexpected behavior.
       if (prefixRange.getEnableSmtVariable()) {
-        throw new BatfishException("PrefixSpace:initSmtVariable: " +
-            "shared PrefixRange objects are not supported yet.");
+        System.out.println("WARNING: PrefixSpace:initSmtVariable: " +
+            "found shared PrefixRange, cloning it.");
+
+        PrefixRange prefixRangeBackup = prefixRange;
+        prefixRange = new PrefixRange(prefixRange.getPrefix(), prefixRange.getLengthRange());
+
+        // add additional assert for using shared object
+        if (prefixRangeBackup.getEnableSmtVariable() == prefixRange.getEnableSmtVariable()) {
+          throw new BatfishException("PrefixSpace:initSmtVariable: " +
+              "cloning failed for shared object.");
+        }
       }
 
       // init smt variable for prefix range configuration

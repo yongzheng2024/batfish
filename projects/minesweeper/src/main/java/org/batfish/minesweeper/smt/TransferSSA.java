@@ -67,6 +67,8 @@ import org.batfish.datamodel.routing_policy.statement.SetOrigin;
 import org.batfish.datamodel.routing_policy.statement.SetOspfMetricType;
 import org.batfish.datamodel.routing_policy.statement.Statement;
 import org.batfish.datamodel.routing_policy.statement.Statements.StaticStatement;
+import org.batfish.datamodel.routing_policy.communities.MatchCommunities;
+import org.batfish.datamodel.routing_policy.communities.SetCommunities;
 import org.batfish.minesweeper.CommunityVar;
 import org.batfish.minesweeper.CommunityVar.Type;
 import org.batfish.minesweeper.Graph;
@@ -727,10 +729,17 @@ class TransferSSA {
           throw new BatfishException(
               "Unhandled " + BooleanExprs.class.getCanonicalName() + ": " + b.getType());
       }
+
     } else if (expr instanceof MatchAsPath) {
       pCur.debug("MatchAsPath");
       System.out.println("MatchAsPath");
       System.out.println("Warning: use of unimplemented feature MatchAsPath");
+      return fromExpr(_enc.mkFalse());
+
+    } else if (expr instanceof MatchCommunities) {
+      pCur.debug("MatchCommunities");
+      System.out.println("MatchCommunities");
+      System.out.println("Warning: use of unimplemented feature MatchCommunities");
       return fromExpr(_enc.mkFalse());
     }
 
@@ -1076,6 +1085,8 @@ class TransferSSA {
         p.getData().getOspfType().setBitVec((BitVecExpr) expr);
         break;
       case "RETURN":
+        break;
+      case "FALLTHROUGH":
         break;
       default:
         for (Map.Entry<CommunityVar, BoolExpr> entry : p.getData().getCommunities().entrySet()) {
@@ -1582,6 +1593,10 @@ class TransferSSA {
       } else if (stmt instanceof SetNextHop) {
         curP.debug("SetNextHop");
         System.out.println("Warning: use of unimplemented feature SetNextHop");
+
+      } else if (stmt instanceof SetCommunities) {
+        curP.debug("SetCommunities");
+        System.out.println("Warning: use of unimplemented feature SetCommunities");
 
       } else {
 

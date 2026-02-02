@@ -87,11 +87,19 @@ import org.batfish.datamodel.routing_policy.statement.SetOrigin;
 import org.batfish.datamodel.routing_policy.statement.SetOspfMetricType;
 import org.batfish.datamodel.routing_policy.statement.Statement;
 import org.batfish.datamodel.routing_policy.statement.Statements.StaticStatement;
+// import org.batfish.datamodel.routing_policy.communities.CommunitySetExpr;
+import org.batfish.datamodel.routing_policy.communities.SetCommunities;
+import org.batfish.datamodel.routing_policy.communities.InputCommunities;
+import org.batfish.datamodel.routing_policy.communities.CommunitySetReference;
+import org.batfish.datamodel.routing_policy.communities.CommunitySetUnion;
+import org.batfish.datamodel.routing_policy.communities.CommunitySetDifference;
+// import org.batfish.datamodel.routing_policy.communities.LiteralCommunitySet;
 
 import org.batfish.datamodel.bgp.community.Community;
 import org.batfish.datamodel.bgp.community.ExtendedCommunity;
 import org.batfish.datamodel.bgp.community.StandardCommunity;
 import org.batfish.datamodel.bgp.community.LargeCommunity;
+
 
 /**
  * Data class to store RouteFilterList rule information for Trie matching.
@@ -322,6 +330,7 @@ public class Encoder {
   PrintWriter _smtWriter;
   PrintWriter _constWriter;
   PrintWriter _configWriter;
+  PrintWriter _modelIgpWriter;
   PrintWriter _hostnameWriter;
   PrintWriter _ebgpneighborWriter;
   PrintWriter _regexCommWriter;
@@ -534,9 +543,13 @@ public class Encoder {
     if (g.getIbgpNeighbors().isEmpty() || !_modelIgp) {
       _slices.put(MAIN_SLICE_NAME,
           new EncoderSlice(this, h, g, "", _unusedCfwdWriter, _historyEnumWriter));
+      // Write a flag indicating that we are NOT modeling IGP
+      _modelIgpWriter.println("0");
     } else {
       _slices.put(MAIN_SLICE_NAME,
           new EncoderSlice(this, h, g, MAIN_SLICE_NAME, _unusedCfwdWriter, _historyEnumWriter));
+      // Write a flag indicating that we are modeling IGP
+      _modelIgpWriter.println("1");
     }
 
     if (_modelIgp) {
@@ -1181,6 +1194,7 @@ public class Encoder {
     String outputSmtFileName = _outputDirectoryName + "/smt_encoding.smt2";
     String outputConstFileName = _outputDirectoryName + "/config_constraints.smt2";
     String outputConfigFileName = _outputDirectoryName + "/configs_to_variables.txt";
+    String outputModelIgpName = _outputDirectoryName + "/0_model_igp.txt";
     String outputHostnameFileName = _outputDirectoryName + "/0_hostnames.txt";
     String outputEbgpNeighborFileName = _outputDirectoryName + "/0_ebgp_neighbors.txt";
     String outputRegexCommFileName = _outputDirectoryName + "/0_regex_communities.txt";
@@ -1194,6 +1208,7 @@ public class Encoder {
     File outputSmtFile = new File(outputSmtFileName);
     File outputConstFile = new File(outputConstFileName);
     File outputConfigFile = new File(outputConfigFileName);
+    File outputModelIgpFile = new File(outputModelIgpName);
     File outputHostnameFile = new File(outputHostnameFileName);
     File outputEbgpNeighborFile = new File(outputEbgpNeighborFileName);
     File outputRegexCommFile = new File(outputRegexCommFileName);
@@ -1208,6 +1223,7 @@ public class Encoder {
       _smtWriter = new PrintWriter(new FileWriter(outputSmtFile, true), true);
       _constWriter = new PrintWriter(new FileWriter(outputConstFile, true), true);
       _configWriter = new PrintWriter(new FileWriter(outputConfigFile, true), true);
+      _modelIgpWriter = new PrintWriter(new FileWriter(outputModelIgpFile, true), true);
       _hostnameWriter = new PrintWriter(new FileWriter(outputHostnameFile, true), true);
       _ebgpneighborWriter = new PrintWriter(new FileWriter(outputEbgpNeighborFile, true), true);
       _regexCommWriter = new PrintWriter(new FileWriter(outputRegexCommFile, true), true);
@@ -1444,6 +1460,11 @@ public class Encoder {
     for (Map.Entry<GraphEdge, BgpActivePeerConfig> entry : _graph.getEbgpNeighbors().entrySet()) {
       GraphEdge ge = entry.getKey();
       BgpActivePeerConfig bgpConfig = entry.getValue();
+
+      // skip destination port without peer
+      if (null == ge.getPeer() || null == ge.getEnd()) {
+        continue;
+      }
 
       String ebgpNeighborPair =
           ge.getRouter() + "," + ge.getStart().getName() + " (" + bgpConfig.getLocalAs() + ") -> " +
@@ -1856,6 +1877,32 @@ public class Encoder {
         // TODO: implement me
         {}  // do nothing
 
+      } else if (stmt instanceof SetCommunities) {
+        SetCommunities scs = (SetCommunities) stmt;
+        org.batfish.datamodel.routing_policy.communities.CommunitySetExpr communitySetExpr =
+            scs.getExpr();
+        configVarPrefix = incrementLineSuffix(configVarPrefix);
+        if (communitySetExpr instanceof InputCommunities) {
+          // TODO: implement me
+          {}  // do nothing
+        } else if (communitySetExpr instanceof CommunitySetReference) {
+          // TODO: implement me
+          {}  // do nothing
+        } else if (communitySetExpr instanceof CommunitySetUnion) {
+          // TODO: implement me
+          {}  // do nothing
+        } else if (communitySetExpr instanceof CommunitySetDifference) {
+          // TODO: implement me
+          {}  // do nothing
+        } else if (communitySetExpr instanceof
+            org.batfish.datamodel.routing_policy.communities.LiteralCommunitySet) {
+          // TODO: implement me
+          {}  // do nothing
+        } else {
+          String msg = String.format("Unimplemented feature %s", communitySetExpr.getClass());
+          throw new BatfishException(msg);
+        }
+
       } else {
         String msg = String.format("Unimplemented feature %s", stmt.toString());
         throw new BatfishException(msg);
@@ -1928,6 +1975,10 @@ public class Encoder {
     if (expr instanceof MatchPrefixSet) {
       // TODO: check here and implement it when needed
       MatchPrefixSet mps = (MatchPrefixSet) expr;
+      // temporary fix: clone a new MatchPrefixSet without SMT variable enable flag
+      if (mps.getEnableSmtVariable()) {
+        mps = new MatchPrefixSet(mps.getPrefix(), mps.getPrefixSet());
+      }
       mps.initSmtVariable(_ctx, _solver, configVarPrefix);
 
       // write smt symbolic variables name to configs_to_variables file
