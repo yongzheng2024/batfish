@@ -18,6 +18,8 @@ public final class IncrementalDataPlaneSettings {
 
   public static final String PROP_COLORING = "coloring";
   public static final String PROP_SCHEDULE = "schedule";
+  /** When true, run BGP sub-iterations until convergence within each routing round (instant withdrawal propagation along chains). */
+  public static final String PROP_BGP_CONVERGE_WITHIN_ROUND = "bgpConvergeWithinRound";
 
   /**
    * Return the underlying configuration (it will be mutable).
@@ -49,6 +51,7 @@ public final class IncrementalDataPlaneSettings {
   private void initDefaults() {
     _config.setProperty(PROP_COLORING, SATURATION.toString());
     _config.setProperty(PROP_SCHEDULE, NODE_COLORED.toString());
+    _config.setProperty(PROP_BGP_CONVERGE_WITHIN_ROUND, false);
   }
 
   /** Return the dataplane computation {@link Schedule} */
@@ -62,5 +65,14 @@ public final class IncrementalDataPlaneSettings {
    */
   public Coloring getColoringType() {
     return Coloring.valueOf(_config.getString(PROP_COLORING));
+  }
+
+  /**
+   * When true, run multiple BGP sub-iterations within each routing round until BGP converges, so
+   * that withdrawals propagate along chains (e.g. A -&gt; B -&gt; C) in one round instead of one
+   * hop per round.
+   */
+  public boolean getBgpConvergeWithinRound() {
+    return _config.getBoolean(PROP_BGP_CONVERGE_WITHIN_ROUND, false);
   }
 }
