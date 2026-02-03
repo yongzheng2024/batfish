@@ -115,17 +115,20 @@ public class SmtReachabilityTest {
 
         // -------------------------------------------------------------
 
-        // String configPath = runfiles.rlocation("batfish/benchmarks/Bics/bgp");
+        // String configPath = runfiles.rlocation("batfish/benchmarks/Internet2/");
+        String configPath = runfiles.rlocation("batfish/benchmarks/Bics/bgp");
         // String configPath = runfiles.rlocation("batfish/benchmarks/Columbus/bgp");
         // String configPath = runfiles.rlocation("batfish/benchmarks/USCarrier/bgp");
-        String configPath = runfiles.rlocation("batfish/benchmarks/Internet2/");
+
+        // String configPath = runfiles.rlocation("batfish/benchmarks/Network2/");
+        // String configPath = runfiles.rlocation("batfish/benchmarks/Bics/bgp-10");
 
         TestrigText _testrig = loadConfigurations(configPath);
         _batfish = BatfishTestUtils.getBatfishFromTestrigText(_testrig, _temp);
 
         // compute data plane for printing RIBs before
         _batfish.computeDataPlane(_batfish.getSnapshot(), _bgpRouteWriter);
-        // print RIBs of the data plane in formal format
+        // print MAIN RIB (forwarding table) of the data plane: one best route per prefix per node.
         RoutesQuestion routesQuestion = new RoutesQuestion();
         RoutesAnswerer routesAnswerer = new RoutesAnswerer(routesQuestion, _batfish);
         AnswerElement routesAnswer = routesAnswerer.answer(_batfish.getSnapshot());
@@ -296,6 +299,11 @@ public class SmtReachabilityTest {
         // IpWildcard ipWildcard = IpWildcard.parse("10.2.2.0/24");
         // question.setDstIps(Set.of(ipWildcard));
         // question.setNegate(true);
+        //
+        // question.setIngressNodeRegex(".*");
+        // question.setFinalNodeRegex("isp1");
+        // IpWildcard ipWildcard = IpWildcard.parse("10.1.1.0/24");
+        // question.setDstIps(Set.of(ipWildcard));
 
         // Line benchmarks - line100
         // question.setIngressNodeRegex("customer");
@@ -303,6 +311,11 @@ public class SmtReachabilityTest {
         // IpWildcard ipWildcard = IpWildcard.parse("10.2.2.0/24");
         // question.setDstIps(Set.of(ipWildcard));
         // question.setNegate(true);
+        //
+        // question.setIngressNodeRegex(".*");
+        // question.setFinalNodeRegex("isp1");
+        // IpWildcard ipWildcard = IpWildcard.parse("10.5.4.0/24");
+        // question.setDstIps(Set.of(ipWildcard));
 
         // Line benchmarks - line1000
         // question.setIngressNodeRegex("customer");
@@ -310,6 +323,11 @@ public class SmtReachabilityTest {
         // IpWildcard ipWildcard = IpWildcard.parse("10.2.2.0/24");
         // question.setDstIps(Set.of(ipWildcard));
         // question.setNegate(true);
+        //
+        // question.setIngressNodeRegex(".*");
+        // question.setFinalNodeRegex("isp1");
+        // IpWildcard ipWildcard = IpWildcard.parse("10.5.49.0/24");
+        // question.setDstIps(Set.of(ipWildcard));
 
         // Line benchmarks - line5000
         // question.setIngressNodeRegex("customer");
@@ -317,6 +335,11 @@ public class SmtReachabilityTest {
         // IpWildcard ipWildcard = IpWildcard.parse("10.2.2.0/24");
         // question.setDstIps(Set.of(ipWildcard));
         // question.setNegate(true);
+        //
+        // question.setIngressNodeRegex(".*");
+        // question.setFinalNodeRegex("isp1");
+        // IpWildcard ipWildcard = IpWildcard.parse("10.20.62.0/24");
+        // question.setDstIps(Set.of(ipWildcard));
 
         // Line benchmarks - line10000
         // question.setIngressNodeRegex("customer");
@@ -324,6 +347,11 @@ public class SmtReachabilityTest {
         // IpWildcard ipWildcard = IpWildcard.parse("10.2.2.0/24");
         // question.setDstIps(Set.of(ipWildcard));
         // question.setNegate(true);
+        //
+        // question.setIngressNodeRegex(".*");
+        // question.setFinalNodeRegex("isp1");
+        // IpWildcard ipWildcard = IpWildcard.parse("10.20.124.0/24");
+        // question.setDstIps(Set.of(ipWildcard));
 
         // -------------------------------------------------------------
 
@@ -331,6 +359,16 @@ public class SmtReachabilityTest {
         // question.setIngressNodeRegex(".*");
         // question.setFinalNodeRegex("geneva");
         // IpWildcard ipWildcard = IpWildcard.parse("200.1.58.0/24");
+        // question.setDstIps(Set.of(ipWildcard));
+        //
+        question.setIngressNodeRegex(".*");
+        question.setFinalNodeRegex("peergeneva_8");
+        IpWildcard ipWildcard = IpWildcard.parse("128.0.8.0/24");
+        question.setDstIps(Set.of(ipWildcard));
+        //
+        // question.setIngressNodeRegex(".*");
+        // question.setFinalNodeRegex("peeristanbul_10");
+        // IpWildcard ipWildcard = IpWildcard.parse("128.0.10.0/24");
         // question.setDstIps(Set.of(ipWildcard));
 
         // Columbus benchmarks
@@ -343,17 +381,28 @@ public class SmtReachabilityTest {
         // question.setFinalNodeRegex("peerstttvincent_15");
         // IpWildcard ipWildcard = IpWildcard.parse("128.0.15.0/24");
         // question.setDstIps(Set.of(ipWildcard));
+        //
+        // question.setIngressNodeRegex(".*");
+        // question.setFinalNodeRegex("peernodeid44_8");
+        // IpWildcard ipWildcard = IpWildcard.parse("128.0.8.0/24");
+        // question.setDstIps(Set.of(ipWildcard));
 
         // USCarrier benchmarks
         // question.setIngressNodeRegex(".*");
         // question.setFinalNodeRegex("georgetown");
         // IpWildcard ipWildcard = IpWildcard.parse("200.4.232.0/24");
         // question.setDstIps(Set.of(ipWildcard));
+        //
+        // question.setIngressNodeRegex(".*");
+        // question.setFinalNodeRegex("peerjacksonvilleid5_8");
+        // IpWildcard ipWildcard = IpWildcard.parse("128.0.8.0/24");
+        // question.setDstIps(Set.of(ipWildcard));
 
         // Internet2 benchmarks
-        question.setIngressNodeRegex(".*");
-        question.setFinalNodeRegex(".*");
-        question.setFinalIfaceRegex(".*");
+        // question.setIngressNodeRegex(".*");
+        // question.setFinalNodeRegex("newy-re1");
+        // IpWildcard ipWildcard = IpWildcard.parse("64.57.22.0/24");
+        // question.setDstIps(Set.of(ipWildcard));
 
         // -------------------------------------------------------------
 
