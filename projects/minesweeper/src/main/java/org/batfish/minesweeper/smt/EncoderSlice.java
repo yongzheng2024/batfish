@@ -1785,7 +1785,7 @@ class EncoderSlice {
           BoolExpr cForward = _symbolicDecisions.getControlForwarding().get(router, ge);
           assert (cForward != null);
           // TODO: write the unused control-forwarding to file
-          // _unusedCfwdWriter.println(cForward);
+          _unusedCfwdWriter.println(cForward);
           add(mkNot(cForward));
         }
       } else {
@@ -1809,7 +1809,7 @@ class EncoderSlice {
                 add(mkImplies(mkNot(expr), mkNot(cForward)));
               } else {
                 // TODO: write the unused control-forwarding to file
-                // _unusedCfwdWriter.println(cForward);
+                _unusedCfwdWriter.println(cForward);
                 add(mkNot(cForward));
               }
             }
