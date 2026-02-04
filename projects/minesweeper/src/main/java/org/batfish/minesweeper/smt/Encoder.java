@@ -332,6 +332,7 @@ public class Encoder {
   PrintWriter _configWriter;
   PrintWriter _modelIgpWriter;
   PrintWriter _hostnameWriter;
+  PrintWriter _interfaceWriter;
   PrintWriter _ebgpneighborWriter;
   PrintWriter _regexCommWriter;
   PrintWriter _dstipsWriter;
@@ -1196,6 +1197,7 @@ public class Encoder {
     String outputConfigFileName = _outputDirectoryName + "/configs_to_variables.txt";
     String outputModelIgpName = _outputDirectoryName + "/0_model_igp.txt";
     String outputHostnameFileName = _outputDirectoryName + "/0_hostnames.txt";
+    String outputInterfaceFileName = _outputDirectoryName + "/0_interfaces.txt";
     String outputEbgpNeighborFileName = _outputDirectoryName + "/0_ebgp_neighbors.txt";
     String outputRegexCommFileName = _outputDirectoryName + "/0_regex_communities.txt";
     String outputDstipsFileName = _outputDirectoryName + "/0_dst_ips.txt";
@@ -1210,6 +1212,7 @@ public class Encoder {
     File outputConfigFile = new File(outputConfigFileName);
     File outputModelIgpFile = new File(outputModelIgpName);
     File outputHostnameFile = new File(outputHostnameFileName);
+    File outputInterfaceFile = new File(outputInterfaceFileName);
     File outputEbgpNeighborFile = new File(outputEbgpNeighborFileName);
     File outputRegexCommFile = new File(outputRegexCommFileName);
     File outputDstipsFile = new File(outputDstipsFileName);
@@ -1225,6 +1228,7 @@ public class Encoder {
       _configWriter = new PrintWriter(new FileWriter(outputConfigFile, true), true);
       _modelIgpWriter = new PrintWriter(new FileWriter(outputModelIgpFile, true), true);
       _hostnameWriter = new PrintWriter(new FileWriter(outputHostnameFile, true), true);
+      _interfaceWriter = new PrintWriter(new FileWriter(outputInterfaceFile, true), true);
       _ebgpneighborWriter = new PrintWriter(new FileWriter(outputEbgpNeighborFile, true), true);
       _regexCommWriter = new PrintWriter(new FileWriter(outputRegexCommFile, true), true);
       _dstipsWriter = new PrintWriter(new FileWriter(outputDstipsFile, true), true);
@@ -1455,6 +1459,13 @@ public class Encoder {
     }
     _hostnameWriter.flush();
     _hostnameWriter.close();
+
+    // write all interfaces
+    for (GraphEdge edge : _graph.getAllEdges()) {
+      _interfaceWriter.println(edge.getRouter() + "," + edge.getStart().getName());
+    }
+    _interfaceWriter.flush();
+    _interfaceWriter.close();
 
     // write all eBGP neighbor pairs (with as-number)
     for (Map.Entry<GraphEdge, BgpActivePeerConfig> entry : _graph.getEbgpNeighbors().entrySet()) {
