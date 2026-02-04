@@ -386,7 +386,7 @@ public class Graph {
       OspfProcess ospf = getFirstOspfProcess(conf.getDefaultVrf());
       for (OspfArea area : ospf.getAreas().values()) {
         for (String ifaceName : area.getInterfaces()) {
-          Interface iface = conf.getAllInterfaces().get(ifaceName);
+          Interface iface = conf.getAllInterfaces(Configuration.DEFAULT_VRF_NAME).get(ifaceName);
           if (iface.getActive() && iface.getOspfEnabled()) {
             acc.add(iface.getConcreteAddress().getPrefix());
           }
@@ -434,9 +434,9 @@ public class Graph {
       return acc;
     }
 
-    // collect interface ip prefix address according to configuration
+    // collect interface ip prefix address according to configuration (default VRF only)
     if (proto.isConnected()) {
-      for (Interface iface : conf.getAllInterfaces().values()) {
+      for (Interface iface : conf.getAllInterfaces(Configuration.DEFAULT_VRF_NAME).values()) {
         ConcreteInterfaceAddress address = iface.getConcreteAddress();
         if (address != null) {
           acc.add(address.getPrefix());
@@ -480,12 +480,12 @@ public class Graph {
     // the element storage a host and all relevant interface
     Map<String, Set<NodeInterfacePair>> routerIfaceMap = new HashMap<>();
 
-    // initialize ifaceMap and routerIfaceMap from all host's configuration
+    // initialize ifaceMap and routerIfaceMap from default VRF interfaces only
     for (Entry<String, Configuration> entry : _configurations.entrySet()) {
       String router = entry.getKey();
       Configuration conf = entry.getValue();
       Set<NodeInterfacePair> ifacePairs = new HashSet<>();
-      for (Entry<String, Interface> entry2 : conf.getAllInterfaces().entrySet()) {
+      for (Entry<String, Interface> entry2 : conf.getAllInterfaces(Configuration.DEFAULT_VRF_NAME).entrySet()) {
         String name = entry2.getKey();
         Interface iface = entry2.getValue();
         NodeInterfacePair nip = NodeInterfacePair.of(router, name);

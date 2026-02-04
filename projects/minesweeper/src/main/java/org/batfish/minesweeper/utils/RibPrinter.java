@@ -3,6 +3,7 @@ package org.batfish.minesweeper.utils;
 import org.batfish.datamodel.answers.AnswerElement;
 import org.batfish.datamodel.table.TableAnswerElement;
 import org.batfish.datamodel.table.Row;
+import org.batfish.datamodel.Configuration;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import java.io.PrintWriter;
@@ -49,10 +50,13 @@ public class RibPrinter {
     writer.println(repeatChar('=', header.length()));
     System.out.println(repeatChar('=', header.length()));
 
-    // Iterate over each route entry and print its fields
+    // Iterate over each route entry and print its fields (default VRF only)
     for (Row row : rows) {
-      String node = getFieldAsText(row, "Node", "name");
       String vrf = getFieldAsText(row, "VRF");
+      if (!Configuration.DEFAULT_VRF_NAME.equals(vrf)) {
+        continue;
+      }
+      String node = getFieldAsText(row, "Node", "name");
       String network = getFieldAsText(row, "Network");
       String protocol = getFieldAsText(row, "Protocol");
       String nextHopIp = getFieldAsText(row, "Next_Hop_IP");

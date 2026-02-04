@@ -829,10 +829,13 @@ public class Batfish extends PluginConsumer implements IBatfish {
         bgpRoutes = ((IncrementalDataPlane) result._dataPlane).getBgpRoutesAll();
     }
 
-    // Iterate over each route entry and print fields
+    // Iterate over each route entry and print fields (default VRF only)
     for (Table.Cell<String, String, Set<Bgpv4Route>> route : bgpRoutes.cellSet()) {
       String hostname = route.getRowKey();
       String vrfname = route.getColumnKey();
+      if (!Configuration.DEFAULT_VRF_NAME.equals(vrfname)) {
+        continue;
+      }
       for (Bgpv4Route r : route.getValue()) {
         String network = r.getNetwork().toString();
         String asPath = r.getAsPath().toString();
