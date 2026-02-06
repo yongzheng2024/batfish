@@ -45,10 +45,10 @@ public class RibPrinter {
         "NextHopInterface", "NextHop", "Metric", "AD", "Tag");
     // Print column headers
     writer.print(header);
-    System.out.print(header);
+    // System.out.print(header);
     // Print a horizontal divider line
     writer.println(repeatChar('=', header.length()));
-    System.out.println(repeatChar('=', header.length()));
+    // System.out.println(repeatChar('=', header.length()));
 
     // Iterate over each route entry and print its fields (default VRF only)
     for (Row row : rows) {
@@ -68,8 +68,8 @@ public class RibPrinter {
 
       writer.printf(format, node, vrf, network, protocol, nextHopIp,
           nextHopInterface, nextHop, metric, adminDistance, tag);
-      System.out.printf(format, node, vrf, network, protocol, nextHopIp,
-          nextHopInterface, nextHop, metric, adminDistance, tag);
+      // System.out.printf(format, node, vrf, network, protocol, nextHopIp,
+      //     nextHopInterface, nextHop, metric, adminDistance, tag);
     }
 
     // Flush and close the writer

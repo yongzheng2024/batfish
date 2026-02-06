@@ -802,15 +802,6 @@ final class BgpRoutingProcess implements RoutingProcess<BgpTopology, BgpRoute<?,
             remoteConfigId.getVrfName(),
             null,
             IN);
-        LOGGER.error(
-            "BGP route (rejected): node={} prefix={} received_from={} "
-                + "next_hop={} as_path_len={} local_pref={} reason=rejected_core_protocol",
-            _hostname,
-            remoteRoute.getNetwork(),
-            remoteConfigId.getHostname(),
-            remoteRoute.getNextHopIp(),
-            remoteRoute.getAsPath().length(),
-            remoteRoute.getLocalPreference());
         continue;
       }
 
@@ -835,16 +826,6 @@ final class BgpRoutingProcess implements RoutingProcess<BgpTopology, BgpRoute<?,
             remoteConfigId.getVrfName(),
             importPolicyName,
             IN);
-        LOGGER.error(
-            "BGP route (rejected): node={} prefix={} received_from={} "
-                + "next_hop={} as_path_len={} local_pref={} reason=rejected_import_policy policy={}",
-            _hostname,
-            remoteRoute.getNetwork(),
-            remoteConfigId.getHostname(),
-            remoteRoute.getNextHopIp(),
-            remoteRoute.getAsPath().length(),
-            remoteRoute.getLocalPreference(),
-            importPolicyName);
         continue;
       }
       Bgpv4Route transformedIncomingRoute = transformedIncomingRouteBuilder.build();
@@ -859,13 +840,6 @@ final class BgpRoutingProcess implements RoutingProcess<BgpTopology, BgpRoute<?,
         if (useRibGroups) {
           perNeighborDeltaForRibGroups.remove(annotatedTransformedRoute, Reason.WITHDRAW);
         }
-        LOGGER.error(
-            "BGP route WITHDRAWN (received): node={} prefix={} received_from={} "
-                + "next_hop={} reason=WITHDRAW",
-            _hostname,
-            transformedIncomingRoute.getNetwork(),
-            remoteConfigId.getHostname(),
-            transformedIncomingRoute.getNextHopIp());
       } else {
         // Merge into staging rib, note delta
         RibDelta<Bgpv4Route> delta =
@@ -880,52 +854,6 @@ final class BgpRoutingProcess implements RoutingProcess<BgpTopology, BgpRoute<?,
             remoteIp,
             remoteConfigId.getVrfName(),
             importPolicyName);
-        // Data plane logging: next_hop, as_path_len, local_pref (grep test.log by node/prefix)
-        Prefix prefix = transformedIncomingRoute.getNetwork();
-        boolean installed = !delta.isEmpty();
-        boolean isBest =
-            installed
-                && targetRib.getBestPathRoutes().stream()
-                    .filter(r -> r.getNetwork().equals(prefix))
-                    .findFirst()
-                    .map(r -> r.equals(transformedIncomingRoute))
-                    .orElse(false);
-        LOGGER.error(
-            "BGP route: node={} prefix={} received_from={} "
-                + "next_hop={} as_path_len={} local_pref={} installed={} is_best={}",
-            _hostname,
-            prefix,
-            remoteConfigId.getHostname(),
-            transformedIncomingRoute.getNextHopIp(),
-            transformedIncomingRoute.getAsPath().length(),
-            transformedIncomingRoute.getLocalPreference(),
-            installed,
-            isBest);
-        if (!installed) {
-          Optional<Bgpv4Route> incumbent =
-              targetRib.getBestPathRoutes().stream()
-                  .filter(r -> r.getNetwork().equals(prefix))
-                  .findFirst();
-          if (incumbent.isPresent()) {
-            Bgpv4Route beatBy = incumbent.get();
-            LOGGER.error(
-                "BGP route (not installed): node={} prefix={} received_from={} "
-                    + "beaten_by: next_hop={} as_path_len={} local_pref={}",
-                _hostname,
-                prefix,
-                remoteConfigId.getHostname(),
-                beatBy.getNextHopIp(),
-                beatBy.getAsPath().length(),
-                beatBy.getLocalPreference());
-          } else {
-            LOGGER.error(
-                "BGP route (not installed): node={} prefix={} received_from={} "
-                    + "reason=next_hop_unreachable_or_no_incumbent",
-                _hostname,
-                prefix,
-                remoteConfigId.getHostname());
-          }
-        }
       }
     }
     // Apply rib groups if any
@@ -1096,25 +1024,14 @@ final class BgpRoutingProcess implements RoutingProcess<BgpTopology, BgpRoute<?,
                       // REPLACE does not make sense across routers, update with WITHDRAW
                       return transformedRoute
                           .map(
-                              bgpv4Route -> {
-                                Reason sendReason =
-                                    adv.getReason() == Reason.REPLACE
-                                        ? Reason.WITHDRAW
-                                        : adv.getReason();
-                                if (sendReason == Reason.WITHDRAW) {
-                                  LOGGER.error(
-                                      "BGP route WITHDRAWN (sent): node={} prefix={} "
-                                          + "sent_to={} next_hop={}",
-                                      _hostname,
-                                      bgpv4Route.getNetwork(),
-                                      remoteConfigId.getHostname(),
-                                      bgpv4Route.getNextHopIp());
-                                }
-                                return RouteAdvertisement.<Bgpv4Route>builder()
-                                    .setReason(sendReason)
-                                    .setRoute(bgpv4Route)
-                                    .build();
-                              })
+                              bgpv4Route ->
+                                  RouteAdvertisement.<Bgpv4Route>builder()
+                                      .setReason(
+                                          adv.getReason() == Reason.REPLACE
+                                              ? Reason.WITHDRAW
+                                              : adv.getReason())
+                                      .setRoute(bgpv4Route)
+                                      .build())
                           .orElse(null);
                     })
                 .filter(Objects::nonNull)

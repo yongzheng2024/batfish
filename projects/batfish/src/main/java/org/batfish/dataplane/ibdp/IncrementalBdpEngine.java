@@ -277,17 +277,6 @@ final class IncrementalBdpEngine {
               .setNodes(nodes)
               .setLayer3Topology(currentTopologyContext.getLayer3Topology())
               .build();
-      // Verification: log total main RIB routes in built data plane (same object refs as nodes)
-      int totalMainRibRoutes =
-          finalDataplane.getRibs().values().stream()
-              .flatMap(vrfMap -> vrfMap.values().stream())
-              .mapToInt(rib -> rib.getRoutes().size())
-              .sum();
-      LOGGER.error(
-          "IncrementalDataPlane built: nodes={} total_main_rib_routes={} (same Rib refs as "
-              + "VirtualRouters; 0_data_plane.txt will reflect this state)",
-          finalDataplane.getRibs().size(),
-          totalMainRibRoutes);
       return new IbdpResult(answerElement, finalDataplane, currentTopologyContext, nodes);
     } finally {
       span.finish();

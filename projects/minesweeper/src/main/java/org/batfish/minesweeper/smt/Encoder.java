@@ -472,8 +472,11 @@ public class Encoder {
     // initialize hostnames and ebgp neighbors
     initNetworkTopology();
 
+    long start = System.currentTimeMillis();
     // initialize configuration constant - SMT symbolic variable
     initConfigurationConstants();
+    long end = System.currentTimeMillis();
+    System.out.println("[Time for initializing configuration constants: " + (end - start) + " ms]");
 
     // initialize _symbolicFailures and _allVariables, which involving
     //   + all GraphEdge getPeer() == null according to _edgeMap  (_failedEdgeLinks)

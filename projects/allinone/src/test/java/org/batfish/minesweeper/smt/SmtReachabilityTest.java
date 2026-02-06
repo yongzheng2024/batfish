@@ -115,17 +115,23 @@ public class SmtReachabilityTest {
 
         // -------------------------------------------------------------
 
+        // String configPath = runfiles.rlocation("batfish/benchmarks/Lines-lite/line10");
+        // String configPath = runfiles.rlocation("batfish/benchmarks/Lines-lite/line100");
+        // String configPath = runfiles.rlocation("batfish/benchmarks/Lines-lite/line1000");
+        // String configPath = runfiles.rlocation("batfish/benchmarks/Lines-lite/line5000");
+        // String configPath = runfiles.rlocation("batfish/benchmarks/Lines-lite/line10000");
+
+        // -------------------------------------------------------------
+
         // String configPath = runfiles.rlocation("batfish/benchmarks/Internet2/");
         String configPath = runfiles.rlocation("batfish/benchmarks/Bics/bgp");
         // String configPath = runfiles.rlocation("batfish/benchmarks/Columbus/bgp");
         // String configPath = runfiles.rlocation("batfish/benchmarks/USCarrier/bgp");
 
-        // String configPath = runfiles.rlocation("batfish/benchmarks/Network2/");
-        // String configPath = runfiles.rlocation("batfish/benchmarks/Bics/bgp-10");
-
         TestrigText _testrig = loadConfigurations(configPath);
         _batfish = BatfishTestUtils.getBatfishFromTestrigText(_testrig, _temp);
 
+        long start = System.currentTimeMillis();
         // compute data plane for printing RIBs before
         _batfish.computeDataPlane(_batfish.getSnapshot(), _bgpRouteWriter);
         // print MAIN RIB (forwarding table) of the data plane: one best route per prefix per node.
@@ -133,6 +139,8 @@ public class SmtReachabilityTest {
         RoutesAnswerer routesAnswerer = new RoutesAnswerer(routesQuestion, _batfish);
         AnswerElement routesAnswer = routesAnswerer.answer(_batfish.getSnapshot());
         RibPrinter.printRouteTable(routesAnswer, _dataPlaneWriter);
+        long end = System.currentTimeMillis();
+        System.out.println("[Time taken to compute data plane and print RIBs: " + (end - start) + " ms]");
     }
 
     /**
@@ -243,13 +251,13 @@ public class SmtReachabilityTest {
 
         // -------------------------------------------------------------
 
-        // FatTree benchmarks - fattree04pol
+        // FatTree benchmarks - fattree4pol
         // question.setIngressNodeRegex(".*");
         // question.setFinalNodeRegex("edge-19");
         // IpWildcard ipWildcard = IpWildcard.parse("70.0.19.0/24");
         // question.setDstIps(Set.of(ipWildcard));
 
-        // FatTree benchmarks - fattree08pol
+        // FatTree benchmarks - fattree8pol
         // question.setIngressNodeRegex(".*");
         // question.setFinalNodeRegex("edge-79");
         // IpWildcard ipWildcard = IpWildcard.parse("70.0.79.0/24");
@@ -361,14 +369,19 @@ public class SmtReachabilityTest {
         // IpWildcard ipWildcard = IpWildcard.parse("200.1.58.0/24");
         // question.setDstIps(Set.of(ipWildcard));
         //
+        // question.setIngressNodeRegex(".*");
+        // question.setFinalNodeRegex("peergeneva_8");
+        // IpWildcard ipWildcard = IpWildcard.parse("128.0.8.0/24");
+        // question.setDstIps(Set.of(ipWildcard));
+        //
         question.setIngressNodeRegex(".*");
-        question.setFinalNodeRegex("peergeneva_8");
-        IpWildcard ipWildcard = IpWildcard.parse("128.0.8.0/24");
+        question.setFinalNodeRegex("peeristanbul_10");
+        IpWildcard ipWildcard = IpWildcard.parse("128.0.10.0/24");
         question.setDstIps(Set.of(ipWildcard));
         //
         // question.setIngressNodeRegex(".*");
-        // question.setFinalNodeRegex("peeristanbul_10");
-        // IpWildcard ipWildcard = IpWildcard.parse("128.0.10.0/24");
+        // question.setFinalNodeRegex("peermarseille_12");
+        // IpWildcard ipWildcard = IpWildcard.parse("128.0.12.0/24");
         // question.setDstIps(Set.of(ipWildcard));
 
         // Columbus benchmarks
@@ -399,8 +412,8 @@ public class SmtReachabilityTest {
         // question.setDstIps(Set.of(ipWildcard));
 
         // Internet2 benchmarks
-        // question.setIngressNodeRegex(".*");
-        // question.setFinalNodeRegex("newy-re1");
+        // question.setIngressNodeRegex("atla-re1");
+        // question.setFinalNodeRegex("atla-re1");
         // IpWildcard ipWildcard = IpWildcard.parse("64.57.22.0/24");
         // question.setDstIps(Set.of(ipWildcard));
 

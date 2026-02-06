@@ -40,7 +40,6 @@ import org.batfish.datamodel.AbstractRoute;
 import org.batfish.datamodel.AbstractRouteBuilder;
 import org.batfish.datamodel.AnnotatedRoute;
 import org.batfish.datamodel.BgpAdvertisement;
-import org.batfish.datamodel.BgpRoute;
 import org.batfish.datamodel.Bgpv4Route;
 import org.batfish.datamodel.BumTransportMethod;
 import org.batfish.datamodel.ConcreteInterfaceAddress;
@@ -96,7 +95,6 @@ import org.batfish.dataplane.rib.KernelRib;
 import org.batfish.dataplane.rib.LocalRib;
 import org.batfish.dataplane.rib.Rib;
 import org.batfish.dataplane.rib.RibDelta;
-import org.batfish.dataplane.rib.RouteAdvertisement;
 import org.batfish.dataplane.rib.RibDelta.Builder;
 import org.batfish.dataplane.rib.RipInternalRib;
 import org.batfish.dataplane.rib.RipRib;
@@ -1486,55 +1484,8 @@ public final class VirtualRouter {
     if (_bgpRoutingProcess == null) {
       return;
     }
-    RibDelta<BgpRoute<?, ?>> bgpDelta = _bgpRoutingProcess.getUpdatesForMainRib();
-    for (RouteAdvertisement<BgpRoute<?, ?>> action :
-        bgpDelta.getActions().collect(Collectors.toList())) {
-      AnnotatedRoute<AbstractRoute> annotated = new AnnotatedRoute<>(action.getRoute(), _name);
-      if (action.isWithdrawn()) {
-        RibDelta<AnnotatedRoute<AbstractRoute>> removeResult =
-            _mainRib.removeRouteGetDelta(annotated, action.getReason());
-        _mainRibRouteDeltaBuilder.from(removeResult);
-        if (!removeResult.isEmpty()) {
-          BgpRoute<?, ?> route = action.getRoute();
-          LOGGER.error(
-              "Main RIB route WITHDRAWN (later round): node={} vrf={} prefix={} protocol={} "
-                  + "next_hop={} reason={}",
-              getHostname(),
-              _name,
-              route.getNetwork(),
-              route.getProtocol(),
-              route.getNextHopIp(),
-              action.getReason());
-        }
-      } else {
-        RibDelta<AnnotatedRoute<AbstractRoute>> mergeResult =
-            _mainRib.mergeRouteGetDelta(annotated);
-        _mainRibRouteDeltaBuilder.from(mergeResult);
-        BgpRoute<?, ?> route = action.getRoute();
-        Prefix prefix = route.getNetwork();
-        boolean installed = !mergeResult.isEmpty();
-        boolean isFinalBest =
-            installed
-                && _mainRib.getTypedRoutes().stream()
-                    .filter(r -> r.getNetwork().equals(prefix))
-                    .findFirst()
-                    .map(best -> best.getRoute().equals(route))
-                    .orElse(false);
-        LOGGER.error(
-            "Main RIB route (at merge time, may change in later rounds): node={} vrf={} prefix={} "
-                + "protocol={} next_hop={} admin_distance={} metric={} installed_in_main_rib={} "
-                + "is_final_best={}",
-            getHostname(),
-            _name,
-            prefix,
-            route.getProtocol(),
-            route.getNextHopIp(),
-            route.getAdministrativeCost(),
-            route.getMetric(),
-            installed,
-            isFinalBest);
-      }
-    }
+    _mainRibRouteDeltaBuilder.from(
+        importRibDelta(_mainRib, _bgpRoutingProcess.getUpdatesForMainRib(), _name));
   }
 
   /** End of a single "EGP" routing round. */

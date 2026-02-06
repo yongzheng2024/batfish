@@ -872,15 +872,15 @@ public class Batfish extends PluginConsumer implements IBatfish {
 
     ComputeDataPlaneResult result = getDataPlanePlugin().computeDataPlane(snapshot);
     // System.out.println(result._dataPlane.getBgpRoutes());
-    for (Table.Cell<String, String, Set<Bgpv4Route>> route : result._dataPlane.getBgpRoutes().cellSet()) {
-      String hostname = route.getRowKey();
-      String vrfname = route.getColumnKey();
-      for (Bgpv4Route r : route.getValue()) {
-        System.out.println(
-            hostname + " " + vrfname + " " +
-            r.getNetwork() + " " + r.getAsPath() + " " + r.getCommunities());
-      }
-    }
+    // for (Table.Cell<String, String, Set<Bgpv4Route>> route : result._dataPlane.getBgpRoutes().cellSet()) {
+    //   String hostname = route.getRowKey();
+    //   String vrfname = route.getColumnKey();
+    //   for (Bgpv4Route r : route.getValue()) {
+    //     System.out.println(
+    //         hostname + " " + vrfname + " " +
+    //         r.getNetwork() + " " + r.getAsPath() + " " + r.getCommunities());
+    //   }
+    // }
     DataPlaneAnswerElement answerElement = result._answerElement;
     DataPlane dataplane = result._dataPlane;
     TopologyContainer topologyContainer = result._topologies;
