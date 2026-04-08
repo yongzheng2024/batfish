@@ -134,12 +134,11 @@ class EncoderSlice {
     _ospfRedistributed = new HashMap<>();
     _originatedNetworks = new Table2<>();
 
-    // call _optimizations.computeOptimizations()
+    // initialize via calling _optimizations.computeOptimizations()
     initOptimizations();
-    // initialize _originatedNetworks for all optimizated protocol
+    // initialize _originatedNetworks after optimizations
     initOriginatedPrefixes();
-    // TODO: to-read
-    // initialize LogicalGraph _redistributedProtocols() according to Graph
+    // initialize LogicalGraph _redistributedProtocols(), TODO
     initRedistributionProtocols();
 
     // TODO: annotated by yongzheng on 20250324
@@ -368,6 +367,7 @@ class EncoderSlice {
         Set<Protocol> redistributed = new HashSet<>();
         redistributed.add(proto);
         _logicalGraph.getRedistributedProtocols().put(router, proto, redistributed);
+        // NOTE: why use a common routing policy?
         RoutingPolicy pol = Graph.findCommonRoutingPolicy(conf, proto);
         if (pol != null) {
           Set<Protocol> ps = getGraph().findRedistributedProtocols(conf, pol, proto);
@@ -565,7 +565,6 @@ class EncoderSlice {
    * Initializes the logical graph edges for the protocol-centric view
    */
   private void buildEdgeMap() {
-    // getProtocols() - call _optimizations.getProtocols()
     for (Entry<String, List<Protocol>> entry : getProtocols().entrySet()) {
       String router = entry.getKey();
       for (Protocol p : entry.getValue()) {
@@ -689,8 +688,8 @@ class EncoderSlice {
     // add edge EXPORT and IMPORT state variables
     for (Entry<String, List<GraphEdge>> entry : getGraph().getEdgeMap().entrySet()) {
       String router = entry.getKey();
-      Configuration conf = getGraph().getConfigurations().get(router);
       List<GraphEdge> edges = entry.getValue();
+      Configuration conf = getGraph().getConfigurations().get(router);
 
       Map<Protocol, Map<GraphEdge, ArrayList<LogicalEdge>>> importEnumMap = new HashMap<>();
       Map<Protocol, Map<GraphEdge, ArrayList<LogicalEdge>>> exportEnumMap = new HashMap<>();
@@ -971,14 +970,15 @@ class EncoderSlice {
     // initialize SymbolicDecisions _controlForwarding
     //                              ^^^^^^^^^^^^^^^^^^ Table2<String, GraphEdge, BoolExpr> 
     // initialize SymbolicDecisions _dataForwarding
-    //                              ^^^^^^^^^^^^^^^ Table2<String, GraphEdge, BoolExpr> 
+    //                              ^^^^^^^^^^^^^^^ Table2<String, GraphEdge, BoolExpr>
+    //   don't add data forwarding variables for abstract edge
     //   and storage all these variables in _allVariables
     addForwardingVariables();
 
     // initialize SymbolicDecisions _bestNeighbor            (OVERALL_BEST)
     //                              ^^^^^^^^^^^^^ Map<String, SymbolicRoute>
     // initialize SymbolicDecisions _bestNeighborPerProtocol (PROTOCOL_BEST)
-    //                              ^^^^^^^^^^^^^^^^^^^^^^^^ Map<String, Ptocol, SymbolicRoute>
+    //                              ^^^^^^^^^^^^^^^^^^^^^^^^ Map<String, Protocol, SymbolicRoute>
     // initialize SymbolicEnum protocolHistory (all protocols per router)
     //   and storage SymbolicEnum protocolHistory in _allVariables
     // initialize SymbolicRoute for BestNeighbor and BestNeighborPerProtocol
