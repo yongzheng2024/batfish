@@ -100,6 +100,8 @@ import org.batfish.datamodel.bgp.community.ExtendedCommunity;
 import org.batfish.datamodel.bgp.community.StandardCommunity;
 import org.batfish.datamodel.bgp.community.LargeCommunity;
 
+import org.batfish.common.util.SymbolicUtil;
+
 
 /**
  * Data class to store RouteFilterList rule information for Trie matching.
@@ -328,8 +330,6 @@ public class Encoder {
   // the output directory name and relevant print writer
   private String _outputDirectoryName;
   PrintWriter _smtWriter;
-  PrintWriter _constWriter;
-  PrintWriter _configWriter;
   PrintWriter _modelIgpWriter;
   PrintWriter _hostnameWriter;
   PrintWriter _interfaceWriter;
@@ -1091,8 +1091,8 @@ public class Encoder {
 
     long start = System.currentTimeMillis();
     // NOTE: Temporarily set status to UNSATISFIABLE for generating SMT file only
-    Status status = Status.UNSATISFIABLE;
-    // Status status = _solver.check();
+    // Status status = Status.UNSATISFIABLE;
+    Status status = _solver.check();
     long time = System.currentTimeMillis() - start;
 
     VerificationStats stats = null;
@@ -1196,8 +1196,6 @@ public class Encoder {
     _outputDirectoryName = searchOutputDirectory();
 
     String outputSmtFileName = _outputDirectoryName + "/smt_encoding.smt2";
-    String outputConstFileName = _outputDirectoryName + "/config_constraints.smt2";
-    String outputConfigFileName = _outputDirectoryName + "/configs_to_variables.txt";
     String outputModelIgpName = _outputDirectoryName + "/0_model_igp.txt";
     String outputHostnameFileName = _outputDirectoryName + "/0_hostnames.txt";
     String outputInterfaceFileName = _outputDirectoryName + "/0_interfaces.txt";
@@ -1211,8 +1209,6 @@ public class Encoder {
     String outputUnmatchedCommunitiesFileName = _outputDirectoryName + "/0_unmatched_communities.txt";
 
     File outputSmtFile = new File(outputSmtFileName);
-    File outputConstFile = new File(outputConstFileName);
-    File outputConfigFile = new File(outputConfigFileName);
     File outputModelIgpFile = new File(outputModelIgpName);
     File outputHostnameFile = new File(outputHostnameFileName);
     File outputInterfaceFile = new File(outputInterfaceFileName);
@@ -1227,8 +1223,6 @@ public class Encoder {
 
     try {
       _smtWriter = new PrintWriter(new FileWriter(outputSmtFile, true), true);
-      _constWriter = new PrintWriter(new FileWriter(outputConstFile, true), true);
-      _configWriter = new PrintWriter(new FileWriter(outputConfigFile, true), true);
       _modelIgpWriter = new PrintWriter(new FileWriter(outputModelIgpFile, true), true);
       _hostnameWriter = new PrintWriter(new FileWriter(outputHostnameFile, true), true);
       _interfaceWriter = new PrintWriter(new FileWriter(outputInterfaceFile, true), true);
@@ -1373,8 +1367,6 @@ public class Encoder {
     return _outputDirectoryName;
   }
 
-  // NOTE: added by yongzheng2024
-  // support destination ports without peer (i.e. null peer)
   public Set<GraphEdge> getDestPorts() {
     return _destPorts;
   }
@@ -1397,62 +1389,6 @@ public class Encoder {
 
   public BitVecExpr mkBVConst(String name, int size) {
     return _ctx.mkBVConst(name, size);
-  }
-
-  private static String format(String str) {
-    String formatedStr = "";
-
-    // replace some characters with '_'
-    for (char c : str.toCharArray()) {
-      switch (c) {
-        case '~':
-        case '-':
-        case ':':
-        case '.':
-        case '/':
-          formatedStr += '_';
-          break;
-        default:
-          formatedStr += c;
-          break;
-      }
-    }
-
-    // remove the start with '_'
-    if (formatedStr.startsWith("_")) {
-      formatedStr = formatedStr.substring(1);
-    }
-    // remove the end with '_'
-    if (formatedStr.endsWith("_")) {
-      formatedStr = formatedStr.substring(0, formatedStr.length() - 1);
-    }
-
-    return formatedStr;
-  }
-
-  public static String incrementLineSuffix(String routingPolicyLineName) {
-    // match end with "_LineN" (N is integer number)
-    String pattern = "(.+)__Line(\\d+)__$";
-    java.util.regex.Pattern r = java.util.regex.Pattern.compile(pattern);
-    java.util.regex.Matcher m = r.matcher(routingPolicyLineName);
-
-    if (m.matches()) {
-      String prefix = m.group(1);
-      int number = Integer.parseInt(m.group(2));
-      return prefix + "__Line" + (number + 1) + "__";
-    } else {
-      return routingPolicyLineName + "_Line1__";
-    }
-  }
-
-  private static String longToIpString(long ip) {
-    return String.format(
-        "%d.%d.%d.%d",
-        (ip >> 24) & 0xFF,
-        (ip >> 16) & 0xFF,
-        (ip >> 8) & 0xFF,
-        ip & 0xFF
-    );
   }
 
   private void initNetworkTopology() {
@@ -1517,59 +1453,73 @@ public class Encoder {
       String hostName = configEntry.getKey();
       Configuration config = configEntry.getValue();
 
-      // write host name to configs_to_variables file
-      _configWriter.println(hostName);
-
       for (Map.Entry<String, RouteFilterList> routeFilterListEntry : config.getRouteFilterLists().entrySet()) {
-        String routerFilterListName = routeFilterListEntry.getKey();
+        String routeFilterListName = routeFilterListEntry.getKey();
         RouteFilterList routeFilterList = routeFilterListEntry.getValue();
-        List<RouteFilterLine> lines = routeFilterList.getLines();
 
         // exclude other router filter list with configuration constants -> SMT symbolic variables
         // if (routerFilterListName.contains("default")) {
         //   continue;
         // }
 
-        // write route filter list name to configs_to_variables file
-        _configWriter.println("  * " + "ip prefix-list / access-list: " + routerFilterListName);
+        String configVarPrefix =
+                "Config_" + hostName + "_RouteFilterList_" + SymbolicUtil.format(routeFilterListName) + "_";
+
+        routeFilterList.initSmtVariable(_ctx, _solver, configVarPrefix);
+      }
+
+      for (Map.Entry<String, CommunityList> communityListEntry : config.getCommunityLists().entrySet()) {
+        String communityListName = communityListEntry.getKey();
+        CommunityList communityList = communityListEntry.getValue();
+
+        String configVarPrefix =
+                "Config_" + hostName + "_CommunityList_" + SymbolicUtil.format(communityListName) + "_";
+
+        communityList.initSmtVariable(_ctx, _solver, configVarPrefix);
+      }
+
+      for (Map.Entry<String, RoutingPolicy> routingPolicyEntry : config.getRoutingPolicies().entrySet()) {
+        String policyName = routingPolicyEntry.getKey();
+        RoutingPolicy routingPolicy = routingPolicyEntry.getValue();
+
+        // exclude other routing policy with configuration constants -> SMT symbolic variables
+        if (policyName.contains("default")) {
+          continue;
+        }
+
+        List<Statement> statements = routingPolicy.getStatements();
+        String configVarPrefix =
+            "Config_" + hostName + "_RoutingPolicy_" + SymbolicUtil.format(policyName) + "_";
+        // NOTE: Improve SMT variable names compatibility with line numbers
+        configVarPrefix += "_Line0__";
+        initConfigurationConstants(statements, configVarPrefix);
+      }
+
+      // prefixes trie-tree optimization
+      // TODO: implement prefixes trie-tree main function
+      for (Map.Entry<String, RouteFilterList> routeFilterListEntry : config.getRouteFilterLists().entrySet()) {
+        String routeFilterListName = routeFilterListEntry.getKey();
+        RouteFilterList routeFilterList = routeFilterListEntry.getValue();
 
         // Build custom PrefixRuleTrie to store rule info
         PrefixRuleTrie trie = new PrefixRuleTrie();
 
         int lineIndex = 1;
-        for (RouteFilterLine line : lines) {
+        for (RouteFilterLine line : routeFilterList.getLines()) {
           Prefix linePrefix = line.getIpWildcard().toPrefix();
           int pLen = linePrefix.getPrefixLength();
           int minLen = line.getLengthRange().getStart();
           int maxLen = line.getLengthRange().getEnd();
 
           long prefixIp = line.getIpWildcard().getIp().asLong();
-          String prefixIpStr = longToIpString(prefixIp);
-          // Keep the original configVarPrefix for SMT variable initialization (with full details)
-          String configVarPrefix =
-              "Config_" + hostName + "_RouteFilterList_" + format(routerFilterListName) +
-              "__Line" + lineIndex + "__" + format(prefixIpStr) + "__";
-          line.initSmtVariable(_ctx, _solver, configVarPrefix);
+          String prefixIpStr = SymbolicUtil.longToIpString(prefixIp);
+          String currConfigVarPrefix =
+                  "Config_" + hostName + "_RouteFilterList_" + SymbolicUtil.format(routeFilterListName) +
+                          "__Line" + lineIndex + "__" + SymbolicUtil.format(prefixIpStr) + "__";
 
-          // write (ipLongFormat -> ipStringFormat) to configs_to_variables file
-          _configWriter.println("    (" + prefixIp + " -> " + prefixIpStr + ")");
-          // write smt symbolic variable name to configs_to_variables file
-          // RouteFilterList
-          _configWriter.println("    + " + configVarPrefix + "action");
-          // IpWildcard
-          _configWriter.println("    + " + configVarPrefix + "ip");
-          _configWriter.println("    + " + configVarPrefix + "mask");
-          _configWriter.println("    + " + configVarPrefix + "length");
-          // SubRange
-          _configWriter.println("    + " + configVarPrefix + "prefix_range_start");
-          _configWriter.println("    + " + configVarPrefix + "prefix_range_end");
-
-          String configVarLinePrefix =
-              "Config_" + hostName + "_RouteFilterList_" + format(routerFilterListName) +
-              "__Line" + lineIndex;
           // Add rule info to trie (with configVarPrefix)
           RouteFilterRuleInfo ruleInfo = new RouteFilterRuleInfo(
-              lineIndex, line.getAction(), pLen, minLen, maxLen, configVarLinePrefix);
+                  lineIndex, line.getAction(), pLen, minLen, maxLen, currConfigVarPrefix);
           trie.insert(linePrefix, ruleInfo);
 
           // add line index
@@ -1600,78 +1550,11 @@ public class Encoder {
           }
         }
       }
-
-      for (Map.Entry<String, CommunityList> communityListEntry : config.getCommunityLists().entrySet()) {
-        String communityListName = communityListEntry.getKey();
-        CommunityList communityList = communityListEntry.getValue();
-
-        int lineIndex = 1;
-        for (CommunityListLine line : communityList.getLines()) {
-          String configVarPrefix =
-              "Config_" + hostName + "_CommunityList_" + format(communityListName) +
-              "__Line" + lineIndex + "__";
-
-          // Add regex / exact community's string
-          CommunitySetExpr communitySetExpr = line.getMatchCondition();
-          String communityExprString = format(line.getMatchCondition().getCommunityExprString());
-
-          // FIXME: handle other community type if needed
-          if (communitySetExpr instanceof RegexCommunitySet) {
-            // TODO: add formated regex community expression
-            // configVarPrefix += "regex_community_" + communityExprString + "_";
-            line.initSmtVariable(_ctx, _solver, configVarPrefix);
-            // write smt symbolic variable name to configs_to_variables file
-            _configWriter.println("    + " + configVarPrefix + "action");
-            _configWriter.println("    + " + configVarPrefix + "community");
-          } else if (communitySetExpr instanceof LiteralCommunity) {
-            configVarPrefix += "exact_community_" + communityExprString + "_";
-            line.initSmtVariable(_ctx, _solver, configVarPrefix);
-            // write smt symbolic variable name to configs_to_variables file
-            _configWriter.println("    + " + configVarPrefix + "action");
-            _configWriter.println("    + " + configVarPrefix + "community");
-          } else {
-            throw new BatfishException("Encoder:initConfigurationConstraints: " +
-                "Unimplemented feature " + communitySetExpr.getClass());
-          }
-
-          // add line index
-          lineIndex++;
-        }
-      }
-
-      for (Map.Entry<String, RoutingPolicy> routingPolicyEntry : config.getRoutingPolicies().entrySet()) {
-        String policyName = routingPolicyEntry.getKey();
-        RoutingPolicy routingPolicy = routingPolicyEntry.getValue();
-
-        // exclude other routing policy with configuration constants -> SMT symbolic variables
-        if (policyName.contains("default")) {
-          continue;
-        }
-
-        // TODO: write smt symbolic variable name to configs_to_variables file
-        //       annotated by yongzheng on 20250407
-        _configWriter.println("  * " + "routing policy (todo): " + policyName);
-
-        List<Statement> statements = routingPolicy.getStatements();
-        String configVarPrefix =
-            "Config_" + hostName + "_RoutingPolicy_" + format(policyName) + "_";
-        // NOTE: Improve SMT variable names compatibility with line numbers
-        configVarPrefix += "_Line0__";
-        initConfigurationConstants(statements, configVarPrefix);
-      }
     }
 
-    // TODO: implement static analysis main function
+    // static analysis community optimization
+    // TODO: implement static analysis community main function
     printUnmatchedCommunities();
-
-    // System.out.println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
-    // System.out.println(_solver.toString());
-    _constWriter.println(_solver.toString());
-    _constWriter.flush();
-    _constWriter.close();
-    // System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-    _configWriter.flush();
-    _configWriter.close();
   }
 
   private void initConfigurationConstants(
@@ -1721,12 +1604,12 @@ public class Encoder {
         //   falseStatement
         If i = (If) stmt;
         // NOTE: Directly increment line number suffix Linei, not append inline line number
-        //       suffix linej to distinguish different parts of configuratoins
-        configVarPrefix = incrementLineSuffix(configVarPrefix);
+        //       suffix Linej to distinguish different parts of configurations
+        configVarPrefix = SymbolicUtil.incrementLineSuffix(configVarPrefix);
         initConfigurationConstants(i.getGuard(), configVarPrefix);
-        configVarPrefix = incrementLineSuffix(configVarPrefix);
+        configVarPrefix = SymbolicUtil.incrementLineSuffix(configVarPrefix);
         initConfigurationConstants(i.getTrueStatements(), configVarPrefix);
-        configVarPrefix = incrementLineSuffix(configVarPrefix);
+        configVarPrefix = SymbolicUtil.incrementLineSuffix(configVarPrefix);
         initConfigurationConstants(i.getFalseStatements(), configVarPrefix);
 
       } else if (stmt instanceof SetDefaultPolicy) {
@@ -1736,11 +1619,8 @@ public class Encoder {
       } else if (stmt instanceof SetMetric) {
         SetMetric sm = (SetMetric) stmt;
         String metricValue = sm.getMetric().getLiteralLongString();
-        configVarPrefix = incrementLineSuffix(configVarPrefix);
+        configVarPrefix = SymbolicUtil.incrementLineSuffix(configVarPrefix);
         sm.initSmtVariable(_ctx, _solver, configVarPrefix + "set_metric_" + metricValue);
-
-        // write smt symbolic variable name to configs_to_variables file
-        _configWriter.println("    + " + configVarPrefix + "set_metric_" + metricValue);
 
       } else if (stmt instanceof SetOspfMetricType) {
         // TODO: implement me
@@ -1749,28 +1629,21 @@ public class Encoder {
       } else if (stmt instanceof SetLocalPreference) {
         SetLocalPreference slp = (SetLocalPreference) stmt;
         String localPreferenceValue = slp.getLocalPreference().getLiteralLongString();
-        configVarPrefix = incrementLineSuffix(configVarPrefix);
+        configVarPrefix = SymbolicUtil.incrementLineSuffix(configVarPrefix);
         slp.initSmtVariable(_ctx, _solver,
             configVarPrefix + "set_localpreference_" + localPreferenceValue);
-
-        // write smt symbolic variable name to configs_to_variables file
-        _configWriter.println("    + " + configVarPrefix +
-            "set_localpreference_" + localPreferenceValue);
 
       } else if (stmt instanceof AddCommunity) {
         AddCommunity ac = (AddCommunity) stmt;
         CommunitySetExpr communitySetExpr = ac.getExpr();
-        configVarPrefix = incrementLineSuffix(configVarPrefix);
+        configVarPrefix = SymbolicUtil.incrementLineSuffix(configVarPrefix);
         if (communitySetExpr instanceof LiteralCommunitySet) {
-          ac.initSmtVariable(_ctx, _solver, configVarPrefix + "add_community_", true);
+          ac.initSmtVariable(_ctx, _solver, configVarPrefix + "add_community_set_", true);
           LiteralCommunitySet lcs = (LiteralCommunitySet) communitySetExpr;
           Set<Community> communities = lcs.getCommunities();
           for (Community community : communities) {
-            // write smt symbolic variable name to configs_to_variables file
-            String communityString = format(community.getCommunityString());
-            _configWriter.println(
-                "    + " + configVarPrefix + "add_community_" + communityString + "_community");
             // support static analysis for more exact community subspecs
+            String communityString = SymbolicUtil.format(community.getCommunityString());
             String matchString = community.matchString();
             String configVarName = configVarPrefix + "add_community_" + communityString + "_community";
             _formattedToMatchString.put(communityString, matchString);
@@ -1781,13 +1654,10 @@ public class Encoder {
           }
         } else if (communitySetExpr instanceof LiteralCommunity) {
           LiteralCommunity lc = (LiteralCommunity) communitySetExpr;
-          String communityString = format(lc.getCommunity().getCommunityString());
-          configVarPrefix = incrementLineSuffix(configVarPrefix);
+          String communityString = SymbolicUtil.format(lc.getCommunity().getCommunityString());
+          configVarPrefix = SymbolicUtil.incrementLineSuffix(configVarPrefix);
           ac.initSmtVariable(
               _ctx, _solver, configVarPrefix + "add_community_" + communityString + "_", true);
-          // write smt symbolic variable name to configs_to_variables file
-          _configWriter.println(
-              "    + " + configVarPrefix + "add_community_" + communityString + "_community");
           // support static analysis for more exact community subspecs
           String matchString = lc.getCommunity().matchString();
           String configVarName = configVarPrefix + "add_community_" + communityString + "_community";
@@ -1803,17 +1673,14 @@ public class Encoder {
       } else if (stmt instanceof SetCommunity) {
         SetCommunity sc = (SetCommunity) stmt;
         CommunitySetExpr communitySetExpr = sc.getExpr();
-        configVarPrefix = incrementLineSuffix(configVarPrefix);
+        configVarPrefix = SymbolicUtil.incrementLineSuffix(configVarPrefix);
         if (communitySetExpr instanceof LiteralCommunitySet) {
-          sc.initSmtVariable(_ctx, _solver, configVarPrefix + "set_community_", true);
+          sc.initSmtVariable(_ctx, _solver, configVarPrefix + "set_community_set_", true);
           LiteralCommunitySet lcs = (LiteralCommunitySet) communitySetExpr;
           Set<Community> communities = lcs.getCommunities();
           for (Community community : communities) {
-            // write smt symbolic variable name to configs_to_variables file
-            String communityString = format(community.getCommunityString());
-            _configWriter.println(
-                "    + " + configVarPrefix + "set_community_" + communityString + "_community");
             // support static analysis for more exact community subspecs
+            String communityString = SymbolicUtil.format(community.getCommunityString());
             String matchString = community.matchString();
             String configVarName = configVarPrefix + "set_community_" + communityString + "_community";
             _formattedToMatchString.put(communityString, matchString);
@@ -1824,13 +1691,10 @@ public class Encoder {
           }
         } else if (communitySetExpr instanceof LiteralCommunity) {
           LiteralCommunity lc = (LiteralCommunity) communitySetExpr;
-          String communityString = format(lc.getCommunity().getCommunityString());
-          configVarPrefix = incrementLineSuffix(configVarPrefix);
+          String communityString = SymbolicUtil.format(lc.getCommunity().getCommunityString());
+          configVarPrefix = SymbolicUtil.incrementLineSuffix(configVarPrefix);
           sc.initSmtVariable(
               _ctx, _solver, configVarPrefix + "set_community_" + communityString + "_", true);
-          // write smt symbolic variable name to configs_to_variables file	
-          _configWriter.println(
-              "    + " + configVarPrefix + "set_community_" + communityString + "_community");
           // support static analysis for more exact community subspecs
           String matchString = lc.getCommunity().matchString();
           String configVarName = configVarPrefix + "set_community_" + communityString + "_community";
@@ -1847,40 +1711,28 @@ public class Encoder {
         // TODO: check here and implement when needed
         DeleteCommunity dc = (DeleteCommunity) stmt;
         CommunitySetExpr communitySetExpr = dc.getExpr();
-        configVarPrefix = incrementLineSuffix(configVarPrefix);
+        configVarPrefix = SymbolicUtil.incrementLineSuffix(configVarPrefix);
         if (communitySetExpr instanceof LiteralCommunitySet) {
           dc.initSmtVariable(_ctx, _solver, configVarPrefix + "delete_community_", false);
           LiteralCommunitySet lcs = (LiteralCommunitySet) communitySetExpr;
           Set<Community> communities = lcs.getCommunities();
-          // write smt symbolic variable name to configs_to_variables file
-          for (Community community : communities) {
-            String communityString = format(community.getCommunityString());
-            _configWriter.println(
-                "    + " + configVarPrefix + "delete_community_" + communityString + "_community");
-          }
         } else if (communitySetExpr instanceof LiteralCommunity) {
           LiteralCommunity lc = (LiteralCommunity) communitySetExpr;
-          String communityString = format(lc.getCommunity().getCommunityString());
+          String communityString = SymbolicUtil.format(lc.getCommunity().getCommunityString());
           dc.initSmtVariable(
               _ctx, _solver, configVarPrefix + "delete_community_" + communityString + "_", false);
-          // write smt symbolic variable name to configs_to_variables file
-          _configWriter.println(
-              "    + " + configVarPrefix + "delete_community_" + communityString + "_community");
         } else if (communitySetExpr instanceof NamedCommunitySet) {
             NamedCommunitySet ncs = (NamedCommunitySet) communitySetExpr;
-            String namedCommunityString = format(ncs.getName());
+            String namedCommunityString = SymbolicUtil.format(ncs.getName());
             ncs.initSmtVariable(
                 _ctx, _solver, configVarPrefix + "delete_community_" + namedCommunityString + "_", false);
-            // write smt symbolic variable name to configs_to_variables file
-            _configWriter.println(
-                "    + " + configVarPrefix + "delete_community_" + namedCommunityString + "_community");
         } else {
             throw new BatfishException("Unimplemented feature " + communitySetExpr.getClass());
         }
 
       } else if (stmt instanceof PrependAsPath) {
         PrependAsPath pap = (PrependAsPath) stmt;
-        configVarPrefix = incrementLineSuffix(configVarPrefix);
+        configVarPrefix = SymbolicUtil.incrementLineSuffix(configVarPrefix);
         pap.initSmtVariable(_ctx, _solver, configVarPrefix + "prepend_aspath_");
 
       } else if (stmt instanceof SetOrigin) {
@@ -1895,7 +1747,7 @@ public class Encoder {
         SetCommunities scs = (SetCommunities) stmt;
         org.batfish.datamodel.routing_policy.communities.CommunitySetExpr communitySetExpr =
             scs.getExpr();
-        configVarPrefix = incrementLineSuffix(configVarPrefix);
+        configVarPrefix = SymbolicUtil.incrementLineSuffix(configVarPrefix);
         if (communitySetExpr instanceof InputCommunities) {
           // TODO: implement me
           {}  // do nothing
@@ -1998,21 +1850,7 @@ public class Encoder {
       // write smt symbolic variables name to configs_to_variables file
       PrefixSetExpr prefixSetExpr = mps.getPrefixSet();
       if (prefixSetExpr instanceof ExplicitPrefixSet) {
-        ExplicitPrefixSet eps = (ExplicitPrefixSet) prefixSetExpr;
-        for (PrefixRange prefixRange : eps.getPrefixSpace().getPrefixRanges()) {
-          // write (ipLongFormat -> ipStringFormat) to configs_to_variables file
-          long prefixIp = prefixRange.getPrefix().getStartIp().asLong();
-          String prefixIpStr = longToIpString(prefixIp);
-          // _configWriter.println("    (" + prefixIp + " -> " + prefixIpStr + ")");
-          // write smt symbolic variable name to configs_to_variables file
-          _configWriter.println("    + " + configVarPrefix + format(prefixIpStr) + "__ip");
-          _configWriter.println("    + " + configVarPrefix + format(prefixIpStr) + "__mask");
-          _configWriter.println("    + " + configVarPrefix + format(prefixIpStr) + "__length");
-          _configWriter.println(
-              "    + " + configVarPrefix + format(prefixIpStr) + "__prefix_range_start");
-          _configWriter.println(
-              "    + " + configVarPrefix + format(prefixIpStr) + "__prefix_range_end");
-        }
+        {}  // do nothing, call ip prefix-list / access-list in configuration
       } else if (prefixSetExpr instanceof NamedPrefixSet) {
         {}  // do nothing, call ip prefix-list / access-list in configuration
       } else {
@@ -2026,7 +1864,6 @@ public class Encoder {
     } else if (expr instanceof CallExpr) {
       // TODO: check here and implement it when needed
       CallExpr ce = (CallExpr) expr;
-      _configWriter.println("    + " + "call " + ce.getCalledPolicyName());
 
     } else if (expr instanceof WithEnvironmentExpr) {
       WithEnvironmentExpr we = (WithEnvironmentExpr) expr;
@@ -2125,13 +1962,13 @@ public class Encoder {
   /** Collect communities from a literal community set into _matchedCommunities (static analysis). */
   private void collectCommunitiesFromLiteralCommunitySet(LiteralCommunitySet lcs) {
     for (Community community : lcs.getCommunities()) {
-      _matchedCommunities.add(format(community.getCommunityString()));
+      _matchedCommunities.add(SymbolicUtil.format(community.getCommunityString()));
     }
   }
 
   /** Collect the single community from a literal community into _matchedCommunities (static analysis). */
   private void collectCommunitiesFromLiteralCommunity(LiteralCommunity lc) {
-    _matchedCommunities.add(format(lc.getCommunity().getCommunityString()));
+    _matchedCommunities.add(SymbolicUtil.format(lc.getCommunity().getCommunityString()));
   }
   
   private void collectCommunitiesFromCommunityList(CommunityList cl, Configuration currentConfig) {
@@ -2192,7 +2029,6 @@ public class Encoder {
     return configVarPrefix.substring(start, end);
   }
 
-  /** Writes 0_unmatched_communities.txt: one config var name per line (unmatched community vars only). */
   private void printUnmatchedCommunities() {
     if (_communityToConfigVars == null) {
       _unmatchedCommunitiesWriter.close();

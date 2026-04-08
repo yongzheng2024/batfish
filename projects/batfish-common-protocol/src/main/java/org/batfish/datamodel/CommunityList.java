@@ -290,8 +290,12 @@ public class CommunityList extends CommunitySetExpr {
         }
       }
 
+      int lineIndex = i + 1;
+
+      String currConfigVarPrefix = configVarPrefix + "_Line" + lineIndex + "__";
+
       // init smt variable for community list line
-      _lines.get(i).initSmtVariable(context, solver, configVarPrefix, isTrue);
+      _lines.get(i).initSmtVariable(context, solver, currConfigVarPrefix, isTrue);
     }
 
     // configure enable smt variable flag to tue
