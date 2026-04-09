@@ -128,6 +128,7 @@ public abstract class CommunitySetExpr implements Serializable {
     }
 
     // only has three subclasses of Community
-    throw new BatfishException("CommunitySetExpr.cloneCommunity: unknown community type.");
+    throw new BatfishException(
+            "CommunitySetExpr.cloneCommunity: unknown community type: " + community.getClass().getName());
   }
 }

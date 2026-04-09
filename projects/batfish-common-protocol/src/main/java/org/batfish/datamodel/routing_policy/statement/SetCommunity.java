@@ -83,14 +83,52 @@ public final class SetCommunity extends Statement {
   }
 
   /** Add configuration constant - SMT symbolic variable */
+  private boolean _enableSmtVariable;
+  private String _configVarPrefix;
+
   public void initSmtVariable(
       Context context, Solver solver, String configVarPrefix, boolean isTrue) {
-    // TODO: handle shared object case properly, now is just throw exception
-    if (_expr.getEnableSmtVariable()) {
-      throw new BatfishException(
-          "SetCommunity.initSmtVariable: shared object CommunitySetExpr.");
+    // assert that the set community is not shared
+    if (_enableSmtVariable) {
+      throw new BatfishException("SetCommunity.initSmtVariable: shared object.\n" +
+              "Previous configVarPrefix: " + _configVarPrefix + "\n" +
+              "Current  configVarPrefix: " + configVarPrefix);
     }
 
+    // check and avoid shared object
+    if (_expr.getEnableSmtVariable()) {
+      System.out.println("WARNING: SetCommunity.initSmtVariable: " +
+              "found shared Community Set Expr, cloning it.");
+
+      CommunitySetExpr exprBackup = _expr;
+      // clone community set expr shared object
+      _expr = cloneCommunityExpr(_expr);
+
+      // add additional assert for using shared object
+      if (exprBackup.getEnableSmtVariable() == _expr.getEnableSmtVariable()) {
+        throw new BatfishException("SetCommunity.initSmtVariable: " +
+                "cloning failed for shared object.");
+      }
+    }
+
+    // assert the isTrue flag is false
+    if (false == isTrue) {
+      throw new BatfishException("SetCommunity.initSmtVariable: invalid is true flag.");
+    }
+
+    // init smt variable for community set expr
     _expr.initSmtVariable(context, solver, configVarPrefix, isTrue);
+
+    // configure the smt variable enable flag to true
+    _enableSmtVariable = true;
+    _configVarPrefix = configVarPrefix;
+  }
+
+  public boolean getEnableSmtVariable() {
+    return _enableSmtVariable;
+  }
+
+  public String getConfigVarPrefix() {
+    return _configVarPrefix;
   }
 }
