@@ -1435,64 +1435,71 @@ class TransferSSA {
         AddCommunity ac = (AddCommunity) stmt;
         Set<CommunityVar> comms = collectCommunityVars(_conf, ac.getExpr());
 
-        // NOTE: check all community enable smt variable or not
-
-        for (CommunityVar cvar : comms) {
-          BoolExpr newValue = null;
-          if (cvar.getLiteralValue().getEnableSmtVariable()) {
+        if (!((AddCommunity) stmt).getEnableSmtVariable()) {
+          for (CommunityVar cvar : comms) {
+            BoolExpr newValue =
+                    _enc.mkIf(
+                            curResult.getReturnAssignedValue(),
+                            curP.getData().getCommunities().get(cvar),
+                            _enc.mkTrue());
+            BoolExpr x = createBoolVariableWith(curP, cvar.getRegex(), newValue);
+            curP.getData().getCommunities().put(cvar, x);
+            curResult = curResult.addChangedVariable(cvar.getRegex(), x);
+          }
+        } else {
+          for (CommunityVar cvar : comms) {
             BoolExpr community = cvar.getLiteralValue().getConfigVarCommunity();
             BoolExpr community_origin = curP.getData().getCommunities().get(cvar);
             BoolExpr communityEqual = _enc.mkEq(community, community_origin);
-            newValue =
-                _enc.mkIf(
-                    curResult.getReturnAssignedValue(),
-                    // communityEqual,
-                    curP.getData().getCommunities().get(cvar),
-                    // _enc.mkTrue());
-                    community);
-          } else {
-            newValue =
-                _enc.mkIf(
-                    curResult.getReturnAssignedValue(),
-                    curP.getData().getCommunities().get(cvar),
-                    _enc.mkTrue());
+            BoolExpr newValue =
+                    _enc.mkIf(
+                            curResult.getReturnAssignedValue(),
+                            // communityEqual,
+                            curP.getData().getCommunities().get(cvar),
+                            // _enc.mkTrue());
+                            community);
+            BoolExpr x = createBoolVariableWith(curP, cvar.getRegex(), newValue);
+            curP.getData().getCommunities().put(cvar, x);
+            curResult = curResult.addChangedVariable(cvar.getRegex(), x);
           }
-          BoolExpr x = createBoolVariableWith(curP, cvar.getRegex(), newValue);
-          curP.getData().getCommunities().put(cvar, x);
-          curResult = curResult.addChangedVariable(cvar.getRegex(), x);
         }
 
       } else if (stmt instanceof SetCommunity) {
         curP.debug("SetCommunity");
         SetCommunity sc = (SetCommunity) stmt;
         Set<CommunityVar> comms = collectCommunityVars(_conf, sc.getExpr());
-        for (CommunityVar cvar : comms) {
-          BoolExpr newValue = null;
-          if (cvar.getLiteralValue().getEnableSmtVariable()) {
+
+        if (!((SetCommunity) stmt).getEnableSmtVariable()) {
+          for (CommunityVar cvar : comms) {
+            BoolExpr newValue =
+                    _enc.mkIf(
+                            curResult.getReturnAssignedValue(),
+                            curP.getData().getCommunities().get(cvar),
+                            _enc.mkTrue());
+
+            BoolExpr x = createBoolVariableWith(curP, cvar.getRegex(), newValue);
+            curP.getData().getCommunities().put(cvar, x);
+            curResult = curResult.addChangedVariable(cvar.getRegex(), x);
+          }
+        } else {
+          for (CommunityVar cvar : comms) {
             BoolExpr community = cvar.getLiteralValue().getConfigVarCommunity();
             BoolExpr community_origin = curP.getData().getCommunities().get(cvar);
             BoolExpr communityEqual = _enc.mkEq(community, community_origin);
-            newValue =
-                _enc.mkIf(
-                    curResult.getReturnAssignedValue(),
-                    // communityEqual,
-                    curP.getData().getCommunities().get(cvar),
-                    // _enc.mkTrue());
-                    community);
-          } else {
-            newValue =
-                _enc.mkIf(
-                    curResult.getReturnAssignedValue(),
-                    curP.getData().getCommunities().get(cvar),
-                    _enc.mkTrue());
+            BoolExpr newValue =
+                    _enc.mkIf(
+                            curResult.getReturnAssignedValue(),
+                            // communityEqual,
+                            curP.getData().getCommunities().get(cvar),
+                            // _enc.mkTrue());
+                            community);
+            BoolExpr x = createBoolVariableWith(curP, cvar.getRegex(), newValue);
+            curP.getData().getCommunities().put(cvar, x);
+            curResult = curResult.addChangedVariable(cvar.getRegex(), x);
           }
-          BoolExpr x = createBoolVariableWith(curP, cvar.getRegex(), newValue);
-          curP.getData().getCommunities().put(cvar, x);
-          curResult = curResult.addChangedVariable(cvar.getRegex(), x);
         }
 
         // BUGFIX: set community to false for other community variables
-        // NOTE: added by yongzheng2024 on 20251204
         for (CommunityVar cvar_other : curP.getData().getCommunities().keySet()) {
           // Skip those communities that are set by this statement
           if (comms.contains(cvar_other)) {
@@ -1529,35 +1536,33 @@ class TransferSSA {
           }
         }
 
-        // NOTE: check all community enable smt variable or not
-
-        // Delete each community
-        for (CommunityVar cvar : toDelete) {
-          BoolExpr newValue = null;
-          if (cvar.getLiteralValue() != null && cvar.getLiteralValue().getEnableSmtVariable()) {
-            // NOTE: annotated by yongzheng2024 in 20250907
-            //       NullPointerException here
-            //       enableSmtVariable is true but configVarCommunity is null
+        if (!((DeleteCommunity) stmt).getEnableSmtVariable()) {
+          for (CommunityVar cvar : toDelete) {
+            BoolExpr newValue =
+                    _enc.mkIf(
+                            curResult.getReturnAssignedValue(),
+                            curP.getData().getCommunities().get(cvar),
+                            _enc.mkFalse());
+            BoolExpr x = createBoolVariableWith(curP, cvar.getRegex(), newValue);
+            curP.getData().getCommunities().put(cvar, x);
+            curResult = curResult.addChangedVariable(cvar.getRegex(), x);
+          }
+        } else {
+          for (CommunityVar cvar : toDelete) {
             BoolExpr community = cvar.getLiteralValue().getConfigVarCommunity();
             BoolExpr community_origin = curP.getData().getCommunities().get(cvar);
             BoolExpr communityEqual = _enc.mkEq(community, community_origin);
-            newValue =
-                _enc.mkIf(
-                    curResult.getReturnAssignedValue(),
-                    // communityEqual,
-                    curP.getData().getCommunities().get(cvar),
-                    // _enc.mkFalse());
-                    _enc.mkNot(community));
-          } else {
-            newValue =
-                _enc.mkIf(
-                    curResult.getReturnAssignedValue(),
-                    curP.getData().getCommunities().get(cvar),
-                    _enc.mkFalse());
+            BoolExpr newValue =
+                    _enc.mkIf(
+                            curResult.getReturnAssignedValue(),
+                            // communityEqual,
+                            curP.getData().getCommunities().get(cvar),
+                            // _enc.mkFalse());
+                            _enc.mkNot(community));
+            BoolExpr x = createBoolVariableWith(curP, cvar.getRegex(), newValue);
+            curP.getData().getCommunities().put(cvar, x);
+            curResult = curResult.addChangedVariable(cvar.getRegex(), x);
           }
-          BoolExpr x = createBoolVariableWith(curP, cvar.getRegex(), newValue);
-          curP.getData().getCommunities().put(cvar, x);
-          curResult = curResult.addChangedVariable(cvar.getRegex(), x);
         }
 
       } else if (stmt instanceof PrependAsPath) {
