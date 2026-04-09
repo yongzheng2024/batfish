@@ -83,16 +83,19 @@ public final class Uint32HighLowExpr extends LongExpr {
   private final @Nonnull IntExpr _lowExpr;
 
   /** Add configuration constant - SMT symbolic variable */
+  // private boolean _enableSmtVariable;    // Inherited from the parent class
+  // private String _configVarPrefix;       // Inherited from the parent class
+
   @Override
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
     // TODO: implement me when needed
-    throw new BatfishException("Uint32HighLowExpr:initSmtVariable: not implemented yet.");
+    throw new BatfishException("Uint32HighLowExpr.initSmtVariable: not implemented yet.");
   }
 
   /** Add get literal long value for configVarPrefix */
   @Override
   public String getLiteralLongString() {
     // TODO: implement ne when needed
-    throw new BatfishException("Uint32HighLowExpr:getLiteralLongString: not implemented yet.");
+    throw new BatfishException("Uint32HighLowExpr.getLiteralLongString: not implemented yet.");
   }
 }

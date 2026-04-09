@@ -170,7 +170,7 @@ public class RouteFilterList implements Serializable {
     for (int i = 0; i < _lines.size(); ++i) {
       // check and avoid shared object
       if (_lines.get(i).getEnableSmtVariable()) {
-        System.out.println("WARNING: RouteFilterList:initSmtVariable: " +
+        System.out.println("WARNING: RouteFilterList.initSmtVariable: " +
                 "found shared RouteFilterLine, cloning it.");
 
         RouteFilterLine lineBackup = _lines.get(i);
@@ -181,19 +181,24 @@ public class RouteFilterList implements Serializable {
         // add additional assert for using shared object
         if (lineBackup.getEnableSmtVariable() == _lines.get(i).getEnableSmtVariable()) {
           throw new BatfishException(
-                  "RouteFilterList:initSmtVariable: cloning failed for shared object");
+                  "RouteFilterList.initSmtVariable: cloning failed for shared object");
         }
       }
 
       long prefixIp = _lines.get(i).getIpWildcard().getIp().asLong();
       String prefixIpStr = SymbolicUtil.longToIpString(prefixIp);
-      int lineIndex = i + 1;
 
-      String currConfigVarPrefix =
+      int lineIndex = i + 1;
+      String configVarPrefixUpdated =
               configVarPrefix + "_Line" + lineIndex + "__" + SymbolicUtil.format(prefixIpStr) + "__";
 
-      _lines.get(i).initSmtVariable(context, solver, currConfigVarPrefix);
+      // init smt variable for route filter line
+      _lines.get(i).initSmtVariable(context, solver, configVarPrefixUpdated);
     }
+
+    // configure the smt variable enable flag to true
+    _enableSmtVariable = true;
+    _configVarPrefix = configVarPrefix;
   }
 
   public boolean getEnableSmtVariable() {

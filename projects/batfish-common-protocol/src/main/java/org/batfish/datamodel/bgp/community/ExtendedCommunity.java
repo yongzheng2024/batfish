@@ -306,10 +306,10 @@ public final class ExtendedCommunity extends Community {
   }
 
   /** Add configuration constant - SMT symbolic variable */
-  // private boolean _enableSmtVariable;
-  // private String _configVarPrefix;
+  // private boolean _enableSmtVariable;    // Inherited from the parent class
+  // private String _configVarPrefix;       // Inherited from the parent class
 
-  // private transient BoolExpr _configVarCommunity;
+  // private transient BoolExpr _configVarCommunity;    // Inherited from the parent class
 
   @Override
   public void initSmtVariable(
@@ -331,7 +331,7 @@ public final class ExtendedCommunity extends Community {
         context.mkEq(_configVarCommunity, context.mkBool(isTrue));
     solver.add(configVarRegexCommConstraint);
 
-    // configure enable smt variable flag to true
+    // configure the smt variable enable flag to true
     _enableSmtVariable = true;
     _configVarPrefix = configVarPrefix;
   }

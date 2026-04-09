@@ -87,7 +87,7 @@ public final class SetLocalPreference extends Statement {
 
     _localPreference.initSmtVariable(context, solver, configVarPrefix);
 
-    // config enable smt variable flag to true
+    // config the smt variable enable flag to true
     _enableSmtVariable = true;
     _configVarPrefix = configVarPrefix;
   }

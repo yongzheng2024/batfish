@@ -289,7 +289,7 @@ public final class IpWildcard implements Serializable, Comparable<IpWildcard> {
     solver.add(configVarMaskConstraint);
     solver.add(configVarLengthConstraint);
 
-    // configure enable smt variable flag to true
+    // configure the smt variable enable flag to true
     _enableSmtVariable = true;
     _configVarPrefix = configVarPrefix;
   }

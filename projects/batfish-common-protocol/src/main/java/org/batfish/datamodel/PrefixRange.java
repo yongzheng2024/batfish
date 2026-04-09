@@ -16,6 +16,8 @@ import com.microsoft.z3.Context;
 import com.microsoft.z3.Solver;
 import com.microsoft.z3.BoolExpr;
 
+import org.batfish.common.util.SymbolicUtil;
+
 public final class PrefixRange implements Serializable, Comparable<PrefixRange> {
 
   /** A prefix range representing all prefixes. */
@@ -187,7 +189,7 @@ public final class PrefixRange implements Serializable, Comparable<PrefixRange> 
 
     // check and avoid shared object for Prefix
     if (_prefix.getEnableSmtVariable()) {
-      System.out.println("WARNING: PrefixRange:initSmtVariable: " +
+      System.out.println("WARNING: PrefixRange.initSmtVariable: " +
           "found shared Prefix, cloning it.");
 
       Prefix prefixBackup = _prefix;
@@ -195,13 +197,13 @@ public final class PrefixRange implements Serializable, Comparable<PrefixRange> 
 
       // add additional assert for using shared object
       if (prefixBackup.getEnableSmtVariable() == _prefix.getEnableSmtVariable()) {
-        throw new BatfishException("PrefixRange:initSmtVariable: cloning failed for shared object");
+        throw new BatfishException("PrefixRange.initSmtVariable: cloning failed for shared object");
       }
     }
 
     // check and avoid shared object for SubRange
     if (_lengthRange.getEnableSmtVariable()) {
-      System.out.println("WARNING: PrefixRange:initSmtVariable: " +
+      System.out.println("WARNING: PrefixRange.initSmtVariable: " +
           "found shared SubRange, cloning it.");
 
       SubRange lengthRangeBackup = _lengthRange;
@@ -209,16 +211,17 @@ public final class PrefixRange implements Serializable, Comparable<PrefixRange> 
 
       // add additional assert for using shared object
       if (lengthRangeBackup.getEnableSmtVariable() == _lengthRange.getEnableSmtVariable()) {
-        throw new BatfishException("PrefixRange:initSmtVariable: cloning failed for shared object");
+        throw new BatfishException("PrefixRange.initSmtVariable: cloning failed for shared object");
       }
     }
 
-    // init smt variable for prefix and relevant length range configuration
     long prefixIp = _prefix.getStartIp().asLong();
-    String prefixIpStr = longToIpString(prefixIp);
-    _prefix.initSmtVariable(context, solver, configVarPrefix + format(prefixIpStr) + "__");
-    _lengthRange.initSmtVariable(
-        context, solver, configVarPrefix + format(prefixIpStr) + "__");
+    String prefixIpStr = SymbolicUtil.longToIpString(prefixIp);
+    String configVarPrefixUpdated = configVarPrefix + SymbolicUtil.format(prefixIpStr) + "__";
+
+    // init smt variable for prefix and relevant length range configuration
+    _prefix.initSmtVariable(context, solver, configVarPrefixUpdated);
+    _lengthRange.initSmtVariable(context, solver, configVarPrefixUpdated);
 
     // add relevant configuration constant constraint (ge / le / eq with prefix length)
     BoolExpr rangeStartGePrefixLength =
@@ -228,7 +231,7 @@ public final class PrefixRange implements Serializable, Comparable<PrefixRange> 
     solver.add(rangeStartGePrefixLength);
     solver.add(rangeEndGePrefixLength);
 
-    // configure enable smt variable flag to true
+    // configure the smt variable enable flag to true
     _enableSmtVariable = true;
     _configVarPrefix = configVarPrefix;
   }

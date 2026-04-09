@@ -365,7 +365,7 @@ public class PrefixSpace implements Serializable {
     // check and avoid shared object for SubRange
     for (PrefixRange prefixRange : getPrefixRanges()) {
       if (prefixRange.getEnableSmtVariable()) {
-        System.out.println("WARNING: PrefixSpace:initSmtVariable: " +
+        System.out.println("WARNING: PrefixSpace.initSmtVariable: " +
             "found shared PrefixRange, cloning it.");
 
         PrefixRange prefixRangeBackup = prefixRange;
@@ -373,7 +373,7 @@ public class PrefixSpace implements Serializable {
 
         // add additional assert for using shared object
         if (prefixRangeBackup.getEnableSmtVariable() == prefixRange.getEnableSmtVariable()) {
-          throw new BatfishException("PrefixSpace:initSmtVariable: " +
+          throw new BatfishException("PrefixSpace.initSmtVariable: " +
               "cloning failed for shared object.");
         }
       }
@@ -382,7 +382,7 @@ public class PrefixSpace implements Serializable {
       prefixRange.initSmtVariable(context, solver, configVarPrefix);
     }
 
-    // configure enable smt variable flag to true
+    // configure the smt variable enable flag to true
     _enableSmtVariable = true;
     _configVarPrefix = configVarPrefix;
   }

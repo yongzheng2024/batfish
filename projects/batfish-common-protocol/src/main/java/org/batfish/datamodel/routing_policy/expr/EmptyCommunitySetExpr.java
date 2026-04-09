@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableSet;
 import java.util.Set;
 import javax.annotation.Nonnull;
 
+import com.microsoft.z3.BoolExpr;
 import com.microsoft.z3.Context;
 import com.microsoft.z3.Solver;
 import org.batfish.common.BatfishException;
@@ -76,13 +77,13 @@ public class EmptyCommunitySetExpr extends CommunitySetExpr {
   }
 
   /** Add configuration constant - SMT symbolic variable */
-  // private boolean _enableSmtVariable;
-  // private String _configVarPrefix;
+  // private boolean _enableSmtVariable;    // Inherited from the parent class
+  // private String _configVarPrefix;       // Inherited from the parent class
 
   @Override
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix, boolean isTrue) {
     // TODO: implement me when needed
-    throw new BatfishException("EmptyCommunitySetExpr:initSmtVariable: not implemented yet.");
+    throw new BatfishException("EmptyCommunitySetExpr.initSmtVariable: not implemented yet.");
   }
 
   @Override
@@ -90,10 +91,8 @@ public class EmptyCommunitySetExpr extends CommunitySetExpr {
     initSmtVariable(context, solver, configVarPrefix, true);
   }
 
-  /** Add get community expression string for configVarPrefix */
   @Override
-  public String getCommunityExprString() {
-    // TODO: implement me when needed
-    throw new BatfishException("EmptyCommunitySetExpr:getCommunityExprString: not implemented yet.");
+  public BoolExpr getConfigVarCommunity() {
+    throw new BatfishException("EmptyCommunitySetExpr.getConfigVarCommunity: not implemented yet.");
   }
 }

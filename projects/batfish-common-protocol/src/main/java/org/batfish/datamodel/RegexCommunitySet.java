@@ -115,8 +115,8 @@ public final class RegexCommunitySet extends CommunitySetExpr {
   }
 
   /** Add configuration constant - SMT symbolic variable */
-  // private boolean _enableSmtVariable;
-  // private String _configVarPrefix;
+  // private boolean _enableSmtVariable;    // Inherited from the parent class
+  // private String _configVarPrefix;       // Inherited from the parent class
 
   private transient BoolExpr _configVarCommunity;
 
@@ -138,7 +138,7 @@ public final class RegexCommunitySet extends CommunitySetExpr {
         context.mkEq(_configVarCommunity, context.mkBool(isTrue));
     solver.add(configVarRegexCommConstraint);
 
-    // configure enable smt variable flag to true
+    // configure the smt variable enable flag to true
     _enableSmtVariable = true;
     _configVarPrefix = configVarPrefix;
   }
@@ -148,14 +148,8 @@ public final class RegexCommunitySet extends CommunitySetExpr {
     initSmtVariable(context, solver, configVarPrefix, true);
   }
 
+  @Override
   public BoolExpr getConfigVarCommunity() {
     return _configVarCommunity;
-  }
-
-  /** Add get community expression string for configVarPrefix */
-  @Override
-  public String getCommunityExprString() {
-    // TODO: format regex community expression
-    return _regex;
   }
 }

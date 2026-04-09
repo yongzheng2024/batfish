@@ -117,7 +117,7 @@ public final class PrependAsPath extends Statement {
 
     _expr.initSmtVariable(context, solver, configVarPrefix);
 
-    // config enable smt variable flag to true
+    // config the smt variable enable flag to true
     _enableSmtVariable = true;
     _configVarPrefix = configVarPrefix;
   }

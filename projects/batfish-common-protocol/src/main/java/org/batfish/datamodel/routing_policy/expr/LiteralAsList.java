@@ -73,7 +73,10 @@ public final class LiteralAsList extends AsPathListExpr {
   }
 
   /** Add configuration constant - SMT symbolic variable */
-  private transient ArithExpr _configVarPrepend;
+  // private boolean _enableSmtVariable;    // Inherited from the parent class
+  // private String _configVarPrefix;       // Inherited from the parent class
+
+  // private transient ArithExpr _configVarPrepend;    // Inherited from the parent class
 
   @Override
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
@@ -89,13 +92,8 @@ public final class LiteralAsList extends AsPathListExpr {
         context.mkEq(_configVarPrepend, context.mkInt(_list.size()));
     solver.add(configVarPrependConstraint);
 
-    // config enable smt variable flag to true
+    // config the smt variable enable flag to true
     _enableSmtVariable = true;
     _configVarPrefix = configVarPrefix;
-  }
-
-  @Override
-  public ArithExpr getConfigVarPrepend() {
-    return _configVarPrepend;
   }
 }

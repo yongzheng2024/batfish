@@ -23,6 +23,8 @@ import org.batfish.datamodel.routing_policy.Environment;
 import org.batfish.datamodel.visitors.CommunitySetExprVisitor;
 import org.batfish.datamodel.visitors.VoidCommunitySetExprVisitor;
 
+import org.batfish.common.util.SymbolicUtil;
+
 /**
  * A {@link CommunitySetExpr} matching community-sets that contain at least the community returned
  * by {@link #getCommunity()}.
@@ -114,23 +116,8 @@ public class LiteralCommunity extends CommunitySetExpr {
   }
 
   /** Add configuration constant - SMT symbolic variable */
-  private boolean _enableSmtVariable;
-  private String _configVarPrefix;
-
-  private static String format(String str) {
-    String formatedStr = "";
-    for (char c : str.toCharArray()) {
-      switch (c) {
-        case ':':
-          formatedStr += "_";
-          break;
-        default:
-          formatedStr += c;
-          break;
-      }
-    }
-    return formatedStr;
-  }
+  // private boolean _enableSmtVariable;    // Inherited from the parent class
+  // private String _configVarPrefix;       // Inherited from the parent class
 
   public void initSmtVariable(
       Context context, Solver solver, String configVarPrefix, boolean isTrue) {
@@ -143,7 +130,7 @@ public class LiteralCommunity extends CommunitySetExpr {
 
     // check and avoid shared object
     if (_community.getEnableSmtVariable()) {
-      System.out.println("WARNING: LiteralCommunity:initSmtVariable: " +
+      System.out.println("WARNING: LiteralCommunity.initSmtVariable: " +
           "found shared Community, cloning it.");
 
       Community communityBackup = _community;
@@ -152,17 +139,17 @@ public class LiteralCommunity extends CommunitySetExpr {
 
       // add additional assert for using shared object
       if (communityBackup.getEnableSmtVariable() == _community.getEnableSmtVariable()) {
-        throw new BatfishException("LiteralCommunity:initSmtVariable: " +
+        throw new BatfishException("LiteralCommunity.initSmtVariable: " +
             "cloning failed for shared object.");
       }
     }
 
     // init smt variable for literal community
-    String communityString = format(_community.getCommunityString());
+    String communityString = SymbolicUtil.format(_community.getCommunityString());
     configVarPrefix += communityString + "_";
     _community.initSmtVariable(context, solver, configVarPrefix, isTrue);
 
-    // configure enable smt variable flag to true
+    // configure the smt variable enable flag to true
     _enableSmtVariable = true;
     _configVarPrefix = configVarPrefix;
   }
@@ -172,13 +159,8 @@ public class LiteralCommunity extends CommunitySetExpr {
     initSmtVariable(context, solver, configVarPrefix, true);
   }
 
+  @Override
   public BoolExpr getConfigVarCommunity() {
     return _community.getConfigVarCommunity();
-  }
-
-  /** Add get community expression string for configVarPrefix */
-  @Override
-  public String getCommunityExprString() {
-    return _community.getCommunityString();
   }
 }

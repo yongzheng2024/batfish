@@ -326,7 +326,6 @@ public final class Prefix implements Comparable<Prefix>, Serializable {
           "Current  configVarPrefix: " + configVarPrefix);
     }
 
-    // FIXME: if prefix length is 0, then the encoding of ip / mask / length ?
     long prefixIp = _ip.asLong();
 
     _configVarIp = context.mkBVConst(configVarPrefix + "ip", BITVEC_EXPR_SIZE);
@@ -346,7 +345,7 @@ public final class Prefix implements Comparable<Prefix>, Serializable {
     solver.add(configVarMaskConstraint);
     solver.add(configVarLengthConstraint);
 
-    // config enable smt variable flag to true
+    // config the smt variable enable flag to true
     _enableSmtVariable = true;
     _configVarPrefix = configVarPrefix;
   }

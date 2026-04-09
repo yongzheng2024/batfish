@@ -69,8 +69,8 @@ public class DecrementMetric extends LongExpr {
   }
 
   /** Add configuration constant - SMT symbolic variable */
-  // private boolean _enableSmtVariable;
-  // private String _configVarPrefix;
+  // private boolean _enableSmtVariable;    // Inherited from the parent class
+  // private String _configVarPrefix;       // Inherited from the parent class
 
   private transient ArithExpr _configVarLocalpreference;
 
@@ -90,7 +90,7 @@ public class DecrementMetric extends LongExpr {
         _configVarLocalpreference, context.mkInt(_subtrahend));
     solver.add(configVarLpConstraint);
 
-    // config enable smt variable flag to true
+    // config the smt variable enable flag to true
     _enableSmtVariable = true;
     _configVarPrefix = configVarPrefix;
   }

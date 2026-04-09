@@ -104,7 +104,7 @@ public final class MatchCommunitySet extends BooleanExpr {
     // init smt variable for community set configuration
     _expr.initSmtVariable(context, solver, configVarPrefix);
 
-    // configure enable smt variable flag to true
+    // configure the smt variable enable flag to true
     _enableSmtVariable = true;
     _configVarPrefix = configVarPrefix;
   }

@@ -84,6 +84,7 @@ public final class AddCommunity extends Statement {
       throw new BatfishException(
           "AddCommunity.initSmtVariable: shared object CommunitySetExpr.");
     }
+
     _expr.initSmtVariable(context, solver, configVarPrefix, isTrue);
   }
 }

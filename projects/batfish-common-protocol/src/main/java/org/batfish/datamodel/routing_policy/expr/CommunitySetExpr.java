@@ -7,6 +7,7 @@ import java.util.Set;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import com.microsoft.z3.BoolExpr;
 import org.batfish.common.BatfishException;
 import org.batfish.datamodel.bgp.community.Community;
 import org.batfish.datamodel.routing_policy.Environment;
@@ -109,8 +110,7 @@ public abstract class CommunitySetExpr implements Serializable {
     return _configVarPrefix;
   }
 
-  /** Add get community expression string for configVarPrefix */
-  public abstract String getCommunityExprString();
+  public abstract BoolExpr getConfigVarCommunity();
 
   // clone a community
   protected Community cloneCommunity(Community community) {
@@ -128,6 +128,6 @@ public abstract class CommunitySetExpr implements Serializable {
     }
 
     // only has three subclasses of Community
-    throw new BatfishException("CommunitySetExpr:cloneCommunity: unknown community type.");
+    throw new BatfishException("CommunitySetExpr.cloneCommunity: unknown community type.");
   }
 }

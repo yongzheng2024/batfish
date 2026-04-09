@@ -24,6 +24,8 @@ public abstract class AsPathListExpr implements Serializable {
   protected boolean _enableSmtVariable;
   protected String _configVarPrefix;
 
+  protected transient ArithExpr _configVarPrepend;
+
   public abstract void initSmtVariable(Context context, Solver solver, String configVarPrefix);
 
   public boolean getEnableSmtVariable() {
@@ -34,5 +36,7 @@ public abstract class AsPathListExpr implements Serializable {
     return _configVarPrefix;
   }
 
-  public abstract ArithExpr getConfigVarPrepend();
+  public ArithExpr getConfigVarPrepend() {
+    return _configVarPrepend;
+  }
 }

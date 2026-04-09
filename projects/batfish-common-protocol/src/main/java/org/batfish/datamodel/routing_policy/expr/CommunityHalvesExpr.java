@@ -9,6 +9,7 @@ import java.util.Objects;
 import java.util.Set;
 import javax.annotation.Nonnull;
 
+import com.microsoft.z3.BoolExpr;
 import com.microsoft.z3.Context;
 import com.microsoft.z3.Solver;
 import org.batfish.common.BatfishException;
@@ -118,13 +119,13 @@ public class CommunityHalvesExpr extends CommunitySetExpr {
   }
 
   /** Add configuration constant - SMT symbolic variable */
-  // private boolean _enableSmtVariable;
-  // private String _configVarPrefix;
+  // private boolean _enableSmtVariable;    // Inherited from the parent class
+  // private String _configVarPrefix;       // Inherited from the parent class
 
   @Override
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix, boolean isTrue) {
     // TODO: implement me when needed
-    throw new BatfishException("CommunityHalvesExpr:initSmtVariable: not implemented yet.");
+    throw new BatfishException("CommunityHalvesExpr.initSmtVariable: not implemented yet.");
   }
 
   @Override
@@ -132,10 +133,8 @@ public class CommunityHalvesExpr extends CommunitySetExpr {
     initSmtVariable(context, solver, configVarPrefix, true);
   }
 
-  /** Add get community expression string for configVarPrefix */
   @Override
-  public String getCommunityExprString() {
-    // TODO: implement me when needed
-    throw new BatfishException("CommunityHalvesExpr:getCommunityExprString: not implemented yet.");
+  public BoolExpr getConfigVarCommunity() {
+    throw new BatfishException("CommunityHalvesExpr.getConfigVarCommunity: not implemented yet.");
   }
 }

@@ -72,6 +72,9 @@ public class ExplicitPrefixSet extends PrefixSetExpr {
   }
 
   /** Add configuration constant - SMT symbolic variable */
+  // private boolean _enableSmtVariable;    // Inherited from the parent class
+  // private String _configVarPrefix;       // Inherited from the parent class
+
   @Override
   public final void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
     // assert that the prefix set is not shared
@@ -99,7 +102,7 @@ public class ExplicitPrefixSet extends PrefixSetExpr {
     // init smt variable for prefix set configuration
     _prefixSpace.initSmtVariable(context, solver, configVarPrefix);
 
-    // configure the enable smt variable flag to true
+    // configure the smt variable enable flag to true
     _enableSmtVariable = true;
     _configVarPrefix = configVarPrefix;
   }

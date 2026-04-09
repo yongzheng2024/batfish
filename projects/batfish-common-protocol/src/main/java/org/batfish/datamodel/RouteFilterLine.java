@@ -127,7 +127,7 @@ public final class RouteFilterLine implements Serializable {
 
     // check and avoid shared object for IpWildcard
     if (_ipWildcard.getEnableSmtVariable()) {
-      System.out.println("WARNING: RouteFilterLine:initSmtVariable: " +
+      System.out.println("WARNING: RouteFilterLine.initSmtVariable: " +
           "found shared IpWildcard, cloning it.");
 
       IpWildcard ipWildcardBackup = _ipWildcard;
@@ -136,14 +136,14 @@ public final class RouteFilterLine implements Serializable {
 
       // add additional assert for using shared object
       if (ipWildcardBackup.getEnableSmtVariable() == _ipWildcard.getEnableSmtVariable()) {
-        throw new BatfishException("RouteFilterLine:initSmtVariable: " +
+        throw new BatfishException("RouteFilterLine.initSmtVariable: " +
             "cloning failed for shared object.");
       }
     }
 
     // check and avoid shared object for SubRange
     if (_lengthRange.getEnableSmtVariable()) {
-      System.out.println("WARNING: RouteFilterLine:initSmtVariable: " +
+      System.out.println("WARNING: RouteFilterLine.initSmtVariable: " +
           "found shared SubRange, cloning it.");
 
       SubRange lengthRangeBackup = _lengthRange;
@@ -151,7 +151,7 @@ public final class RouteFilterLine implements Serializable {
 
       // add additional assert for using shared object
       if (lengthRangeBackup.getEnableSmtVariable() == _lengthRange.getEnableSmtVariable()) {
-        throw new BatfishException("RouteFilterLine:initSmtVariable: " +
+        throw new BatfishException("RouteFilterLine.initSmtVariable: " +
             "cloning failed for shared object.");
       }
     }
@@ -161,6 +161,11 @@ public final class RouteFilterLine implements Serializable {
     _ipWildcard.initSmtVariable(context, solver, configVarPrefix);
     _lengthRange.initSmtVariable(context, solver, configVarPrefix);
 
+    // add relevant configuration constant constraint
+    BoolExpr configVarActionConstraint = context.mkEq(
+            _configVarAction, context.mkBool(_action == LineAction.PERMIT));
+    solver.add(configVarActionConstraint);
+
     // add relevant configuration constant constraint (ge / le / eq with prefix length)
     BoolExpr rangeStartGePrefixLength =
         context.mkGe(_lengthRange.getConfigVarStart(), _ipWildcard.getConfigVarLength());
@@ -169,12 +174,7 @@ public final class RouteFilterLine implements Serializable {
     solver.add(rangeStartGePrefixLength);
     solver.add(rangeEndGePrefixLength);
 
-    // add relevant configuration constant constraint
-    BoolExpr configVarActionConstraint = context.mkEq(
-            _configVarAction, context.mkBool(_action == LineAction.PERMIT));
-    solver.add(configVarActionConstraint);
-
-    // configure enable smt variable flag to true
+    // configure the smt variable enable flag to true
     _enableSmtVariable = true;
     _configVarPrefix = configVarPrefix;
   }

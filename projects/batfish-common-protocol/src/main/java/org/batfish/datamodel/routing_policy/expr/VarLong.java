@@ -66,16 +66,19 @@ public class VarLong extends LongExpr {
   }
 
   /** Add configuration constant - SMT symbolic variable */
+  // private boolean _enableSmtVariable;    // Inherited from the parent class
+  // private String _configVarPrefix;       // Inherited from the parent class
+
   @Override
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
     // TODO: implement me when needed
-    throw new BatfishException("VarLong:initSmtVariable: not implemented yet.");
+    throw new BatfishException("VarLong.initSmtVariable: not implemented yet.");
   }
 
   /** Add get literal long value for configVarPrefix */
   @Override
   public String getLiteralLongString() {
     // TODO: implement ne when needed
-    throw new BatfishException("VarLong:getLiteralLongString: not implemented yet.");
+    throw new BatfishException("VarLong.getLiteralLongString: not implemented yet.");
   }
 }

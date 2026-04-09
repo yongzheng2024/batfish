@@ -23,6 +23,7 @@ import java.util.concurrent.ExecutionException;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import com.microsoft.z3.BoolExpr;
 import com.microsoft.z3.Context;
 import com.microsoft.z3.Solver;
 import org.batfish.common.BatfishException;
@@ -260,8 +261,8 @@ public class CommunityList extends CommunitySetExpr {
   }
 
   /** Add configuration constant - SMT symbolic variable */
-  // private boolean _enableSmtVariable;
-  // private String _configVarPrefix;
+  // private boolean _enableSmtVariable;    // Inherited from the parent class
+  // private String _configVarPrefix;       // Inherited from the parent class
 
   @Override
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix, boolean isTrue) {
@@ -275,7 +276,7 @@ public class CommunityList extends CommunitySetExpr {
     for (int i = 0; i < _lines.size(); ++i) {
       // check and avoid shared object
       if (_lines.get(i).getEnableSmtVariable()) {
-        System.out.println("WARNING: CommunityList:initSmtVariable: " +
+        System.out.println("WARNING: CommunityList.initSmtVariable: " +
             "found shared CommunityListLine, cloning it.");
 
         CommunityListLine lineBackup = _lines.get(i);
@@ -286,19 +287,18 @@ public class CommunityList extends CommunitySetExpr {
         // add additional assert for using shared object
         if (lineBackup.getEnableSmtVariable() == _lines.get(i).getEnableSmtVariable()) {
           throw new BatfishException(
-              "CommunityList:initSmtVariable: cloning failed for shared object");
+              "CommunityList.initSmtVariable: cloning failed for shared object");
         }
       }
 
       int lineIndex = i + 1;
-
-      String currConfigVarPrefix = configVarPrefix + "_Line" + lineIndex + "__";
+      String configVarPrefixUpdated = configVarPrefix + "_Line" + lineIndex + "__";
 
       // init smt variable for community list line
-      _lines.get(i).initSmtVariable(context, solver, currConfigVarPrefix, isTrue);
+      _lines.get(i).initSmtVariable(context, solver, configVarPrefixUpdated, isTrue);
     }
 
-    // configure enable smt variable flag to tue
+    // configure the smt variable enable flag to true
     _enableSmtVariable = true;
     _configVarPrefix = configVarPrefix;
   }
@@ -308,9 +308,8 @@ public class CommunityList extends CommunitySetExpr {
     initSmtVariable(context, solver, configVarPrefix, true);
   }
 
-  /** Add get community expression string for configVarPrefix */
   @Override
-  public String getCommunityExprString() {
-    return _name;
+  public BoolExpr getConfigVarCommunity() {
+    throw new BatfishException("CommunityList.getConfigVarCommunity: not implemented yet.");
   }
 }

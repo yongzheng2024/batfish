@@ -99,7 +99,8 @@ public class CommunityListLine implements Serializable {
 
     // check and avoid shared object
     if (_matchCondition.getEnableSmtVariable()) {
-      System.out.println("WARNING: CommunityListLine:initSmtVariable found shared CommunitySetExpr, cloning it.");
+      System.out.println("WARNING: CommunityListLine.initSmtVariable: " +
+              "found shared CommunitySetExpr, cloning it.");
 
       CommunitySetExpr matchConditionBackup = _matchCondition;
 
@@ -122,26 +123,27 @@ public class CommunityListLine implements Serializable {
                 communityList.getName(), communityList.getLines(), communityList.getInvertMatch());
       } else {
         throw new BatfishException(
-            "CommunityListLine:initSmtVariable: unimplemented community set type: " +
+            "CommunityListLine.initSmtVariable: unimplemented community set type: " +
             _matchCondition.getClass().getName());
       }
 
       // add additional assert for using shared object
       if (matchConditionBackup.getEnableSmtVariable() == _matchCondition.getEnableSmtVariable()) {
         throw new BatfishException(
-            "CommunityListLine:initSmtVariable: cloning failed for shared object.");
+            "CommunityListLine.initSmtVariable: cloning failed for shared object.");
       }
     }
 
     _configVarAction = context.mkBoolConst(configVarPrefix + "action");
+
+    _matchCondition.initSmtVariable(context, solver, configVarPrefix, isTrue);
+
     // add relevant configuration constant constraint
     BoolExpr configVarActionConstraint = context.mkEq(
         _configVarAction, context.mkBool(_action == LineAction.PERMIT));
     solver.add(configVarActionConstraint);
-    // init smt variable for community set expr
-    _matchCondition.initSmtVariable(context, solver, configVarPrefix, isTrue);
 
-    // configure enable smt variable flag to true
+    // configure the smt variable enable flag to true
     _enableSmtVariable = true;
     _configVarPrefix = configVarPrefix;
   }

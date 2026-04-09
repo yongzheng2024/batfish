@@ -179,7 +179,7 @@ public final class SubRange implements Serializable, Comparable<SubRange> {
     solver.add(configVarStartConstraint);
     solver.add(configVarEndConstraint);
 
-    // configure enable smt variable flag to true
+    // configure the smt variable enable flag to true
     _enableSmtVariable = true;
     _configVarPrefix = configVarPrefix;
   }

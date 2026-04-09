@@ -143,7 +143,7 @@ public final class MatchPrefixSet extends BooleanExpr {
     // init smt variable for prefix set configuration
     _prefixSet.initSmtVariable(context, solver, configVarPrefix);
 
-    // configure enable smt variable flag to true
+    // configure the smt variable enable flag to true
     _enableSmtVariable = true;
     _configVarPrefix = configVarPrefix;
   }

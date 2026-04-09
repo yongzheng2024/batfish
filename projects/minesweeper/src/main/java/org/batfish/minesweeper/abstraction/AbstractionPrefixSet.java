@@ -70,6 +70,9 @@ public final class AbstractionPrefixSet extends PrefixSetExpr {
   }
 
   /** Add configuration constant - SMT symbolic variable */
+  // private boolean _enableSmtVariable;    // Inherited from the parent class
+  // private String _configVarPrefix;       // Inherited from the parent class
+
   @Override
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
     // TODO: implement me when needed

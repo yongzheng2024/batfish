@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Set;
 import javax.annotation.Nonnull;
 
+import com.microsoft.z3.BoolExpr;
 import com.microsoft.z3.Context;
 import com.microsoft.z3.Solver;
 import org.batfish.common.BatfishException;
@@ -105,8 +106,8 @@ public class NamedCommunitySet extends CommunitySetExpr {
   }
 
   /** Add configuration constant - SMT symbolic variable */
-  // private boolean _enableSmtVariable;
-  // private String _configVarPrefix;
+  // private boolean _enableSmtVariable;    // Inherited from the parent class
+  // private String _configVarPrefix;       // Inherited from the parent class
 
   @Override
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix, boolean isTrue) {
@@ -119,7 +120,7 @@ public class NamedCommunitySet extends CommunitySetExpr {
 
     // do nothing, just refer to the RouteFilterList object according to parameter _name
 
-    // configure enable smt variable flag to true
+    // configure the smt variable enable flag to true
     _enableSmtVariable = true;
     _configVarPrefix = configVarPrefix;
   }
@@ -129,9 +130,8 @@ public class NamedCommunitySet extends CommunitySetExpr {
     initSmtVariable(context, solver, configVarPrefix, true);
   }
 
-  /** Add get community expression string for configVarPrefix */
   @Override
-  public String getCommunityExprString() {
-    return _name;
+  public BoolExpr getConfigVarCommunity() {
+    throw new BatfishException("NamedCommunitySet.getConfigVarCommunity: not implemented yet.");
   }
 }

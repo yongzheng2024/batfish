@@ -84,6 +84,7 @@ public final class DeleteCommunity extends Statement {
       throw new BatfishException(
           "DeleteCommunity.initSmtVariable: shared object CommunitySetExpr.");
     }
+
     _expr.initSmtVariable(context, solver, configVarPrefix, isTrue);
   }
 }
