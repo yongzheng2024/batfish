@@ -474,17 +474,23 @@ class EncoderSlice {
     }
 
     // well formed prefix
-    if (p.getEnableSmtVariable() && r.getEnableSmtVariable()) {
+    if (!p.getEnableSmtVariable() /* || !r.getEnableSmtVariable() */) {
+      BoolExpr lowerBitsMatch = firstBitsEqual(_symbolicPacket.getDstIp(), pfx, len);
+      if (lower == upper) {
+        BoolExpr equalLenStart = mkEq(prefixLen, mkInt(lower));
+        BoolExpr equalLenEnd = mkEq(prefixLen, mkInt(upper));
+        return mkAnd(equalLenStart, equalLenEnd, lowerBitsMatch);
+      } else {
+        BoolExpr lengthLowerBound = mkGe(prefixLen, mkInt(lower));
+        BoolExpr lengthUpperBound = mkLe(prefixLen, mkInt(upper));
+        return mkAnd(lengthLowerBound, lengthUpperBound, lowerBitsMatch);
+      }
+    } else {
       BitVecExpr configVarIp = p.getConfigVarIp();
       BitVecExpr configVarMask = p.getConfigVarMask();
       BoolExpr lowerBitsMatch = firstBitsEqual(
-          _symbolicPacket.getDstIp(), configVarIp, configVarMask, pfx, len);
+              _symbolicPacket.getDstIp(), configVarIp, configVarMask, pfx, len);
       if (lower == upper) {
-        // NOTE: add additional constraint here for traceability
-        //       by yongzheng2024
-        // ArithExpr configVarRangeStart = r.getConfigVarStart();
-        // BoolExpr equalLen = mkEq(prefixLen, configVarRangeStart);
-        // return mkAnd(equalLen, lowerBitsMatch);
         ArithExpr configVarRangeStart = r.getConfigVarStart();
         ArithExpr configVarRangeEnd = r.getConfigVarEnd();
         BoolExpr equalLenStart = mkEq(prefixLen, configVarRangeStart);
@@ -495,17 +501,6 @@ class EncoderSlice {
         ArithExpr configVarRangeEnd = r.getConfigVarEnd();
         BoolExpr lengthLowerBound = mkGe(prefixLen, configVarRangeStart);
         BoolExpr lengthUpperBound = mkLe(prefixLen, configVarRangeEnd);
-        return mkAnd(lengthLowerBound, lengthUpperBound, lowerBitsMatch);
-      }
-
-    } else {
-      BoolExpr lowerBitsMatch = firstBitsEqual(_symbolicPacket.getDstIp(), pfx, len);
-      if (lower == upper) {
-        BoolExpr equalLen = mkEq(prefixLen, mkInt(lower));
-        return mkAnd(equalLen, lowerBitsMatch);
-      } else {
-        BoolExpr lengthLowerBound = mkGe(prefixLen, mkInt(lower));
-        BoolExpr lengthUpperBound = mkLe(prefixLen, mkInt(upper));
         return mkAnd(lengthLowerBound, lengthUpperBound, lowerBitsMatch);
       }
     }
