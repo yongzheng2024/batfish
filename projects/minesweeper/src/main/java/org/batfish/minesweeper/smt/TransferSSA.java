@@ -421,6 +421,19 @@ class TransferSSA {
     return null;
   }
 
+  private BoolExpr matchCommunityExtend(SymbolicRoute other, CommunityVar cvar) {
+    BoolExpr c1 = other.getCommunities().get(cvar);
+    BoolExpr c2 = matchCommunity(other.getCommunities(), cvar);
+    if (null != c1) {
+      return c1;
+    } else if (null != c2) {
+      return c2;
+    } else {
+      throw new BatfishException(
+              "TransferSSA.matchCommunityExtend: cannot match community in SymbolicRoute.");
+    }
+  }
+
   /*
    * Converts a community list to a boolean expression.
    */
@@ -429,34 +442,19 @@ class TransferSSA {
     Collections.reverse(lines);
     BoolExpr acc = _enc.mkFalse();
 
-    // TODO: check all CommunityListLine enable smt variable flag or not
-    //       annotated by yongzheng on 20250412
-
-    for (CommunityListLine line : lines) {
-      // Add additional
-      // NOTE: This is wrong, we need to actually match on the cvar.
-      //       refer to https://github.com/batfish minesweeper-ibgp-new branch
-      // CommunityVar cvar = toCommunityVar(line.getMatchCondition());
-      // BoolExpr c = matchCommunity(other.getCommunities(), cvar);
-      CommunityVar cvar = toCommunityVar(line.getMatchCondition());
-      BoolExpr c1 = other.getCommunities().get(cvar);
-      BoolExpr c2 = matchCommunity(other.getCommunities(), cvar);
-      BoolExpr c = null;
-      if (c1 != null) {
-        c = c1;
-      } else if (c2 != null) {
-        c = c2;
-      } else {
-        throw new BatfishException("matchCommunityList: should not be null");
-      }
-
-      if (!line.getEnableSmtVariable()) {
+    if (!cl.getEnableSmtVariable()) {
+      for (CommunityListLine line : lines) {
+        CommunityVar cvar = toCommunityVar(line.getMatchCondition());
+        BoolExpr c = matchCommunityExtend(other, cvar);
         boolean action = (line.getAction() == LineAction.PERMIT);
         acc = _enc.mkIf(c, _enc.mkBool(action), acc);
+      }
+    } else {
+      for (CommunityListLine line : lines) {
+        CommunityVar cvar = toCommunityVar(line.getMatchCondition());
+        BoolExpr c = matchCommunityExtend(other, cvar);
 
-      } else {
         BoolExpr community = null;
-
         CommunitySetExpr communitySetExpr = line.getMatchCondition();
         if (communitySetExpr instanceof RegexCommunitySet) {
           RegexCommunitySet rcs = (RegexCommunitySet) communitySetExpr;
@@ -467,10 +465,10 @@ class TransferSSA {
         } else {
           throw new BatfishException("Unimplemented community condition: " + communitySetExpr);
         }
-
-        BoolExpr action = line.getConfigVarAction();
+        BoolExpr lineEnable = line.getConfigLineEnable();
         BoolExpr matchCommunityLine = _enc.mkEq(community, c);
-        acc = _enc.mkIf(matchCommunityLine, action, acc);
+        BoolExpr action = line.getConfigVarAction();
+        acc = _enc.mkIf(_enc.mkAnd(lineEnable, matchCommunityLine), action, acc);
       }
     }
 
