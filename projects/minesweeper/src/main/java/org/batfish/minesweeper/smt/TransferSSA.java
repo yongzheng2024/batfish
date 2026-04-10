@@ -1433,7 +1433,10 @@ class TransferSSA {
         AddCommunity ac = (AddCommunity) stmt;
         Set<CommunityVar> comms = collectCommunityVars(_conf, ac.getExpr());
 
-        if (!((AddCommunity) stmt).getEnableSmtVariable()) {
+        // line enable flag or block enable flag?
+        BoolExpr lineEnable = ac.getConfigLineEnable();
+
+        if (!ac.getEnableSmtVariable()) {
           for (CommunityVar cvar : comms) {
             BoolExpr newValue =
                     _enc.mkIf(
@@ -1451,7 +1454,7 @@ class TransferSSA {
             BoolExpr communityEqual = _enc.mkEq(community, community_origin);
             BoolExpr newValue =
                     _enc.mkIf(
-                            curResult.getReturnAssignedValue(),
+                            _enc.mkAnd(lineEnable, curResult.getReturnAssignedValue()),
                             // communityEqual,
                             curP.getData().getCommunities().get(cvar),
                             // _enc.mkTrue());
@@ -1467,7 +1470,7 @@ class TransferSSA {
         SetCommunity sc = (SetCommunity) stmt;
         Set<CommunityVar> comms = collectCommunityVars(_conf, sc.getExpr());
 
-        if (!((SetCommunity) stmt).getEnableSmtVariable()) {
+        if (!sc.getEnableSmtVariable()) {
           for (CommunityVar cvar : comms) {
             BoolExpr newValue =
                     _enc.mkIf(
@@ -1534,7 +1537,7 @@ class TransferSSA {
           }
         }
 
-        if (!((DeleteCommunity) stmt).getEnableSmtVariable()) {
+        if (!dc.getEnableSmtVariable()) {
           for (CommunityVar cvar : toDelete) {
             BoolExpr newValue =
                     _enc.mkIf(
