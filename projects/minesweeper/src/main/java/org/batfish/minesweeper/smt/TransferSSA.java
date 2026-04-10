@@ -224,21 +224,21 @@ class TransferSSA {
         throw new BatfishException("non-prefix IpWildcards are unsupported");
       }
 
-      if (line.getEnableSmtVariable())  {
-        Prefix p = line.getIpWildcard().toPrefixWithSymbolicVariables();
-        SubRange r = line.getLengthRange();
-        PrefixRange range = new PrefixRange(p, r);
-        BoolExpr matches = _enc.isRelevantFor(other.getPrefixLength(), range);
-        BoolExpr action = line.getConfigVarAction();
-        acc = _enc.mkIf(matches, action, acc);
-
-      } else {
+      if (!line.getEnableSmtVariable())  {
         Prefix p = line.getIpWildcard().toPrefix();
         SubRange r = line.getLengthRange();
         PrefixRange range = new PrefixRange(p, r);
         BoolExpr matches = _enc.isRelevantFor(other.getPrefixLength(), range);
         BoolExpr action = _enc.mkBool(line.getAction() == LineAction.PERMIT);
         acc = _enc.mkIf(matches, action, acc);
+      } else {
+        Prefix p = line.getIpWildcard().toPrefixWithSymbolicVariables();
+        SubRange r = line.getLengthRange();
+        PrefixRange range = new PrefixRange(p, r);
+        BoolExpr lineEnable = line.getConfigLineEnable();
+        BoolExpr matches = _enc.isRelevantFor(other.getPrefixLength(), range);
+        BoolExpr action = line.getConfigVarAction();
+        acc = _enc.mkIf(_enc.mkAnd(lineEnable, matches), action, acc);
       }
     }
 

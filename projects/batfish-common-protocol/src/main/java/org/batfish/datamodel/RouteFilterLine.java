@@ -115,6 +115,7 @@ public final class RouteFilterLine implements Serializable {
   private boolean _enableSmtVariable;
   private String _configVarPrefix;
 
+  private transient BoolExpr _configLineEnable;
   private transient BoolExpr _configVarAction;
 
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
@@ -156,14 +157,17 @@ public final class RouteFilterLine implements Serializable {
       }
     }
 
+    _configLineEnable = context.mkBoolConst(configVarPrefix + "enable");
     _configVarAction = context.mkBoolConst(configVarPrefix + "action");
 
     _ipWildcard.initSmtVariable(context, solver, configVarPrefix);
     _lengthRange.initSmtVariable(context, solver, configVarPrefix);
 
     // add relevant configuration constant constraint
+    BoolExpr configLineEnableConstraint = context.mkEq(_configLineEnable, context.mkTrue());
     BoolExpr configVarActionConstraint = context.mkEq(
             _configVarAction, context.mkBool(_action == LineAction.PERMIT));
+    solver.add(configLineEnableConstraint);
     solver.add(configVarActionConstraint);
 
     // add relevant configuration constant constraint (ge / le / eq with prefix length)
@@ -185,6 +189,10 @@ public final class RouteFilterLine implements Serializable {
 
   public String getConfigVarPrefix() {
     return _configVarPrefix;
+  }
+
+  public BoolExpr getConfigLineEnable() {
+    return _configLineEnable;
   }
 
   public BoolExpr getConfigVarAction() {
