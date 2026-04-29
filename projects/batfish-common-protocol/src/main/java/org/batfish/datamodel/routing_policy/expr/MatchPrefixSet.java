@@ -18,6 +18,7 @@ import org.batfish.datamodel.routing_policy.Result;
 
 import com.microsoft.z3.Context;
 import com.microsoft.z3.Solver;
+import com.microsoft.z3.BoolExpr;
 
 /**
  * Boolean expression that tests whether an IPv4 prefix extracted from an {@link Environment} using
@@ -97,6 +98,8 @@ public final class MatchPrefixSet extends BooleanExpr {
   private boolean _enableSmtVariable;
   private String _configVarPrefix;
 
+  private transient BoolExpr _configLineEnable;
+
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
     // assert that the ip wildcard is not shared object
     if (_enableSmtVariable) {
@@ -143,6 +146,11 @@ public final class MatchPrefixSet extends BooleanExpr {
     // init smt variable for prefix set configuration
     _prefixSet.initSmtVariable(context, solver, configVarPrefix);
 
+    // add the line enable flag, and default configure to true
+    _configLineEnable = context.mkBoolConst(configVarPrefix + "enable");
+    BoolExpr configLineEnableConstraint = context.mkEq(_configLineEnable, context.mkTrue());
+    solver.add(configLineEnableConstraint);
+
     // configure the smt variable enable flag to true
     _enableSmtVariable = true;
     _configVarPrefix = configVarPrefix;
@@ -154,5 +162,9 @@ public final class MatchPrefixSet extends BooleanExpr {
 
   public String getConfigVarPrefix() {
     return _configVarPrefix;
+  }
+
+  public BoolExpr getConfigLineEnable() {
+    return _configLineEnable;
   }
 }

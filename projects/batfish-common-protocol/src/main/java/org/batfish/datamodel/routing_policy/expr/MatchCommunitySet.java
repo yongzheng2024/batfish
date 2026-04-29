@@ -17,6 +17,7 @@ import org.batfish.datamodel.CommunityList;
 
 import com.microsoft.z3.Context;
 import com.microsoft.z3.Solver;
+import com.microsoft.z3.BoolExpr;
 
 /**
  * Boolean expression that tests whether an {@link Environment} contains a BGP route with a
@@ -87,6 +88,8 @@ public final class MatchCommunitySet extends BooleanExpr {
   private boolean _enableSmtVariable;
   private String _configVarPrefix;
 
+  private transient BoolExpr _configLineEnable;
+
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
     // assert that the community list line is not shared
     if (_enableSmtVariable) {
@@ -104,6 +107,11 @@ public final class MatchCommunitySet extends BooleanExpr {
     // init smt variable for community set configuration
     _expr.initSmtVariable(context, solver, configVarPrefix);
 
+    // add the line enable flag, and default configure to true
+    _configLineEnable = context.mkBoolConst(configVarPrefix + "enable");
+    BoolExpr configLineEnableConstraint = context.mkEq(_configLineEnable, context.mkTrue());
+    solver.add(configLineEnableConstraint);
+
     // configure the smt variable enable flag to true
     _enableSmtVariable = true;
     _configVarPrefix = configVarPrefix;
@@ -115,5 +123,9 @@ public final class MatchCommunitySet extends BooleanExpr {
 
   public String getConfigVarPrefix() {
     return _configVarPrefix;
+  }
+
+  public BoolExpr getConfigLineEnable() {
+    return _configLineEnable;
   }
 }

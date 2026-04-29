@@ -105,18 +105,17 @@ class EncoderSlice {
     _logicalGraph = new LogicalGraph(graph);
     _symbolicDecisions = new SymbolicDecisions();
     _symbolicPacket = new SymbolicPacket(enc.getCtx(), enc.getId(), _sliceName);
-
     // add smt constant in SymbolicPacket to Encoder _allVariables
     enc.getAllVariables().put(_symbolicPacket.getDstIp().toString(), _symbolicPacket.getDstIp());
     enc.getAllVariables().put(_symbolicPacket.getSrcIp().toString(), _symbolicPacket.getSrcIp());
     enc.getAllVariables()
-        .put(_symbolicPacket.getDstPort().toString(), _symbolicPacket.getDstPort());
+            .put(_symbolicPacket.getDstPort().toString(), _symbolicPacket.getDstPort());
     enc.getAllVariables()
-        .put(_symbolicPacket.getSrcPort().toString(), _symbolicPacket.getSrcPort());
+            .put(_symbolicPacket.getSrcPort().toString(), _symbolicPacket.getSrcPort());
     enc.getAllVariables()
-        .put(_symbolicPacket.getIcmpCode().toString(), _symbolicPacket.getIcmpCode());
+            .put(_symbolicPacket.getIcmpCode().toString(), _symbolicPacket.getIcmpCode());
     enc.getAllVariables()
-        .put(_symbolicPacket.getIcmpType().toString(), _symbolicPacket.getIcmpType());
+            .put(_symbolicPacket.getIcmpType().toString(), _symbolicPacket.getIcmpType());
     enc.getAllVariables().put(_symbolicPacket.getTcpAck().toString(), _symbolicPacket.getTcpAck());
     enc.getAllVariables().put(_symbolicPacket.getTcpCwr().toString(), _symbolicPacket.getTcpCwr());
     enc.getAllVariables().put(_symbolicPacket.getTcpEce().toString(), _symbolicPacket.getTcpEce());
@@ -126,7 +125,8 @@ class EncoderSlice {
     enc.getAllVariables().put(_symbolicPacket.getTcpSyn().toString(), _symbolicPacket.getTcpSyn());
     enc.getAllVariables().put(_symbolicPacket.getTcpUrg().toString(), _symbolicPacket.getTcpUrg());
     enc.getAllVariables()
-        .put(_symbolicPacket.getIpProtocol().toString(), _symbolicPacket.getIpProtocol());
+            .put(_symbolicPacket.getIpProtocol().toString(), _symbolicPacket.getIpProtocol());
+
 
     _inboundAcls = new HashMap<>();
     _outboundAcls = new HashMap<>();

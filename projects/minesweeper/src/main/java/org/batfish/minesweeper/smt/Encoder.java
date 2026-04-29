@@ -1845,7 +1845,7 @@ public class Encoder {
       if (mps.getEnableSmtVariable()) {
         mps = new MatchPrefixSet(mps.getPrefix(), mps.getPrefixSet());
       }
-      mps.initSmtVariable(_ctx, _solver, configVarPrefix);
+      mps.initSmtVariable(_ctx, _solver, configVarPrefix + "match_prefixlist_");
 
       // write smt symbolic variables name to configs_to_variables file
       PrefixSetExpr prefixSetExpr = mps.getPrefixSet();
@@ -1880,21 +1880,26 @@ public class Encoder {
 
       CommunitySetExpr communitySetExpr = mcs.getExpr();
       if (communitySetExpr instanceof NamedCommunitySet) {
-        mcs.initSmtVariable(_ctx, _solver, configVarPrefix + "named_community_set_");
+        // mcs.initSmtVariable(_ctx, _solver, configVarPrefix + "named_community_set_");
+        mcs.initSmtVariable(_ctx, _solver, configVarPrefix + "match_community_list_");
         // support static analysis for more exact community subspecs
         collectCommunitiesFromNamedCommunitySet(((NamedCommunitySet) communitySetExpr).getName(), currentConfig);
       } else if (communitySetExpr instanceof RegexCommunitySet) {
-        mcs.initSmtVariable(_ctx, _solver, configVarPrefix + "regex_community_set_");
+        // mcs.initSmtVariable(_ctx, _solver, configVarPrefix + "regex_community_set_");
+        mcs.initSmtVariable(_ctx, _solver, configVarPrefix + "match_community_list_");
         // support static analysis for more exact community subspecs
         collectCommunitiesFromRegexCommunitySet((RegexCommunitySet) communitySetExpr);
       } else if (communitySetExpr instanceof LiteralCommunitySet) {
-        mcs.initSmtVariable(_ctx, _solver, configVarPrefix + "exact_community_set_");
+        // mcs.initSmtVariable(_ctx, _solver, configVarPrefix + "exact_community_set_");
+        mcs.initSmtVariable(_ctx, _solver, configVarPrefix + "match_community_list_");
         collectCommunitiesFromLiteralCommunitySet((LiteralCommunitySet) communitySetExpr);
       } else if (communitySetExpr instanceof LiteralCommunity) {
-        mcs.initSmtVariable(_ctx, _solver, configVarPrefix + "exact_community_");
+        // mcs.initSmtVariable(_ctx, _solver, configVarPrefix + "exact_community_");
+        mcs.initSmtVariable(_ctx, _solver, configVarPrefix + "match_community_list_");
         collectCommunitiesFromLiteralCommunity((LiteralCommunity) communitySetExpr);
       } else if (communitySetExpr instanceof CommunityList) {
-        mcs.initSmtVariable(_ctx, _solver, configVarPrefix + "community_list_");
+        // mcs.initSmtVariable(_ctx, _solver, configVarPrefix + "community_list_");
+        mcs.initSmtVariable(_ctx, _solver, configVarPrefix + "match_community_list_");
         // support static analysis for more exact community subspecs
         collectCommunitiesFromCommunityList((CommunityList) communitySetExpr, currentConfig);
       } else {
@@ -1903,7 +1908,8 @@ public class Encoder {
         // * UnsupportedCommunitySetExpr in CommunityListTest
         // * CommunityHalvesExpr
         // * EmptyCommunitySetExpr
-        mcs.initSmtVariable(_ctx, _solver, configVarPrefix + "unimplemented_community_");
+        // mcs.initSmtVariable(_ctx, _solver, configVarPrefix + "unimplemented_community_");
+        throw new BatfishException("Unimplemented feature: " + expr.getClass().getName());
       }
 
     } else if (expr instanceof BooleanExprs.StaticBooleanExpr) {

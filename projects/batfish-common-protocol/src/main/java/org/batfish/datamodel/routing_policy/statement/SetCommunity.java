@@ -18,6 +18,8 @@ import org.batfish.datamodel.routing_policy.Result;
 import org.batfish.datamodel.routing_policy.expr.CommunitySetExpr;
 import org.batfish.datamodel.routing_policy.expr.EmptyCommunitySetExpr;
 
+import com.microsoft.z3.BoolExpr;
+
 public final class SetCommunity extends Statement {
 
   private static final String PROP_EXPR = "expr";
@@ -86,6 +88,8 @@ public final class SetCommunity extends Statement {
   private boolean _enableSmtVariable;
   private String _configVarPrefix;
 
+  private transient BoolExpr _configLineEnable;
+
   public void initSmtVariable(
       Context context, Solver solver, String configVarPrefix, boolean isTrue) {
     // assert that the set community is not shared
@@ -119,6 +123,11 @@ public final class SetCommunity extends Statement {
     // init smt variable for community set expr
     _expr.initSmtVariable(context, solver, configVarPrefix, isTrue);
 
+    // add the line enable flag, and default configure to true
+    _configLineEnable = context.mkBoolConst(configVarPrefix + "enable");
+    BoolExpr configLineEnableConstraint = context.mkEq(_configLineEnable, context.mkTrue());
+    solver.add(configLineEnableConstraint);
+
     // configure the smt variable enable flag to true
     _enableSmtVariable = true;
     _configVarPrefix = configVarPrefix;
@@ -130,5 +139,9 @@ public final class SetCommunity extends Statement {
 
   public String getConfigVarPrefix() {
     return _configVarPrefix;
+  }
+
+  public BoolExpr getConfigLineEnable() {
+    return _configLineEnable;
   }
 }
