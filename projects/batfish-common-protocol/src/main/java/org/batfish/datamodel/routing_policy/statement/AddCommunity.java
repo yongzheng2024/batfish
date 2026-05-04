@@ -37,6 +37,7 @@ public final class AddCommunity extends Statement {
 
   public AddCommunity(CommunitySetExpr expr) {
     _expr = expr;
+    _enableSmtVariable = false;
   }
 
   @Override

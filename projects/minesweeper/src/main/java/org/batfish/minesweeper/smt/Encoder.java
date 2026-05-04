@@ -1635,6 +1635,9 @@ public class Encoder {
 
       } else if (stmt instanceof AddCommunity) {
         AddCommunity ac = (AddCommunity) stmt;
+        if (ac.getEnableSmtVariable()) {
+          ac = new AddCommunity(ac.getExpr());
+        }
         CommunitySetExpr communitySetExpr = ac.getExpr();
         configVarPrefix = SymbolicUtil.incrementLineSuffix(configVarPrefix);
         if (communitySetExpr instanceof LiteralCommunitySet) {
@@ -1672,6 +1675,9 @@ public class Encoder {
 
       } else if (stmt instanceof SetCommunity) {
         SetCommunity sc = (SetCommunity) stmt;
+        if (sc.getEnableSmtVariable()) {
+          sc = new SetCommunity(sc.getExpr());
+        }
         CommunitySetExpr communitySetExpr = sc.getExpr();
         configVarPrefix = SymbolicUtil.incrementLineSuffix(configVarPrefix);
         if (communitySetExpr instanceof LiteralCommunitySet) {
@@ -1710,6 +1716,9 @@ public class Encoder {
       } else if (stmt instanceof DeleteCommunity) {
         // TODO: check here and implement when needed
         DeleteCommunity dc = (DeleteCommunity) stmt;
+        if (dc.getEnableSmtVariable()) {
+          dc = new DeleteCommunity(dc.getExpr());
+        }
         CommunitySetExpr communitySetExpr = dc.getExpr();
         configVarPrefix = SymbolicUtil.incrementLineSuffix(configVarPrefix);
         if (communitySetExpr instanceof LiteralCommunitySet) {

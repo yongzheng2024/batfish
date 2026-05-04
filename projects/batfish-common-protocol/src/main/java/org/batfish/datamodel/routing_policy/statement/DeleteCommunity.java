@@ -36,6 +36,7 @@ public final class DeleteCommunity extends Statement {
 
   public DeleteCommunity(CommunitySetExpr expr) {
     _expr = expr;
+    _enableSmtVariable = false;
   }
 
   @Override
