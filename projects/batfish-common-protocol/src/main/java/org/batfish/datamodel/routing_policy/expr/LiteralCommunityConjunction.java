@@ -6,6 +6,7 @@ import static com.google.common.base.MoreObjects.toStringHelper;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 import java.util.Collection;
@@ -119,18 +120,17 @@ public final class LiteralCommunityConjunction extends CommunitySetExpr {
   // private String _configVarPrefix;       // Inherited from the parent class
 
   @Override
-  public void initSmtVariable(Context context, Solver solver, String configVarPrefix, boolean isTrue) {
+  public void initSmtVariable(
+      Context context, Solver solver, String configVarPrefix, boolean isTrue,
+      ImmutableMap<Community, Integer> commsIndex) {
     // TODO: implement me when needed
     throw new BatfishException("LiteralCommunityConjunction.initSmtVariable: not implemented yet.");
   }
 
   @Override
-  public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
-    initSmtVariable(context, solver, configVarPrefix, true);
-  }
-
-  @Override
-  public BoolExpr getConfigVarCommunity() {
-    throw new BatfishException("LiteralCommunityConjunction.getConfigVarCommunity: not implemented yet.");
+  public void initSmtVariable(
+      Context context, Solver solver, String configVarPrefix,
+      ImmutableMap<Community, Integer> commsIndex) {
+    initSmtVariable(context, solver, configVarPrefix, true, commsIndex);
   }
 }

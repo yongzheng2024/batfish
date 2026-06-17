@@ -5,6 +5,7 @@ import static java.util.Objects.requireNonNull;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.ImmutableMap;
 import java.io.Serializable;
 import java.util.Objects;
 import javax.annotation.Nonnull;
@@ -14,6 +15,7 @@ import com.microsoft.z3.Context;
 import com.microsoft.z3.Solver;
 import org.batfish.common.BatfishException;
 import org.batfish.datamodel.RegexCommunitySet;
+import org.batfish.datamodel.bgp.community.Community;
 import org.batfish.datamodel.routing_policy.expr.CommunitySetExpr;
 import org.batfish.datamodel.routing_policy.expr.NamedCommunitySet;
 import org.batfish.datamodel.routing_policy.expr.LiteralCommunitySet;
@@ -90,7 +92,8 @@ public class CommunityListLine implements Serializable {
   private transient BoolExpr _configVarAction;
 
   public void initSmtVariable(
-      Context context, Solver solver, String configVarPrefix, boolean isTrue) {
+      Context context, Solver solver, String configVarPrefix, boolean isTrue,
+      ImmutableMap<Community, Integer> commsIndex) {
     // assert that the community list line is not shared
     if (_enableSmtVariable) {
       throw new BatfishException("CommunityListLine.initSmtVariable: shared object.\n" +
@@ -138,7 +141,7 @@ public class CommunityListLine implements Serializable {
     _configLineEnable = context.mkBoolConst(configVarPrefix + "enable");
     _configVarAction = context.mkBoolConst(configVarPrefix + "action");
 
-    _matchCondition.initSmtVariable(context, solver, configVarPrefix, isTrue);
+    _matchCondition.initSmtVariable(context, solver, configVarPrefix, isTrue, commsIndex);
 
     // add relevant configuration constant constraint
     BoolExpr configLineEnableConstraint = context.mkEq(_configLineEnable, context.mkTrue());
@@ -152,8 +155,10 @@ public class CommunityListLine implements Serializable {
     _configVarPrefix = configVarPrefix;
   }
 
-  public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
-    initSmtVariable(context, solver, configVarPrefix, true);
+  public void initSmtVariable(
+      Context context, Solver solver, String configVarPrefix,
+      ImmutableMap<Community, Integer> commsIndex) {
+    initSmtVariable(context, solver, configVarPrefix, true, commsIndex);
   }
 
   public boolean getEnableSmtVariable() {

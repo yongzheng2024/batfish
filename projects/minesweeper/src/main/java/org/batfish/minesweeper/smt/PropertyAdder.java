@@ -136,7 +136,7 @@ class PropertyAdder {
       BoolExpr isAbsorbed = ctx.mkFalse();
       // if singleProtocol, call SymbolicDecisions BestNeighbor
       // else,              call SymbolicDecisions BestNeighborPerProtocol
-      SymbolicRoute r = _encoderSlice.getBestNeighborPerProtocol(router, Protocol.CONNECTED);
+      SymbolicRouteBV r = _encoderSlice.getBestNeighborPerProtocol(router, Protocol.CONNECTED);
 
       for (GraphEdge ge : edges) {
         if (!ge.isAbstract() && ges.contains(ge)) {
@@ -277,7 +277,7 @@ class PropertyAdder {
       // Add the base case, reachable if we forward to a directly connected interface
       BoolExpr hasDirectRoute = ctx.mkFalse();
       BoolExpr isAbsorbed = ctx.mkFalse();
-      SymbolicRoute r = _encoderSlice.getBestNeighborPerProtocol(router, Protocol.CONNECTED);
+      SymbolicRouteBV r = _encoderSlice.getBestNeighborPerProtocol(router, Protocol.CONNECTED);
 
       for (GraphEdge ge : edges) {
         if (!ge.isAbstract() && ges.contains(ge)) {
@@ -358,7 +358,7 @@ class PropertyAdder {
       // If there is a direct route, then we have length 0
       BoolExpr hasDirectRoute = ctx.mkFalse();
       BoolExpr isAbsorbed = ctx.mkFalse();
-      SymbolicRoute r = _encoderSlice.getBestNeighborPerProtocol(router, Protocol.CONNECTED);
+      SymbolicRouteBV r = _encoderSlice.getBestNeighborPerProtocol(router, Protocol.CONNECTED);
 
       for (GraphEdge ge : edges) {
         if (!ge.isAbstract() && ges.contains(ge)) {
@@ -434,7 +434,7 @@ class PropertyAdder {
       ArithExpr load = loadVars.get(router);
       BoolExpr hasDirectRoute = ctx.mkFalse();
       BoolExpr isAbsorbed = ctx.mkFalse();
-      SymbolicRoute r = _encoderSlice.getBestNeighborPerProtocol(router, Protocol.CONNECTED);
+      SymbolicRouteBV r = _encoderSlice.getBestNeighborPerProtocol(router, Protocol.CONNECTED);
 
       for (GraphEdge ge : edges) {
         if (!ge.isAbstract() && ges.contains(ge)) {

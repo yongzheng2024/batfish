@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableMap;
 import java.io.Serializable;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -117,12 +118,14 @@ public final class RegexCommunitySet extends CommunitySetExpr {
   /** Add configuration constant - SMT symbolic variable */
   // private boolean _enableSmtVariable;    // Inherited from the parent class
   // private String _configVarPrefix;       // Inherited from the parent class
+  // protected transient BitVecExpr _configVarCommunity;  // Inherited from the parent class
 
   private transient BoolExpr _configVarCommunity;
 
   @Override
   public void initSmtVariable(
-      Context context, Solver solver, String configVarPrefix, boolean isTrue) {
+      Context context, Solver solver, String configVarPrefix, boolean isTrue,
+      ImmutableMap<Community, Integer> commsIndex) {
     // assert that the regex community set is not shared
     if (_enableSmtVariable) {
       throw new BatfishException("RegexCommunitySet.initSmtVariable: shared object.\n" +
@@ -130,6 +133,7 @@ public final class RegexCommunitySet extends CommunitySetExpr {
           "Current  configVarPrefix: " + configVarPrefix);
     }
 
+    // FIXME: modify boolean variable to bitvector variable
     // init smt variable for regex community set
     _configVarCommunity = context.mkBoolConst(configVarPrefix + "community");
     // add relevant configuration constant constraint
@@ -144,11 +148,12 @@ public final class RegexCommunitySet extends CommunitySetExpr {
   }
 
   @Override
-  public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
-    initSmtVariable(context, solver, configVarPrefix, true);
+  public void initSmtVariable(
+      Context context, Solver solver, String configVarPrefix,
+      ImmutableMap<Community, Integer> commsIndex) {
+    initSmtVariable(context, solver, configVarPrefix, true, commsIndex);
   }
 
-  @Override
   public BoolExpr getConfigVarCommunity() {
     return _configVarCommunity;
   }

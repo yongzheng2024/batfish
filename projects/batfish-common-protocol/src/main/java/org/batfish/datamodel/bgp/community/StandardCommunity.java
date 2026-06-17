@@ -182,40 +182,6 @@ public final class StandardCommunity extends Community {
     return BigInteger.valueOf(_value);
   }
 
-  /** Add configuration constant - SMT symbolic variable */
-  // private boolean _enableSmtVariable;    // Inherited from the parent class
-  // private String _configVarPrefix;       // Inherited from the parent class
-
-  // private transient BoolExpr _configVarCommunity;    // Inherited from the parent class
-
-  @Override
-  public void initSmtVariable(
-      Context context, Solver solver, String configVarPrefix, boolean isTrue) {
-    // assert that the standard community is not shared
-    if (_enableSmtVariable) {
-      throw new BatfishException("StandardCommunity.initSmtVariable: shared object.\n" +
-          "Previous configVarPrefix: " + _configVarPrefix + "\n" +
-          "Current  configVarPrefix: " + configVarPrefix);
-    }
-
-    _configVarCommunity = context.mkBoolConst(configVarPrefix + "community");
-
-    // add relevant configuration constant constraint
-    // for community (regex / exact), add boolean constraint which equal true
-    BoolExpr configVarRegexCommConstraint =
-        context.mkEq(_configVarCommunity, context.mkBool(isTrue));
-    solver.add(configVarRegexCommConstraint);
-
-    // configure the smt variable enable flag to true
-    _enableSmtVariable = true;
-    _configVarPrefix = configVarPrefix;
-  }
-
-  @Override
-  public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
-    initSmtVariable(context, solver, configVarPrefix, true);
-  }
-
   /** Add get community string for configVarPrefix */
   @Override
   public String getCommunityString() {

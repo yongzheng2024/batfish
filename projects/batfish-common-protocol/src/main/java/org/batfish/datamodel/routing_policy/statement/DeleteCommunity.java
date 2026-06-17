@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.ImmutableMap;
 import java.util.Set;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -87,7 +88,8 @@ public final class DeleteCommunity extends Statement {
   private transient BoolExpr _configLineEnable;
 
   public void initSmtVariable(
-      Context context, Solver solver, String configVarPrefix, boolean isTrue) {
+      Context context, Solver solver, String configVarPrefix, boolean isTrue,
+      ImmutableMap<Community, Integer> commsIndex) {
     // assert that the delete community is not shared
     if (_enableSmtVariable) {
       throw new BatfishException("DeleteCommunity.initSmtVariable: shared object.\n" +
@@ -117,7 +119,7 @@ public final class DeleteCommunity extends Statement {
     }
 
     // init smt variable for community set expr
-    _expr.initSmtVariable(context, solver, configVarPrefix, isTrue);
+    _expr.initSmtVariable(context, solver, configVarPrefix, isTrue, commsIndex);
 
     // add the line enable flag, and default configure to true
     _configLineEnable = context.mkBoolConst(configVarPrefix + "enable");

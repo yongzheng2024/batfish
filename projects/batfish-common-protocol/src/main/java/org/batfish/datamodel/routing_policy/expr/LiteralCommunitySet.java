@@ -7,15 +7,17 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.ImmutableMap;
 import java.util.Collection;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.SortedSet;
 import javax.annotation.Nonnull;
 
-import com.microsoft.z3.BoolExpr;
 import com.microsoft.z3.Context;
 import com.microsoft.z3.Solver;
+import com.microsoft.z3.BoolExpr;
+import com.microsoft.z3.BitVecExpr;
 import org.batfish.common.BatfishException;
 import org.batfish.datamodel.bgp.community.Community;
 import org.batfish.datamodel.bgp.community.ExtendedCommunity;
@@ -125,7 +127,8 @@ public class LiteralCommunitySet extends CommunitySetExpr {
 
   @Override
   public void initSmtVariable(
-      Context context, Solver solver, String configVarPrefix, boolean isTrue) {
+      Context context, Solver solver, String configVarPrefix, boolean isTrue,
+      ImmutableMap<Community, Integer> commsIndex) {
     // assert that the literal community set is not shared
     if (_enableSmtVariable) {
       throw new BatfishException("LiteralCommunitySet.initSmtVariable: shared object.\n" +
@@ -163,9 +166,18 @@ public class LiteralCommunitySet extends CommunitySetExpr {
 
     // init smt variable for community
     for (Community community : _communities) {
-      String communityString = SymbolicUtil.format(community.getCommunityString());
-      String configVarPrefixUpdated = configVarPrefix + communityString + "_";
-      community.initSmtVariable(context, solver, configVarPrefixUpdated, isTrue);
+      // community.initSmtVariable(context, solver, configVarPrefixUpdated, isTrue);
+      String configVarPrefixUpdated =
+          configVarPrefix + SymbolicUtil.format(community.getCommunityString()) + "_";
+      BitVecExpr communityValue = null;
+      if (null != commsIndex.get(community)) {
+        communityValue = context.mkBV(communityBitVec(commsIndex.get(community)), commsIndex.size());
+      } else {
+        throw new BatfishException("LiteralCommunitySet.initSmtVariable: " +
+            "community not found in commsIndex: " + community.getCommunityString());
+      }
+      community.initSmtVariable(
+          context, solver, configVarPrefixUpdated, isTrue, communityValue, commsIndex.size());
     }
 
     // configure the smt variable enable flag to true
@@ -174,12 +186,9 @@ public class LiteralCommunitySet extends CommunitySetExpr {
   }
 
   @Override
-  public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
-    initSmtVariable(context, solver, configVarPrefix, true);
-  }
-
-  @Override
-  public BoolExpr getConfigVarCommunity() {
-    throw new BatfishException("LiteralCommunitySet.getConfigVarCommunity: not implemented yet.");
+  public void initSmtVariable(
+      Context context, Solver solver, String configVarPrefix,
+      ImmutableMap<Community, Integer> commsIndex) {
+    initSmtVariable(context, solver, configVarPrefix, true, commsIndex);
   }
 }

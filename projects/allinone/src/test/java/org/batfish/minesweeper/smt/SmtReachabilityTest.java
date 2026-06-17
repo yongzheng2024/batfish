@@ -80,6 +80,19 @@ public class SmtReachabilityTest {
         // read the configurations from the filesystem
         Runfiles runfiles = Runfiles.create();
 
+        // String configPath = runfiles.rlocation("batfish/networks/repair-examples/ring/ring10/unbroken");
+        // String configPath = runfiles.rlocation("batfish/networks/repair-examples/ring/ring10/acl_remove_half");
+        // String configPath = runfiles.rlocation("batfish/networks/repair-examples/ring/ring10/rm-neighbor_one");
+        // String configPath = runfiles.rlocation("batfish/networks/repair-examples/ring/ring10/rm-network_half");
+
+        String configPath = runfiles.rlocation("batfish/networks/community_networks/0001");
+
+        // -------------------------------------------------------------
+
+        // String configPath = runfiles.rlocation("batfish/networks/userstudy_network");
+
+        // String configPath = runfiles.rlocation("batfish/networks/userstudy_network_ospf");
+        // String configPath = runfiles.rlocation("batfish/networks/userstudy_network_new");
         // String configPath = runfiles.rlocation("batfish/networks/userstudy_network");
         // String configPath = runfiles.rlocation("batfish/networks/userstudy_network_hard");
         // String configPath = runfiles.rlocation("batfish/networks/userstudy_network_accessment");
@@ -124,7 +137,7 @@ public class SmtReachabilityTest {
         // -------------------------------------------------------------
 
         // String configPath = runfiles.rlocation("batfish/benchmarks/Internet2/");
-        String configPath = runfiles.rlocation("batfish/benchmarks/Bics/bgp");
+        // String configPath = runfiles.rlocation("batfish/benchmarks/Bics/bgp");
         // String configPath = runfiles.rlocation("batfish/benchmarks/Columbus/bgp");
         // String configPath = runfiles.rlocation("batfish/benchmarks/USCarrier/bgp");
 
@@ -150,6 +163,12 @@ public class SmtReachabilityTest {
     @Test
     public void testReachability() {
         final ReachabilityQuestion question = new ReachabilityQuestion();
+
+        // ospf
+        question.setIngressNodeRegex("customer");
+        question.setFinalNodeRegex("isp1");
+        IpWildcard ipWildcard = IpWildcard.parse("198.51.100.0/24");
+        question.setDstIps(Set.of(ipWildcard));
 
         // Specification 1: Customer reachability
         // question.setIngressNodeRegex("customer");
@@ -230,8 +249,9 @@ public class SmtReachabilityTest {
         // Specification 01: Coursera test 1
         // question.setIngressNodeRegex("r1");
         // question.setFinalNodeRegex("customer");
-        // IpWildcard ipWildcard = IpWildcard.parse("172.16.0.0/12");
+        // IpWildcard ipWildcard = IpWildcard.parse("192.168.0.0/16");
         // question.setDstIps(Set.of(ipWildcard));
+        // question.setNegate(true);
 
         // -------------------------------------------------------------
 
@@ -365,23 +385,13 @@ public class SmtReachabilityTest {
 
         // Bics benchmarks
         // question.setIngressNodeRegex(".*");
-        // question.setFinalNodeRegex("geneva");
-        // IpWildcard ipWildcard = IpWildcard.parse("200.1.58.0/24");
-        // question.setDstIps(Set.of(ipWildcard));
-        //
-        // question.setIngressNodeRegex(".*");
         // question.setFinalNodeRegex("peergeneva_8");
         // IpWildcard ipWildcard = IpWildcard.parse("128.0.8.0/24");
         // question.setDstIps(Set.of(ipWildcard));
         //
-        question.setIngressNodeRegex(".*");
-        question.setFinalNodeRegex("peeristanbul_10");
-        IpWildcard ipWildcard = IpWildcard.parse("128.0.10.0/24");
-        question.setDstIps(Set.of(ipWildcard));
-        //
         // question.setIngressNodeRegex(".*");
-        // question.setFinalNodeRegex("peermarseille_12");
-        // IpWildcard ipWildcard = IpWildcard.parse("128.0.12.0/24");
+        // question.setFinalNodeRegex("budapest");
+        // IpWildcard ipWildcard = IpWildcard.parse("200.1.38.0/24");
         // question.setDstIps(Set.of(ipWildcard));
 
         // Columbus benchmarks
@@ -389,35 +399,26 @@ public class SmtReachabilityTest {
         // question.setFinalNodeRegex("grenada");
         // IpWildcard ipWildcard = IpWildcard.parse("200.2.55.0/24");
         // question.setDstIps(Set.of(ipWildcard));
-        //
-        // question.setIngressNodeRegex(".*");
-        // question.setFinalNodeRegex("peerstttvincent_15");
-        // IpWildcard ipWildcard = IpWildcard.parse("128.0.15.0/24");
-        // question.setDstIps(Set.of(ipWildcard));
-        //
-        // question.setIngressNodeRegex(".*");
-        // question.setFinalNodeRegex("peernodeid44_8");
-        // IpWildcard ipWildcard = IpWildcard.parse("128.0.8.0/24");
-        // question.setDstIps(Set.of(ipWildcard));
 
         // USCarrier benchmarks
-        // question.setIngressNodeRegex(".*");
-        // question.setFinalNodeRegex("georgetown");
-        // IpWildcard ipWildcard = IpWildcard.parse("200.4.232.0/24");
-        // question.setDstIps(Set.of(ipWildcard));
-        //
         // question.setIngressNodeRegex(".*");
         // question.setFinalNodeRegex("peerjacksonvilleid5_8");
         // IpWildcard ipWildcard = IpWildcard.parse("128.0.8.0/24");
         // question.setDstIps(Set.of(ipWildcard));
 
         // Internet2 benchmarks
-        // question.setIngressNodeRegex("atla-re1");
-        // question.setFinalNodeRegex("atla-re1");
-        // IpWildcard ipWildcard = IpWildcard.parse("64.57.22.0/24");
+        // question.setIngressNodeRegex("hous-re1");
+        // question.setFinalNodeRegex("hous-re1");
+        // IpWildcard ipWildcard = IpWildcard.parse("171.67.234.0/24");
         // question.setDstIps(Set.of(ipWildcard));
 
         // -------------------------------------------------------------
+
+        // AED repair-examples ring10
+        // question.setIngressNodeRegex("r0");
+        // question.setFinalNodeRegex("r2");
+        // IpWildcard ipWildcard = IpWildcard.parse("70.0.2.0/24");
+        // question.setDstIps(Set.of(ipWildcard));
 
         final AnswerElement answer = Answerer.create(question, _batfish).answer(_batfish.getSnapshot());
         assertThat(answer, instanceOf(SmtReachabilityAnswerElement.class));

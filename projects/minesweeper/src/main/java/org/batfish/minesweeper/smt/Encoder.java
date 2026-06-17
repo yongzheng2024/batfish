@@ -9,6 +9,7 @@ import com.microsoft.z3.Model;
 import com.microsoft.z3.Solver;
 import com.microsoft.z3.Status;
 import com.microsoft.z3.Tactic;
+import com.google.common.collect.ImmutableMap;
 
 import java.io.*;
 import java.util.Arrays;
@@ -879,10 +880,10 @@ public class Encoder {
     }
 
     for (EncoderSlice slice : enc.getSlices().values()) {
-      for (Entry<LogicalEdge, SymbolicRoute> entry2 :
+      for (Entry<LogicalEdge, SymbolicRouteBV> entry2 :
           slice.getLogicalGraph().getEnvironmentVars().entrySet()) {
         LogicalEdge lge = entry2.getKey();
-        SymbolicRoute r = entry2.getValue();
+        SymbolicRouteBV r = entry2.getValue();
         if ("true".equals(valuation.get(r.getPermitted()))) {
           SortedMap<String, String> recordMap = new TreeMap<>();
           GraphEdge ge = lge.getEdge();
@@ -937,18 +938,21 @@ public class Encoder {
             }
           }
 
-          for (Entry<CommunityVar, BoolExpr> entry3 : r.getCommunities().entrySet()) {
-            CommunityVar cvar = entry3.getKey();
-            BoolExpr e = entry3.getValue();
-            String c = valuation.get(e);
-            // TODO: what about OTHER type?
-            if ("true".equals(c) && displayCommunity(cvar)) {
-              String s = cvar.getRegex();
-              String t = slice.getNamedCommunities().get(cvar.getRegex());
-              s = (t == null ? s : t);
-              recordMap.put("community " + s, "");
-            }
-          }
+          // for (Entry<CommunityVar, BoolExpr> entry3 : r.getCommunities().entrySet()) {
+          //   CommunityVar cvar = entry3.getKey();
+          //   BoolExpr e = entry3.getValue();
+          //   String c = valuation.get(e);
+          //   // TODO: what about OTHER type?
+          //   if ("true".equals(c) && displayCommunity(cvar)) {
+          //     String s = cvar.getRegex();
+          //     String t = slice.getNamedCommunities().get(cvar.getRegex());
+          //     s = (t == null ? s : t);
+          //     recordMap.put("community " + s, "");
+          //   }
+          // }
+
+          // NOTE: modified community encoding for counterexample (BoolExpr -> BitVecExpr communities)
+          // FIXME: implement here, added by yongzheng on 20260618
         }
       }
     }
@@ -961,7 +965,7 @@ public class Encoder {
             (router, edge, e) -> {
               String s = valuation.get(e);
               if ("true".equals(s)) {
-                SymbolicRoute r =
+                SymbolicRouteBV r =
                     enc.getMainSlice().getSymbolicDecisions().getBestNeighbor().get(router);
                 if (r.getProtocolHistory() != null) {
                   Protocol proto;
@@ -1021,9 +1025,9 @@ public class Encoder {
     BoolExpr acc2 = mkTrue();
 
     // Disable an environment edge if possible
-    Map<LogicalEdge, SymbolicRoute> map = getMainSlice().getLogicalGraph().getEnvironmentVars();
-    for (Map.Entry<LogicalEdge, SymbolicRoute> entry : map.entrySet()) {
-      SymbolicRoute record = entry.getValue();
+    Map<LogicalEdge, SymbolicRouteBV> map = getMainSlice().getLogicalGraph().getEnvironmentVars();
+    for (Map.Entry<LogicalEdge, SymbolicRouteBV> entry : map.entrySet()) {
+      SymbolicRouteBV record = entry.getValue();
       BoolExpr per = record.getPermitted();
       Expr x = m.evaluate(per, false);
       if (x.toString().equals("true")) {
@@ -1034,18 +1038,21 @@ public class Encoder {
     }
 
     // Disable a community value if possible
-    for (Map.Entry<LogicalEdge, SymbolicRoute> entry : map.entrySet()) {
-      SymbolicRoute record = entry.getValue();
-      for (Map.Entry<CommunityVar, BoolExpr> centry : record.getCommunities().entrySet()) {
-        BoolExpr comm = centry.getValue();
-        Expr x = m.evaluate(comm, false);
-        if (x.toString().equals("true")) {
-          acc1 = mkOr(acc1, mkNot(comm));
-        } else {
-          acc2 = mkAnd(acc2, mkNot(comm));
-        }
-      }
-    }
+    // for (Map.Entry<LogicalEdge, SymbolicRoute> entry : map.entrySet()) {
+    //   SymbolicRoute record = entry.getValue();
+    //   for (Map.Entry<CommunityVar, BoolExpr> centry : record.getCommunities().entrySet()) {
+    //     BoolExpr comm = centry.getValue();
+    //     Expr x = m.evaluate(comm, false);
+    //     if (x.toString().equals("true")) {
+    //       acc1 = mkOr(acc1, mkNot(comm));
+    //     } else {
+    //       acc2 = mkAnd(acc2, mkNot(comm));
+    //     }
+    //   }
+    // }
+
+    // NOTE: modified disable community value if possible (BoolExpr -> BitVecExpr communities)
+    // FIXME: implement here, added by yongzheng on 20260618
 
     return mkAnd(acc1, acc2);
   }
@@ -1475,7 +1482,7 @@ public class Encoder {
         String configVarPrefix =
                 "Config_" + hostName + "_CommunityList_" + SymbolicUtil.format(communityListName) + "_";
 
-        communityList.initSmtVariable(_ctx, _solver, configVarPrefix);
+        communityList.initSmtVariable(_ctx, _solver, configVarPrefix, _graph.getAllExactCommunitiesIndex());
       }
 
       for (Map.Entry<String, RoutingPolicy> routingPolicyEntry : config.getRoutingPolicies().entrySet()) {
@@ -1641,11 +1648,13 @@ public class Encoder {
         CommunitySetExpr communitySetExpr = ac.getExpr();
         configVarPrefix = SymbolicUtil.incrementLineSuffix(configVarPrefix);
         if (communitySetExpr instanceof LiteralCommunitySet) {
-          ac.initSmtVariable(_ctx, _solver, configVarPrefix + "add_community_set_", true);
+          ac.initSmtVariable(
+              _ctx, _solver, configVarPrefix + "add_community_set_", true,
+              _graph.getAllExactCommunitiesIndex());
+          // support static analysis for more exact community subspecs
           LiteralCommunitySet lcs = (LiteralCommunitySet) communitySetExpr;
           Set<Community> communities = lcs.getCommunities();
           for (Community community : communities) {
-            // support static analysis for more exact community subspecs
             String communityString = SymbolicUtil.format(community.getCommunityString());
             String matchString = community.matchString();
             String configVarName = configVarPrefix + "add_community_" + communityString + "_community";
@@ -1658,9 +1667,9 @@ public class Encoder {
         } else if (communitySetExpr instanceof LiteralCommunity) {
           LiteralCommunity lc = (LiteralCommunity) communitySetExpr;
           String communityString = SymbolicUtil.format(lc.getCommunity().getCommunityString());
-          configVarPrefix = SymbolicUtil.incrementLineSuffix(configVarPrefix);
           ac.initSmtVariable(
-              _ctx, _solver, configVarPrefix + "add_community_" + communityString + "_", true);
+              _ctx, _solver, configVarPrefix + "add_community_" + communityString + "_", true,
+              _graph.getAllExactCommunitiesIndex());
           // support static analysis for more exact community subspecs
           String matchString = lc.getCommunity().matchString();
           String configVarName = configVarPrefix + "add_community_" + communityString + "_community";
@@ -1681,7 +1690,9 @@ public class Encoder {
         CommunitySetExpr communitySetExpr = sc.getExpr();
         configVarPrefix = SymbolicUtil.incrementLineSuffix(configVarPrefix);
         if (communitySetExpr instanceof LiteralCommunitySet) {
-          sc.initSmtVariable(_ctx, _solver, configVarPrefix + "set_community_set_", true);
+          sc.initSmtVariable(
+              _ctx, _solver, configVarPrefix + "set_community_set_", true,
+              _graph.getAllExactCommunitiesIndex());
           LiteralCommunitySet lcs = (LiteralCommunitySet) communitySetExpr;
           Set<Community> communities = lcs.getCommunities();
           for (Community community : communities) {
@@ -1700,7 +1711,8 @@ public class Encoder {
           String communityString = SymbolicUtil.format(lc.getCommunity().getCommunityString());
           configVarPrefix = SymbolicUtil.incrementLineSuffix(configVarPrefix);
           sc.initSmtVariable(
-              _ctx, _solver, configVarPrefix + "set_community_" + communityString + "_", true);
+              _ctx, _solver, configVarPrefix + "set_community_" + communityString + "_", true,
+              _graph.getAllExactCommunitiesIndex());
           // support static analysis for more exact community subspecs
           String matchString = lc.getCommunity().matchString();
           String configVarName = configVarPrefix + "set_community_" + communityString + "_community";
@@ -1722,19 +1734,23 @@ public class Encoder {
         CommunitySetExpr communitySetExpr = dc.getExpr();
         configVarPrefix = SymbolicUtil.incrementLineSuffix(configVarPrefix);
         if (communitySetExpr instanceof LiteralCommunitySet) {
-          dc.initSmtVariable(_ctx, _solver, configVarPrefix + "delete_community_", false);
+          dc.initSmtVariable(
+              _ctx, _solver, configVarPrefix + "delete_community_", false,
+              _graph.getAllExactCommunitiesIndex());
           LiteralCommunitySet lcs = (LiteralCommunitySet) communitySetExpr;
           Set<Community> communities = lcs.getCommunities();
         } else if (communitySetExpr instanceof LiteralCommunity) {
           LiteralCommunity lc = (LiteralCommunity) communitySetExpr;
           String communityString = SymbolicUtil.format(lc.getCommunity().getCommunityString());
           dc.initSmtVariable(
-              _ctx, _solver, configVarPrefix + "delete_community_" + communityString + "_", false);
+              _ctx, _solver, configVarPrefix + "delete_community_" + communityString + "_", false,
+              _graph.getAllExactCommunitiesIndex());
         } else if (communitySetExpr instanceof NamedCommunitySet) {
             NamedCommunitySet ncs = (NamedCommunitySet) communitySetExpr;
             String namedCommunityString = SymbolicUtil.format(ncs.getName());
             ncs.initSmtVariable(
-                _ctx, _solver, configVarPrefix + "delete_community_" + namedCommunityString + "_", false);
+                _ctx, _solver, configVarPrefix + "delete_community_" + namedCommunityString + "_", false,
+                _graph.getAllExactCommunitiesIndex());
         } else {
             throw new BatfishException("Unimplemented feature " + communitySetExpr.getClass());
         }
@@ -1889,26 +1905,18 @@ public class Encoder {
 
       CommunitySetExpr communitySetExpr = mcs.getExpr();
       if (communitySetExpr instanceof NamedCommunitySet) {
-        // mcs.initSmtVariable(_ctx, _solver, configVarPrefix + "named_community_set_");
-        mcs.initSmtVariable(_ctx, _solver, configVarPrefix + "match_community_list_");
         // support static analysis for more exact community subspecs
         collectCommunitiesFromNamedCommunitySet(((NamedCommunitySet) communitySetExpr).getName(), currentConfig);
       } else if (communitySetExpr instanceof RegexCommunitySet) {
-        // mcs.initSmtVariable(_ctx, _solver, configVarPrefix + "regex_community_set_");
-        mcs.initSmtVariable(_ctx, _solver, configVarPrefix + "match_community_list_");
         // support static analysis for more exact community subspecs
         collectCommunitiesFromRegexCommunitySet((RegexCommunitySet) communitySetExpr);
       } else if (communitySetExpr instanceof LiteralCommunitySet) {
-        // mcs.initSmtVariable(_ctx, _solver, configVarPrefix + "exact_community_set_");
-        mcs.initSmtVariable(_ctx, _solver, configVarPrefix + "match_community_list_");
+        // support static analysis for more exact community subspecs
         collectCommunitiesFromLiteralCommunitySet((LiteralCommunitySet) communitySetExpr);
       } else if (communitySetExpr instanceof LiteralCommunity) {
-        // mcs.initSmtVariable(_ctx, _solver, configVarPrefix + "exact_community_");
-        mcs.initSmtVariable(_ctx, _solver, configVarPrefix + "match_community_list_");
+        // support static analysis for more exact community subspecs
         collectCommunitiesFromLiteralCommunity((LiteralCommunity) communitySetExpr);
       } else if (communitySetExpr instanceof CommunityList) {
-        // mcs.initSmtVariable(_ctx, _solver, configVarPrefix + "community_list_");
-        mcs.initSmtVariable(_ctx, _solver, configVarPrefix + "match_community_list_");
         // support static analysis for more exact community subspecs
         collectCommunitiesFromCommunityList((CommunityList) communitySetExpr, currentConfig);
       } else {
@@ -1920,6 +1928,9 @@ public class Encoder {
         // mcs.initSmtVariable(_ctx, _solver, configVarPrefix + "unimplemented_community_");
         throw new BatfishException("Unimplemented feature: " + expr.getClass().getName());
       }
+      mcs.initSmtVariable(
+          _ctx, _solver, configVarPrefix + "match_community_list_",
+          _graph.getAllExactCommunitiesIndex());
 
     } else if (expr instanceof BooleanExprs.StaticBooleanExpr) {
       BooleanExprs.StaticBooleanExpr b = (BooleanExprs.StaticBooleanExpr) expr;

@@ -3,6 +3,7 @@ package org.batfish.minesweeper;
 import static java.util.stream.Collectors.toMap;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -45,6 +46,7 @@ import org.batfish.datamodel.StaticRoute;
 import org.batfish.datamodel.Topology;
 import org.batfish.datamodel.Vrf;
 import org.batfish.datamodel.bgp.AddressFamily;
+import org.batfish.datamodel.bgp.community.Community;
 import org.batfish.datamodel.collections.NodeInterfacePair;
 import org.batfish.datamodel.ospf.OspfArea;
 import org.batfish.datamodel.ospf.OspfProcess;
@@ -133,6 +135,9 @@ public class Graph {
   private boolean _hasStaticRouteWithDynamicNextHop;
 
   private final Set<CommunityVar> _allCommunities;
+
+  /** EXACT/OTHER only; bit index {@code i} is the {@code i}th entry in {@link CommunityVar} sort. */
+  private final ImmutableMap<CommunityVar, Integer> _allCommunitiesIndex;
 
   /**
    * Keys are all REGEX vars, and values are lists of EXACT or OTHER vars. This field is only used
@@ -289,8 +294,9 @@ public class Graph {
     initAreaIds();
     // initialize _domainMap and _domainMapInverse for iBGP
     initDomains();
-    // TODO initialize community
+    // initialize _allCommunities and _allCommunitiesIndex
     initAllCommunities(communities);
+    _allCommunitiesIndex = buildAllCommunitiesIndex(_allCommunities);
 
     if (_bddBasedAnalysis) {
       // compute atomic predicates for the BDD-based analysis
@@ -951,6 +957,25 @@ public class Graph {
   }
 
   /**
+   * {@link CommunityVar.Type#EXACT} and {@link CommunityVar.Type#OTHER} from {@code allCommunities}
+   * → bit index, in {@link CommunityVar#compareTo} order.
+   */
+  private static ImmutableMap<CommunityVar, Integer> buildAllCommunitiesIndex(
+      Set<CommunityVar> allCommunities) {
+    ImmutableMap.Builder<CommunityVar, Integer> builder = ImmutableMap.builder();
+    List<CommunityVar> ordered =
+        allCommunities.stream()
+            .filter(c -> c.getType() == Type.EXACT || c.getType() == Type.OTHER)
+            .distinct()
+            .sorted()
+            .collect(Collectors.toList());
+    for (int i = 0; i < ordered.size(); i++) {
+      builder.put(ordered.get(i), i);
+    }
+    return builder.build();
+  }
+
+  /**
    * Identifies all of the AS-path regexes in the given configurations. An optional set of
    * additional AS-path regexes is also included, which is used to support user-specified AS-path
    * constraints for symbolic analysis.
@@ -1033,12 +1058,30 @@ public class Graph {
     return _allCommunities;
   }
 
+  public ImmutableMap<CommunityVar, Integer> getAllCommunitiesIndex() {
+    return _allCommunitiesIndex;
+  }
+
+  public ImmutableMap<Community, Integer> getAllExactCommunitiesIndex() {
+    return _allCommunitiesIndex.entrySet().stream()
+        .filter(e -> e.getKey().getType() == Type.EXACT)
+        .collect(ImmutableMap.toImmutableMap(e -> e.getKey().getLiteralValue(), e -> e.getValue()));
+  }
+
   public boolean getBddBasedAnalysis() {
     return _bddBasedAnalysis;
   }
 
   public SortedMap<CommunityVar, List<CommunityVar>> getCommunityDependencies() {
     return _communityDependencies;
+  }
+
+  public List<CommunityVar> getCommunityDependencies(CommunityVar cvar) {
+    if (!_communityDependencies.containsKey(cvar)) {
+      throw new BatfishException("Graph.getCommunityDependencies: " +
+          "variable " + cvar + " not found");
+    }
+    return _communityDependencies.get(cvar);
   }
 
   public Map<String, String> getNamedCommunities() {

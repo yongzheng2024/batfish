@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.ImmutableMap;
 import java.util.Objects;
 import java.util.Set;
 import org.batfish.common.BatfishException;
@@ -90,7 +91,9 @@ public final class MatchCommunitySet extends BooleanExpr {
 
   private transient BoolExpr _configLineEnable;
 
-  public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
+  public void initSmtVariable(
+      Context context, Solver solver, String configVarPrefix,
+      ImmutableMap<Community, Integer> commsIndex) {
     // assert that the community list line is not shared
     if (_enableSmtVariable) {
       throw new BatfishException("MatchCommunitySet.initSmtVariable: shared object.\n" +
@@ -105,7 +108,7 @@ public final class MatchCommunitySet extends BooleanExpr {
     }
 
     // init smt variable for community set configuration
-    _expr.initSmtVariable(context, solver, configVarPrefix);
+    _expr.initSmtVariable(context, solver, configVarPrefix, commsIndex);
 
     // add the line enable flag, and default configure to true
     _configLineEnable = context.mkBoolConst(configVarPrefix + "enable");

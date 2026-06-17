@@ -12,6 +12,7 @@ import static org.junit.Assert.assertThat;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.testing.EqualsTester;
+import com.google.common.collect.ImmutableMap;
 import java.util.Set;
 import javax.annotation.Nonnull;
 
@@ -89,19 +90,18 @@ public final class CommunityListTest {
     // private String _configVarPrefix;       // Inherited from the parent class
 
     @Override
-    public void initSmtVariable(Context context, Solver solver, String configVarPrefix, boolean isTrue) {
+    public void initSmtVariable(
+        Context context, Solver solver, String configVarPrefix, boolean isTrue,
+        ImmutableMap<Community, Integer> commsIndex) {
       // TODO: implement me when needed
       throw new BatfishException("UnsupportedCommunitySetExpr.initSmtVariable: not implemented yet.");
     }
 
     @Override
-    public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
-      initSmtVariable(context, solver, configVarPrefix, true);
-    }
-
-    @Override
-    public BoolExpr getConfigVarCommunity() {
-      throw new BatfishException("UnsupportedCommunitySetExpr.getConfigVarCommunity: not implemented yet.");
+    public void initSmtVariable(
+        Context context, Solver solver, String configVarPrefix,
+        ImmutableMap<Community, Integer> commsIndex) {
+      initSmtVariable(context, solver, configVarPrefix, true, commsIndex);
     }
   }
 

@@ -130,7 +130,7 @@ public class PropertyChecker {
     }
   }
 
-  private BoolExpr equal(Encoder e, Configuration conf, SymbolicRoute r1, SymbolicRoute r2) {
+  private BoolExpr equal(Encoder e, Configuration conf, SymbolicRouteBV r1, SymbolicRouteBV r2) {
     EncoderSlice main = e.getMainSlice();
     BoolExpr eq = main.equal(conf, Protocol.CONNECTED, r1, r2, null, true);
     BoolExpr samePermitted = e.mkEq(r1.getPermitted(), r2.getPermitted());
@@ -160,25 +160,25 @@ public class PropertyChecker {
 
   private BoolExpr relateEnvironments(Encoder enc1, Encoder enc2) {
     // create a map for enc2 to lookup a related environment variable from enc
-    Table2<GraphEdge, EdgeType, SymbolicRoute> relatedEnv = new Table2<>();
-    for (Entry<LogicalEdge, SymbolicRoute> entry :
+    Table2<GraphEdge, EdgeType, SymbolicRouteBV> relatedEnv = new Table2<>();
+    for (Entry<LogicalEdge, SymbolicRouteBV> entry :
         enc2.getMainSlice().getLogicalGraph().getEnvironmentVars().entrySet()) {
       LogicalEdge lge = entry.getKey();
-      SymbolicRoute r = entry.getValue();
+      SymbolicRouteBV r = entry.getValue();
       relatedEnv.put(lge.getEdge(), lge.getEdgeType(), r);
     }
     // relate environments if necessary
     BoolExpr related = enc1.mkTrue();
-    Map<LogicalEdge, SymbolicRoute> map =
+    Map<LogicalEdge, SymbolicRouteBV> map =
         enc1.getMainSlice().getLogicalGraph().getEnvironmentVars();
-    for (Map.Entry<LogicalEdge, SymbolicRoute> entry : map.entrySet()) {
+    for (Map.Entry<LogicalEdge, SymbolicRouteBV> entry : map.entrySet()) {
       LogicalEdge le = entry.getKey();
-      SymbolicRoute r1 = entry.getValue();
+      SymbolicRouteBV r1 = entry.getValue();
       String router = le.getEdge().getRouter();
       Configuration conf = enc1.getMainSlice().getGraph().getConfigurations().get(router);
       // Lookup the same environment variable in the other copy
       // The copy will have a different name but the same edge and type
-      SymbolicRoute r2 = relatedEnv.get(le.getEdge(), le.getEdgeType());
+      SymbolicRouteBV r2 = relatedEnv.get(le.getEdge(), le.getEdgeType());
       assert r2 != null;
       BoolExpr x = equal(enc1, conf, r1, r2);
       related = enc1.mkAnd(related, x);
@@ -245,12 +245,12 @@ public class PropertyChecker {
       case ANY:
         break;
       case NONE:
-        for (SymbolicRoute vars : lg.getEnvironmentVars().values()) {
+        for (SymbolicRouteBV vars : lg.getEnvironmentVars().values()) {
           enc.add(ctx.mkNot(vars.getPermitted()));
         }
         break;
       case SANE:
-        for (SymbolicRoute vars : lg.getEnvironmentVars().values()) {
+        for (SymbolicRouteBV vars : lg.getEnvironmentVars().values()) {
           enc.add(ctx.mkLe(vars.getMetric(), ctx.mkInt(50)));
         }
         break;
@@ -477,7 +477,7 @@ public class PropertyChecker {
                 if (question.getDiffType() != null) {
                   assert (enc2 != null);
                   // create a map for enc2 to lookup a related environment variable from enc
-                  Table2<GraphEdge, EdgeType, SymbolicRoute> relatedEnv = new Table2<>();
+                  Table2<GraphEdge, EdgeType, SymbolicRouteBV> relatedEnv = new Table2<>();
                   enc2.getMainSlice()
                       .getLogicalGraph()
                       .getEnvironmentVars()
@@ -1061,7 +1061,7 @@ public class PropertyChecker {
       // Set environments equal
       Set<String> communities = new HashSet<>();
 
-      Set<SymbolicRoute> envRecords = new HashSet<>();
+      Set<SymbolicRouteBV> envRecords = new HashSet<>();
 
       for (Protocol proto1 : slice1.getProtocols().get(r1)) {
         for (ArrayList<LogicalEdge> es :
@@ -1074,8 +1074,8 @@ public class PropertyChecker {
 
             if (lge1.getEdgeType() == EdgeType.IMPORT) {
 
-              SymbolicRoute vars1 = slice1.getLogicalGraph().getEnvironmentVars().get(lge1);
-              SymbolicRoute vars2 = slice2.getLogicalGraph().getEnvironmentVars().get(lge2);
+              SymbolicRouteBV vars1 = slice1.getLogicalGraph().getEnvironmentVars().get(lge1);
+              SymbolicRouteBV vars2 = slice2.getLogicalGraph().getEnvironmentVars().get(lge2);
 
               BoolExpr aclIn1 = slice1.getIncomingAcls().get(lge1.getEdge());
               BoolExpr aclIn2 = slice2.getIncomingAcls().get(lge2.getEdge());
@@ -1096,54 +1096,71 @@ public class PropertyChecker {
                 BoolExpr samePermitted = ctx.mkEq(vars1.getPermitted(), vars2.getPermitted());
 
                 // Set communities equal
-                BoolExpr equalComms = e1.mkTrue();
-                for (Map.Entry<CommunityVar, BoolExpr> entry : vars1.getCommunities().entrySet()) {
-                  CommunityVar cvar = entry.getKey();
-                  BoolExpr ce1 = entry.getValue();
-                  BoolExpr ce2 = vars2.getCommunities().get(cvar);
-                  if (ce2 != null) {
-                    equalComms = e1.mkAnd(equalComms, e1.mkEq(ce1, ce2));
-                  }
+                // BoolExpr equalComms = e1.mkTrue();
+                // for (Map.Entry<CommunityVar, BoolExpr> entry : vars1.getCommunities().entrySet()) {
+                //   CommunityVar cvar = entry.getKey();
+                //   BoolExpr ce1 = entry.getValue();
+                //   BoolExpr ce2 = vars2.getCommunities().get(cvar);
+                //   if (ce2 != null) {
+                //     equalComms = e1.mkAnd(equalComms, e1.mkEq(ce1, ce2));
+                //   }
+                // }
+
+                // NOTE: modified communities equal checking (BoolExpr -> BitVecExpr communities)
+                BoolExpr equalComms = null;
+                BitVecExpr vars1Comms = vars1.getCommunitiesBitVec();
+                BitVecExpr vars2Comms = vars2.getCommunitiesBitVec();
+                if (null == vars1Comms && null == vars2Comms) {
+                  equalComms = ctx.mkFalse();
+                } else if (null == vars1Comms || null == vars2Comms) {
+                  equalComms = ctx.mkTrue();
+                } else {
+                  equalComms = ctx.mkEq(vars1Comms, vars2Comms);
                 }
 
                 // Set communities belonging to one but not the other
                 // off, but give a warning of the difference
-                BoolExpr unsetComms = e1.mkTrue();
+                // BoolExpr unsetComms = e1.mkTrue();
 
-                for (Map.Entry<CommunityVar, BoolExpr> entry : vars1.getCommunities().entrySet()) {
-                  CommunityVar cvar = entry.getKey();
-                  BoolExpr ce1 = entry.getValue();
-                  BoolExpr ce2 = vars2.getCommunities().get(cvar);
-                  if (ce2 == null) {
-                    if (!communities.contains(cvar.getRegex())) {
-                      communities.add(cvar.getRegex());
-                      /* String msg =
-                       String.format(
-                           "Warning: community %s found for router %s but not %s.",
-                           cvar.getRegex(), conf1.getEnvName(), conf2.getEnvName());
-                      System.out.println(msg); */
-                    }
-                    unsetComms = e1.mkAnd(unsetComms, e1.mkNot(ce1));
-                  }
-                }
+                // for (Map.Entry<CommunityVar, BoolExpr> entry : vars1.getCommunities().entrySet()) {
+                //   CommunityVar cvar = entry.getKey();
+                //   BoolExpr ce1 = entry.getValue();
+                //   BoolExpr ce2 = vars2.getCommunities().get(cvar);
+                //   if (ce2 == null) {
+                //     if (!communities.contains(cvar.getRegex())) {
+                //       communities.add(cvar.getRegex());
+                //       /* String msg =
+                //        String.format(
+                //            "Warning: community %s found for router %s but not %s.",
+                //            cvar.getRegex(), conf1.getEnvName(), conf2.getEnvName());
+                //       System.out.println(msg); */
+                //     }
+                //     unsetComms = e1.mkAnd(unsetComms, e1.mkNot(ce1));
+                //   }
+                // }
 
                 // Do the same thing for communities missing from the other side
-                for (Map.Entry<CommunityVar, BoolExpr> entry : vars2.getCommunities().entrySet()) {
-                  CommunityVar cvar = entry.getKey();
-                  BoolExpr ce2 = entry.getValue();
-                  BoolExpr ce1 = vars1.getCommunities().get(cvar);
-                  if (ce1 == null) {
-                    if (!communities.contains(cvar.getRegex())) {
-                      communities.add(cvar.getRegex());
-                      /* String msg =
-                       String.format(
-                           "Warning: community %s found for router %s but not %s.",
-                           cvar.getRegex(), conf2.getEnvName(), conf1.getEnvName());
-                      System.out.println(msg); */
-                    }
-                    unsetComms = e1.mkAnd(unsetComms, e1.mkNot(ce2));
-                  }
-                }
+                // for (Map.Entry<CommunityVar, BoolExpr> entry : vars2.getCommunities().entrySet()) {
+                //   CommunityVar cvar = entry.getKey();
+                //   BoolExpr ce2 = entry.getValue();
+                //   BoolExpr ce1 = vars1.getCommunities().get(cvar);
+                //   if (ce1 == null) {
+                //     if (!communities.contains(cvar.getRegex())) {
+                //       communities.add(cvar.getRegex());
+                //       /* String msg =
+                //        String.format(
+                //            "Warning: community %s found for router %s but not %s.",
+                //            cvar.getRegex(), conf2.getEnvName(), conf1.getEnvName());
+                //       System.out.println(msg); */
+                //     }
+                //     unsetComms = e1.mkAnd(unsetComms, e1.mkNot(ce2));
+                //   }
+                // }
+
+                // NOTE: modified unset communities checking (BoolExpr -> BitVecExpr communities)
+                BoolExpr unsetComms =
+                    SymbolicRouteBV.communitiesEmpty(
+                        ctx, ctx.mkBVXOR(vars1Comms, vars2Comms), graph.getAllCommunitiesIndex().size());
 
                 envRecords.add(vars1);
                 BoolExpr equalVars = slice1.equal(conf1, proto1, vars1, vars2, lge1, true);
@@ -1157,8 +1174,8 @@ public class PropertyChecker {
 
             } else {
 
-              SymbolicRoute out1 = lge1.getSymbolicRecord();
-              SymbolicRoute out2 = lge2.getSymbolicRecord();
+              SymbolicRouteBV out1 = lge1.getSymbolicRecord();
+              SymbolicRouteBV out2 = lge2.getSymbolicRecord();
 
               equalOutputs =
                   ctx.mkAnd(equalOutputs, slice1.equal(conf1, proto1, out1, out2, lge1, false));
@@ -1170,8 +1187,8 @@ public class PropertyChecker {
       // Ensure that there is only one active environment message if we want to
       // check the stronger version of local equivalence
       if (strict) {
-        for (SymbolicRoute env1 : envRecords) {
-          for (SymbolicRoute env2 : envRecords) {
+        for (SymbolicRouteBV env1 : envRecords) {
+          for (SymbolicRouteBV env2 : envRecords) {
             if (!env1.equals(env2)) {
               BoolExpr c = e2.mkImplies(env1.getPermitted(), e2.mkNot(env2.getPermitted()));
               e2.add(c);
@@ -1196,9 +1213,9 @@ public class PropertyChecker {
       // Best choices should be the same
       BoolExpr required;
       if (strict) {
-        SymbolicRoute best1 =
+        SymbolicRouteBV best1 =
             e1.getMainSlice().getSymbolicDecisions().getBestNeighbor().get(conf1.getHostname());
-        SymbolicRoute best2 =
+        SymbolicRouteBV best2 =
             e2.getMainSlice().getSymbolicDecisions().getBestNeighbor().get(conf2.getHostname());
         // Just pick some protocol for defaults, shouldn't matter for best choice
         required = equal(e2, conf2, best1, best2);

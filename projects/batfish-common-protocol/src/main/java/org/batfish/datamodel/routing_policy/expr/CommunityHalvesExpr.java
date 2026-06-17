@@ -5,6 +5,7 @@ import static java.util.Objects.requireNonNull;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.ImmutableMap;
 import java.util.Objects;
 import java.util.Set;
 import javax.annotation.Nonnull;
@@ -123,18 +124,17 @@ public class CommunityHalvesExpr extends CommunitySetExpr {
   // private String _configVarPrefix;       // Inherited from the parent class
 
   @Override
-  public void initSmtVariable(Context context, Solver solver, String configVarPrefix, boolean isTrue) {
+  public void initSmtVariable(
+      Context context, Solver solver, String configVarPrefix, boolean isTrue,
+      ImmutableMap<Community, Integer> commsIndex) {
     // TODO: implement me when needed
     throw new BatfishException("CommunityHalvesExpr.initSmtVariable: not implemented yet.");
   }
 
   @Override
-  public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
-    initSmtVariable(context, solver, configVarPrefix, true);
-  }
-
-  @Override
-  public BoolExpr getConfigVarCommunity() {
-    throw new BatfishException("CommunityHalvesExpr.getConfigVarCommunity: not implemented yet.");
+  public void initSmtVariable(
+      Context context, Solver solver, String configVarPrefix,
+      ImmutableMap<Community, Integer> commsIndex) {
+    initSmtVariable(context, solver, configVarPrefix, true, commsIndex);
   }
 }

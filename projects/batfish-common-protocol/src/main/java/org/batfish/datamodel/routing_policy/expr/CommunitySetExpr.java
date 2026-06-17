@@ -2,8 +2,10 @@ package org.batfish.datamodel.routing_policy.expr;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableMap;
 import java.io.Serializable;
 import java.util.Set;
+import java.math.BigInteger;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -19,6 +21,7 @@ import org.batfish.datamodel.bgp.community.LargeCommunity;
 
 import com.microsoft.z3.Context;
 import com.microsoft.z3.Solver;
+import com.microsoft.z3.BitVecExpr;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "class")
 public abstract class CommunitySetExpr implements Serializable {
@@ -99,8 +102,11 @@ public abstract class CommunitySetExpr implements Serializable {
   protected String _configVarPrefix;
 
   public abstract void initSmtVariable(
-      Context context, Solver solver, String configVarPrefix, boolean isTrue);
-  public abstract void initSmtVariable(Context context, Solver solver, String configVarPrefix);
+      Context context, Solver solver, String configVarPrefix, boolean isTrue,
+      ImmutableMap<Community, Integer> commsIndex);
+  public abstract void initSmtVariable(
+      Context context, Solver solver, String configVarPrefix,
+      ImmutableMap<Community, Integer> commsIndex);
 
   public boolean getEnableSmtVariable() {
     return _enableSmtVariable;
@@ -109,8 +115,6 @@ public abstract class CommunitySetExpr implements Serializable {
   public String getConfigVarPrefix() {
     return _configVarPrefix;
   }
-
-  public abstract BoolExpr getConfigVarCommunity();
 
   // clone a community
   protected Community cloneCommunity(Community community) {
@@ -130,5 +134,11 @@ public abstract class CommunitySetExpr implements Serializable {
     // only has three subclasses of Community
     throw new BatfishException(
             "CommunitySetExpr.cloneCommunity: unknown community type: " + community.getClass().getName());
+  }
+
+  // Community Index -> Community BitVec
+  // TODO: improve long type to support more communities
+  protected long communityBitVec(Integer index) {
+    return 1L << index;
   }
 }

@@ -17,7 +17,7 @@ import org.batfish.minesweeper.Protocol;
  * based on the protocol, and which optimizations are applicable to the network.
  *
  * <p>Community membership may be encoded either as a map of per-community {@link BoolExpr} ({@link
- * SymbolicRoute}) or as a single bit-vector ({@link SymbolicRouteNew}).
+ * SymbolicRoute}) or as a single bit-vector ({@link SymbolicRouteBV}).
  *
  * @author Ryan Beckett
  */
