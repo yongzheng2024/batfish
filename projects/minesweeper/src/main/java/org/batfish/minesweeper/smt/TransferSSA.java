@@ -465,7 +465,7 @@ class TransferSSA {
     // List<CommunityListLine> lines = new ArrayList<>(cl.getLines());
     // Collections.reverse(lines);
     // BoolExpr acc = _enc.mkFalse();
-
+    //
     // if (!cl.getEnableSmtVariable()) {
     //   for (CommunityListLine line : lines) {
     //     CommunityVar cvar = toCommunityVar(line.getMatchCondition());
@@ -477,7 +477,7 @@ class TransferSSA {
     //   for (CommunityListLine line : lines) {
     //     CommunityVar cvar = toCommunityVar(line.getMatchCondition());
     //     BoolExpr c = matchCommunityExtend(other, cvar);
-
+    //
     //     BoolExpr community = null;
     //     CommunitySetExpr communitySetExpr = line.getMatchCondition();
     //     if (communitySetExpr instanceof RegexCommunitySet) {
@@ -496,7 +496,7 @@ class TransferSSA {
     //     acc = _enc.mkIf(_enc.mkAnd(lineEnable, matchCommunityLine), action, acc);
     //   }
     // }
-
+    //
     // return acc;
 
     // NOTE: modified match community list (BoolExpr -> BitVecExpr communities)
@@ -564,13 +564,13 @@ class TransferSSA {
     //   }
     //   return acc;
     // }
-
+    //
     // if (e instanceof NamedCommunitySet) {
     //   NamedCommunitySet x = (NamedCommunitySet) e;
     //   CommunityList cl = conf.getCommunityLists().get(x.getName());
     //   return matchCommunityList(cl, other);
     // }
-
+    //
     // throw new BatfishException("TODO: match community set");
 
     // NOTE: modified match community set (BoolExpr -> BitVec communities)

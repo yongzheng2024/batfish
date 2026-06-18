@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.microsoft.z3.ArithExpr;
 import com.microsoft.z3.BoolExpr;
+import com.microsoft.z3.BitVecExpr;
 import com.microsoft.z3.BitVecNum;
 import com.microsoft.z3.Expr;
 import com.microsoft.z3.Model;
@@ -48,6 +49,7 @@ import org.batfish.minesweeper.answers.FlowHistory;
 import org.batfish.minesweeper.answers.FlowTrace;
 import org.batfish.minesweeper.answers.FlowTraceHop;
 import org.batfish.minesweeper.utils.Tuple;
+import org.batfish.common.BatfishException;
 
 class CounterExample {
 
@@ -199,14 +201,19 @@ class CounterExample {
           // }
 
           // NOTE: modified communities recovery (BoolExpr -> BitVecExpr communities)
+          BitVecExpr comms = symbolicRoute.getCommunitiesBitVec();
           ImmutableSortedSet.Builder<Community> communities = ImmutableSortedSet.naturalOrder();
-          // TODO: BitVecNum cast maybe problematic?
-          ImmutableSet<CommunityVar> commsVars =
-              SymbolicRouteBV.communitiesVars(
-                  (BitVecNum) symbolicRoute.getCommunitiesBitVec(), slice.getGraph().getAllCommunitiesIndex());
-          for (CommunityVar cvar : commsVars) {
-            if (cvar.getType() == Type.EXACT && cvar.getLiteralValue() != null) {
-              communities.add(cvar.getLiteralValue());
+          if (null != comms) {
+            Expr commsExpr = _model.evaluate(comms, true);
+            if (!(commsExpr instanceof BitVecNum)) {
+              throw new BatfishException("Expected BitVecNum for communities, got: " + commsExpr);
+            }
+            ImmutableSet<CommunityVar> commsVars =
+                SymbolicRouteBV.communitiesVars((BitVecNum) commsExpr, enc.getGraph().getAllCommunitiesIndex());
+            for (CommunityVar cvar : commsVars) {
+              if (cvar.getType() == Type.EXACT && cvar.getLiteralValue() != null) {
+                communities.add(cvar.getLiteralValue());
+              }
             }
           }
 

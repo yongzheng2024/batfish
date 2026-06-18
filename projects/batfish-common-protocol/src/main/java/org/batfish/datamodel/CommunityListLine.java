@@ -93,7 +93,7 @@ public class CommunityListLine implements Serializable {
 
   public void initSmtVariable(
       Context context, Solver solver, String configVarPrefix, boolean isTrue,
-      ImmutableMap<Community, Integer> commsIndex) {
+      ImmutableMap<Community, Integer> commsIndex, int commsWidth) {
     // assert that the community list line is not shared
     if (_enableSmtVariable) {
       throw new BatfishException("CommunityListLine.initSmtVariable: shared object.\n" +
@@ -141,7 +141,7 @@ public class CommunityListLine implements Serializable {
     _configLineEnable = context.mkBoolConst(configVarPrefix + "enable");
     _configVarAction = context.mkBoolConst(configVarPrefix + "action");
 
-    _matchCondition.initSmtVariable(context, solver, configVarPrefix, isTrue, commsIndex);
+    _matchCondition.initSmtVariable(context, solver, configVarPrefix, isTrue, commsIndex, commsWidth);
 
     // add relevant configuration constant constraint
     BoolExpr configLineEnableConstraint = context.mkEq(_configLineEnable, context.mkTrue());
@@ -157,8 +157,8 @@ public class CommunityListLine implements Serializable {
 
   public void initSmtVariable(
       Context context, Solver solver, String configVarPrefix,
-      ImmutableMap<Community, Integer> commsIndex) {
-    initSmtVariable(context, solver, configVarPrefix, true, commsIndex);
+      ImmutableMap<Community, Integer> commsIndex, int commsWidth) {
+    initSmtVariable(context, solver, configVarPrefix, true, commsIndex, commsWidth);
   }
 
   public boolean getEnableSmtVariable() {

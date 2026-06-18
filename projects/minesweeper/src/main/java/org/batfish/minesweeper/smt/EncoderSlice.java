@@ -1339,8 +1339,18 @@ class EncoderSlice {
     // return acc;
 
     // NOTE: modified the community equality check (BoolExpr -> BitVecExpr communities)
-    return SymbolicRouteBV.communitiesEqual(
-        getCtx(), best.getCommunitiesBitVec(), vars.getCommunitiesBitVec());
+    BitVecExpr bestComms = best.getCommunitiesBitVec();
+    BitVecExpr varsComms = vars.getCommunitiesBitVec();
+    int width = getGraph().getAllCommunitiesIndex().size();
+    if (null != bestComms && null == varsComms) {
+      return SymbolicRouteBV.communitiesEmpty(_encoder.getCtx(), bestComms, width);
+    } else if (null == bestComms && null != varsComms) {
+      return SymbolicRouteBV.communitiesEmpty(_encoder.getCtx(), varsComms, width);
+    } else if (null != bestComms && null != varsComms) {
+      return SymbolicRouteBV.communitiesEqual(_encoder.getCtx(), bestComms, varsComms);
+    } else {
+      return mkTrue();
+    }
   }
 
   /*
@@ -2366,7 +2376,9 @@ class EncoderSlice {
             //   comms = mkAnd(comms, mkNot(entry.getValue()));
             // }
             // NOTE: modified the empty community encoding (BoolExpr -> BitVecExpr communities)
-            BoolExpr comms = mkEq(vars.getCommunitiesBitVec(), mkInt(0));
+            BoolExpr comms =
+                SymbolicRouteBV.communitiesEmpty(
+                    _encoder.getCtx(), vars.getCommunitiesBitVec(), getGraph().getAllCommunitiesIndex().size());
             BoolExpr values =
                 mkAnd(per, lp, ad, met, med, len, type, area, internal, igpMet, comms);
 

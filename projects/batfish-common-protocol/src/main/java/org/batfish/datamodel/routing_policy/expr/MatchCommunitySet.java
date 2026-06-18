@@ -93,7 +93,7 @@ public final class MatchCommunitySet extends BooleanExpr {
 
   public void initSmtVariable(
       Context context, Solver solver, String configVarPrefix,
-      ImmutableMap<Community, Integer> commsIndex) {
+      ImmutableMap<Community, Integer> commsIndex, int commsWidth) {
     // assert that the community list line is not shared
     if (_enableSmtVariable) {
       throw new BatfishException("MatchCommunitySet.initSmtVariable: shared object.\n" +
@@ -108,7 +108,7 @@ public final class MatchCommunitySet extends BooleanExpr {
     }
 
     // init smt variable for community set configuration
-    _expr.initSmtVariable(context, solver, configVarPrefix, commsIndex);
+    _expr.initSmtVariable(context, solver, configVarPrefix, commsIndex, commsWidth);
 
     // add the line enable flag, and default configure to true
     _configLineEnable = context.mkBoolConst(configVarPrefix + "enable");

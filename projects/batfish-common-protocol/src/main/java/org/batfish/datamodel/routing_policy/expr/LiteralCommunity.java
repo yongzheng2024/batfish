@@ -121,11 +121,10 @@ public class LiteralCommunity extends CommunitySetExpr {
   /** Add configuration constant - SMT symbolic variable */
   // private boolean _enableSmtVariable;    // Inherited from the parent class
   // private String _configVarPrefix;       // Inherited from the parent class
-  // protected transient BitVecExpr _configVarCommunity;  // Inherited from the parent class
 
   public void initSmtVariable(
       Context context, Solver solver, String configVarPrefix, boolean isTrue,
-      ImmutableMap<Community, Integer> commsIndex) {
+      ImmutableMap<Community, Integer> commsIndex, int commsWidth) {
     // assert that the literal community is not shared
     if (_enableSmtVariable) {
       throw new BatfishException("LiteralCommunity.initSmtVariable: shared object.\n" +
@@ -154,13 +153,13 @@ public class LiteralCommunity extends CommunitySetExpr {
         configVarPrefix + SymbolicUtil.format(_community.getCommunityString()) + "_";
     BitVecExpr communityValue = null;
     if (null != commsIndex.get(_community)) {
-      communityValue = context.mkBV(communityBitVec(commsIndex.get(_community)), commsIndex.size());
+      communityValue = context.mkBV(communityBitVec(commsIndex.get(_community)), commsWidth);
     } else {
       throw new BatfishException("LiteralCommunity.initSmtVariable: " +
           "community not found in commsIndex: " + _community.getCommunityString());
     }
     _community.initSmtVariable(
-        context, solver, configVarPrefixUpdated, isTrue, communityValue, commsIndex.size());
+        context, solver, configVarPrefixUpdated, isTrue, communityValue, commsWidth);
 
     // configure the smt variable enable flag to true
     _enableSmtVariable = true;
@@ -170,7 +169,7 @@ public class LiteralCommunity extends CommunitySetExpr {
   @Override
   public void initSmtVariable(
       Context context, Solver solver, String configVarPrefix,
-      ImmutableMap<Community, Integer> commsIndex) {
-    initSmtVariable(context, solver, configVarPrefix, true, commsIndex);
+      ImmutableMap<Community, Integer> commsIndex, int commsWidth) {
+    initSmtVariable(context, solver, configVarPrefix, true, commsIndex, commsWidth);
   }
 }

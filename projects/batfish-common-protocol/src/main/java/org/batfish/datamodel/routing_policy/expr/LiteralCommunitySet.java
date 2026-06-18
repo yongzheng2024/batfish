@@ -128,7 +128,7 @@ public class LiteralCommunitySet extends CommunitySetExpr {
   @Override
   public void initSmtVariable(
       Context context, Solver solver, String configVarPrefix, boolean isTrue,
-      ImmutableMap<Community, Integer> commsIndex) {
+      ImmutableMap<Community, Integer> commsIndex, int commsWidth) {
     // assert that the literal community set is not shared
     if (_enableSmtVariable) {
       throw new BatfishException("LiteralCommunitySet.initSmtVariable: shared object.\n" +
@@ -171,13 +171,13 @@ public class LiteralCommunitySet extends CommunitySetExpr {
           configVarPrefix + SymbolicUtil.format(community.getCommunityString()) + "_";
       BitVecExpr communityValue = null;
       if (null != commsIndex.get(community)) {
-        communityValue = context.mkBV(communityBitVec(commsIndex.get(community)), commsIndex.size());
+        communityValue = context.mkBV(communityBitVec(commsIndex.get(community)), commsWidth);
       } else {
         throw new BatfishException("LiteralCommunitySet.initSmtVariable: " +
             "community not found in commsIndex: " + community.getCommunityString());
       }
       community.initSmtVariable(
-          context, solver, configVarPrefixUpdated, isTrue, communityValue, commsIndex.size());
+          context, solver, configVarPrefixUpdated, isTrue, communityValue, commsWidth);
     }
 
     // configure the smt variable enable flag to true
@@ -188,7 +188,7 @@ public class LiteralCommunitySet extends CommunitySetExpr {
   @Override
   public void initSmtVariable(
       Context context, Solver solver, String configVarPrefix,
-      ImmutableMap<Community, Integer> commsIndex) {
-    initSmtVariable(context, solver, configVarPrefix, true, commsIndex);
+      ImmutableMap<Community, Integer> commsIndex, int commsWidth) {
+    initSmtVariable(context, solver, configVarPrefix, true, commsIndex, commsWidth);
   }
 }

@@ -115,7 +115,7 @@ public abstract class Community implements Serializable, Comparable<Community> {
 
   public void initSmtVariable(
       Context context, Solver solver, String configVarPrefix, boolean isTrue,
-      BitVecExpr commValue, int width) {
+      BitVecExpr commValue, int commsWidth) {
     // assert that the community is not shared
     if (_enableSmtVariable) {
       throw new BatfishException("Community.initSmtVariable: shared object.\n" +
@@ -124,7 +124,7 @@ public abstract class Community implements Serializable, Comparable<Community> {
     }
 
     // add relevant configuration constant constraint
-    _configVarCommunity = context.mkBVConst(configVarPrefix + "community", width);
+    _configVarCommunity = context.mkBVConst(configVarPrefix + "community", commsWidth);
     BoolExpr configVarCommConstraint = context.mkEq(commValue, _configVarCommunity);
     solver.add(configVarCommConstraint);
 

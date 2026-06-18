@@ -118,14 +118,11 @@ public final class RegexCommunitySet extends CommunitySetExpr {
   /** Add configuration constant - SMT symbolic variable */
   // private boolean _enableSmtVariable;    // Inherited from the parent class
   // private String _configVarPrefix;       // Inherited from the parent class
-  // protected transient BitVecExpr _configVarCommunity;  // Inherited from the parent class
-
-  private transient BoolExpr _configVarCommunity;
 
   @Override
   public void initSmtVariable(
       Context context, Solver solver, String configVarPrefix, boolean isTrue,
-      ImmutableMap<Community, Integer> commsIndex) {
+      ImmutableMap<Community, Integer> commsIndex, int commsWidth) {
     // assert that the regex community set is not shared
     if (_enableSmtVariable) {
       throw new BatfishException("RegexCommunitySet.initSmtVariable: shared object.\n" +
@@ -133,14 +130,9 @@ public final class RegexCommunitySet extends CommunitySetExpr {
           "Current  configVarPrefix: " + configVarPrefix);
     }
 
-    // FIXME: modify boolean variable to bitvector variable
-    // init smt variable for regex community set
-    _configVarCommunity = context.mkBoolConst(configVarPrefix + "community");
-    // add relevant configuration constant constraint
-    // for community (regex / exact), add boolean constraint which equal isTrue
-    BoolExpr configVarRegexCommConstraint =
-        context.mkEq(_configVarCommunity, context.mkBool(isTrue));
-    solver.add(configVarRegexCommConstraint);
+    // NOTE: regex community is not directly used in match community encoding,
+    //       its corresponding community dependencies are used in match community encoding
+    //       (BoolExpr -> BitVecExpr communities)
 
     // configure the smt variable enable flag to true
     _enableSmtVariable = true;
@@ -150,11 +142,7 @@ public final class RegexCommunitySet extends CommunitySetExpr {
   @Override
   public void initSmtVariable(
       Context context, Solver solver, String configVarPrefix,
-      ImmutableMap<Community, Integer> commsIndex) {
-    initSmtVariable(context, solver, configVarPrefix, true, commsIndex);
-  }
-
-  public BoolExpr getConfigVarCommunity() {
-    return _configVarCommunity;
+      ImmutableMap<Community, Integer> commsIndex, int commsWidth) {
+    initSmtVariable(context, solver, configVarPrefix, true, commsIndex, commsWidth);
   }
 }

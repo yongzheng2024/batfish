@@ -89,7 +89,7 @@ public final class DeleteCommunity extends Statement {
 
   public void initSmtVariable(
       Context context, Solver solver, String configVarPrefix, boolean isTrue,
-      ImmutableMap<Community, Integer> commsIndex) {
+      ImmutableMap<Community, Integer> commsIndex, int commsWidth) {
     // assert that the delete community is not shared
     if (_enableSmtVariable) {
       throw new BatfishException("DeleteCommunity.initSmtVariable: shared object.\n" +
@@ -119,7 +119,7 @@ public final class DeleteCommunity extends Statement {
     }
 
     // init smt variable for community set expr
-    _expr.initSmtVariable(context, solver, configVarPrefix, isTrue, commsIndex);
+    _expr.initSmtVariable(context, solver, configVarPrefix, isTrue, commsIndex, commsWidth);
 
     // add the line enable flag, and default configure to true
     _configLineEnable = context.mkBoolConst(configVarPrefix + "enable");

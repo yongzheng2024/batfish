@@ -2,6 +2,7 @@ package org.batfish.minesweeper.smt;
 
 import com.microsoft.z3.ArithExpr;
 import com.microsoft.z3.BitVecExpr;
+import com.microsoft.z3.BitVecNum;
 import com.microsoft.z3.BoolExpr;
 import com.microsoft.z3.Context;
 import com.microsoft.z3.Expr;
@@ -10,8 +11,10 @@ import com.microsoft.z3.Solver;
 import com.microsoft.z3.Status;
 import com.microsoft.z3.Tactic;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 import java.io.*;
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -952,7 +955,25 @@ public class Encoder {
           // }
 
           // NOTE: modified community encoding for counterexample (BoolExpr -> BitVecExpr communities)
-          // FIXME: implement here, added by yongzheng on 20260618
+          //       but only display exact community values in counterexample, regex community values
+          //       are not displayed directly, via community dependencies indirectly
+          BitVecExpr comms = r.getCommunitiesBitVec();
+          if (null != comms) {
+            Expr commsExpr = m.evaluate(comms, true);
+            if (!(commsExpr instanceof BitVecNum)) {
+              throw new BatfishException("Expected BitVecNum for communities, got: " + commsExpr);
+            }
+            ImmutableSet<CommunityVar> commsVars =
+                SymbolicRouteBV.communitiesVars((BitVecNum) commsExpr, _graph.getAllCommunitiesIndex());
+            for (CommunityVar cvar : commsVars) {
+              if (displayCommunity(cvar)) {
+                String s = cvar.getRegex();
+                String t = slice.getNamedCommunities().get(cvar.getRegex());
+                s = (t == null ? s : t);
+                recordMap.put("community " + s, "");
+              }
+            }
+          }
         }
       }
     }
@@ -1052,7 +1073,29 @@ public class Encoder {
     // }
 
     // NOTE: modified disable community value if possible (BoolExpr -> BitVecExpr communities)
-    // FIXME: implement here, added by yongzheng on 20260618
+    ImmutableMap<CommunityVar, Integer> commsIndex = _graph.getAllCommunitiesIndex();
+    for (Map.Entry<LogicalEdge, SymbolicRouteBV> entry : map.entrySet()) {
+      SymbolicRouteBV record = entry.getValue();
+      BitVecExpr comms = record.getCommunitiesBitVec();
+      if (null == comms) {
+        continue;
+      }
+      Expr commsExpr = m.evaluate(comms, false);
+      if (!(commsExpr instanceof BitVecNum)) {
+        throw new BatfishException("Expected BitVecNum for communities, got: " + commsExpr);
+      }
+      BigInteger bits = ((BitVecNum) commsExpr).getBigInteger();
+      for (Map.Entry<CommunityVar, Integer> commIndex : commsIndex.entrySet()) {
+        CommunityVar cvar = commIndex.getKey();
+        int bitIndex = commIndex.getValue();
+        BoolExpr commLit = SymbolicRouteBV.communityBitSet(_ctx, comms, commsIndex, cvar);
+        if (bits.testBit(bitIndex)) {
+          acc1 = mkOr(acc1, mkNot(commLit));
+        } else {
+          acc2 = mkAnd(acc2, mkNot(commLit));
+        }
+      }
+    }
 
     return mkAnd(acc1, acc2);
   }
@@ -1313,6 +1356,10 @@ public class Encoder {
    * Getters and setters
    */
 
+  Graph getGraph() {
+    return _graph;
+  }
+
   SymbolicFailures getSymbolicFailures() {
     return _symbolicFailures;
   }
@@ -1475,14 +1522,19 @@ public class Encoder {
         routeFilterList.initSmtVariable(_ctx, _solver, configVarPrefix);
       }
 
-      for (Map.Entry<String, CommunityList> communityListEntry : config.getCommunityLists().entrySet()) {
-        String communityListName = communityListEntry.getKey();
-        CommunityList communityList = communityListEntry.getValue();
+      if (!_graph.getAllCommunities().isEmpty()) {
+        // if graph has no community, skip initialization of community symbolic configuration constants
+        for (Map.Entry<String, CommunityList> communityListEntry : config.getCommunityLists().entrySet()) {
+          String communityListName = communityListEntry.getKey();
+          CommunityList communityList = communityListEntry.getValue();
 
-        String configVarPrefix =
-                "Config_" + hostName + "_CommunityList_" + SymbolicUtil.format(communityListName) + "_";
+          String configVarPrefix =
+              "Config_" + hostName + "_CommunityList_" + SymbolicUtil.format(communityListName) + "_";
 
-        communityList.initSmtVariable(_ctx, _solver, configVarPrefix, _graph.getAllExactCommunitiesIndex());
+          communityList.initSmtVariable(
+              _ctx, _solver, configVarPrefix,
+              _graph.getAllExactCommunitiesIndex(), _graph.getAllCommunitiesIndex().size());
+        }
       }
 
       for (Map.Entry<String, RoutingPolicy> routingPolicyEntry : config.getRoutingPolicies().entrySet()) {
@@ -1650,7 +1702,7 @@ public class Encoder {
         if (communitySetExpr instanceof LiteralCommunitySet) {
           ac.initSmtVariable(
               _ctx, _solver, configVarPrefix + "add_community_set_", true,
-              _graph.getAllExactCommunitiesIndex());
+              _graph.getAllExactCommunitiesIndex(), _graph.getAllCommunitiesIndex().size());
           // support static analysis for more exact community subspecs
           LiteralCommunitySet lcs = (LiteralCommunitySet) communitySetExpr;
           Set<Community> communities = lcs.getCommunities();
@@ -1669,7 +1721,7 @@ public class Encoder {
           String communityString = SymbolicUtil.format(lc.getCommunity().getCommunityString());
           ac.initSmtVariable(
               _ctx, _solver, configVarPrefix + "add_community_" + communityString + "_", true,
-              _graph.getAllExactCommunitiesIndex());
+              _graph.getAllExactCommunitiesIndex(), _graph.getAllCommunitiesIndex().size());
           // support static analysis for more exact community subspecs
           String matchString = lc.getCommunity().matchString();
           String configVarName = configVarPrefix + "add_community_" + communityString + "_community";
@@ -1692,7 +1744,7 @@ public class Encoder {
         if (communitySetExpr instanceof LiteralCommunitySet) {
           sc.initSmtVariable(
               _ctx, _solver, configVarPrefix + "set_community_set_", true,
-              _graph.getAllExactCommunitiesIndex());
+              _graph.getAllExactCommunitiesIndex(), _graph.getAllCommunitiesIndex().size());
           LiteralCommunitySet lcs = (LiteralCommunitySet) communitySetExpr;
           Set<Community> communities = lcs.getCommunities();
           for (Community community : communities) {
@@ -1712,7 +1764,7 @@ public class Encoder {
           configVarPrefix = SymbolicUtil.incrementLineSuffix(configVarPrefix);
           sc.initSmtVariable(
               _ctx, _solver, configVarPrefix + "set_community_" + communityString + "_", true,
-              _graph.getAllExactCommunitiesIndex());
+              _graph.getAllExactCommunitiesIndex(), _graph.getAllCommunitiesIndex().size());
           // support static analysis for more exact community subspecs
           String matchString = lc.getCommunity().matchString();
           String configVarName = configVarPrefix + "set_community_" + communityString + "_community";
@@ -1736,7 +1788,7 @@ public class Encoder {
         if (communitySetExpr instanceof LiteralCommunitySet) {
           dc.initSmtVariable(
               _ctx, _solver, configVarPrefix + "delete_community_", false,
-              _graph.getAllExactCommunitiesIndex());
+              _graph.getAllExactCommunitiesIndex(), _graph.getAllCommunitiesIndex().size());
           LiteralCommunitySet lcs = (LiteralCommunitySet) communitySetExpr;
           Set<Community> communities = lcs.getCommunities();
         } else if (communitySetExpr instanceof LiteralCommunity) {
@@ -1744,13 +1796,13 @@ public class Encoder {
           String communityString = SymbolicUtil.format(lc.getCommunity().getCommunityString());
           dc.initSmtVariable(
               _ctx, _solver, configVarPrefix + "delete_community_" + communityString + "_", false,
-              _graph.getAllExactCommunitiesIndex());
+              _graph.getAllExactCommunitiesIndex(), _graph.getAllCommunitiesIndex().size());
         } else if (communitySetExpr instanceof NamedCommunitySet) {
             NamedCommunitySet ncs = (NamedCommunitySet) communitySetExpr;
             String namedCommunityString = SymbolicUtil.format(ncs.getName());
             ncs.initSmtVariable(
                 _ctx, _solver, configVarPrefix + "delete_community_" + namedCommunityString + "_", false,
-                _graph.getAllExactCommunitiesIndex());
+                _graph.getAllExactCommunitiesIndex(), _graph.getAllCommunitiesIndex().size());
         } else {
             throw new BatfishException("Unimplemented feature " + communitySetExpr.getClass());
         }
@@ -1910,12 +1962,12 @@ public class Encoder {
       } else if (communitySetExpr instanceof RegexCommunitySet) {
         // support static analysis for more exact community subspecs
         collectCommunitiesFromRegexCommunitySet((RegexCommunitySet) communitySetExpr);
-      } else if (communitySetExpr instanceof LiteralCommunitySet) {
-        // support static analysis for more exact community subspecs
-        collectCommunitiesFromLiteralCommunitySet((LiteralCommunitySet) communitySetExpr);
       } else if (communitySetExpr instanceof LiteralCommunity) {
         // support static analysis for more exact community subspecs
         collectCommunitiesFromLiteralCommunity((LiteralCommunity) communitySetExpr);
+      } else if (communitySetExpr instanceof LiteralCommunitySet) {
+        // support static analysis for more exact community subspecs
+        collectCommunitiesFromLiteralCommunitySet((LiteralCommunitySet) communitySetExpr);
       } else if (communitySetExpr instanceof CommunityList) {
         // support static analysis for more exact community subspecs
         collectCommunitiesFromCommunityList((CommunityList) communitySetExpr, currentConfig);
@@ -1930,7 +1982,7 @@ public class Encoder {
       }
       mcs.initSmtVariable(
           _ctx, _solver, configVarPrefix + "match_community_list_",
-          _graph.getAllExactCommunitiesIndex());
+          _graph.getAllExactCommunitiesIndex(), _graph.getAllCommunitiesIndex().size());
 
     } else if (expr instanceof BooleanExprs.StaticBooleanExpr) {
       BooleanExprs.StaticBooleanExpr b = (BooleanExprs.StaticBooleanExpr) expr;

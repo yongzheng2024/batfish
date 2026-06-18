@@ -113,7 +113,7 @@ public class NamedCommunitySet extends CommunitySetExpr {
   @Override
   public void initSmtVariable(
       Context context, Solver solver, String configVarPrefix, boolean isTrue,
-      ImmutableMap<Community, Integer> commsIndex) {
+      ImmutableMap<Community, Integer> commsIndex, int commsWidth) {
     // assert that the named community set is not shared
     if (_enableSmtVariable) {
       throw new BatfishException("NamedCommunitySet.initSmtVariable: shared object.\n" +
@@ -121,7 +121,8 @@ public class NamedCommunitySet extends CommunitySetExpr {
           "Current  configVarPrefix: " + configVarPrefix);
     }
 
-    // do nothing, just refer to the RouteFilterList object according to parameter _name
+    // NOTE: do nothing, just refer to the RouteFilterList object
+    //       according to the parameter _name
 
     // configure the smt variable enable flag to true
     _enableSmtVariable = true;
@@ -131,7 +132,7 @@ public class NamedCommunitySet extends CommunitySetExpr {
   @Override
   public void initSmtVariable(
       Context context, Solver solver, String configVarPrefix,
-      ImmutableMap<Community, Integer> commsIndex) {
-    initSmtVariable(context, solver, configVarPrefix, true, commsIndex);
+      ImmutableMap<Community, Integer> commsIndex, int commsWidth) {
+    initSmtVariable(context, solver, configVarPrefix, true, commsIndex, commsWidth);
   }
 }

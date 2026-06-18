@@ -103,10 +103,10 @@ public abstract class CommunitySetExpr implements Serializable {
 
   public abstract void initSmtVariable(
       Context context, Solver solver, String configVarPrefix, boolean isTrue,
-      ImmutableMap<Community, Integer> commsIndex);
+      ImmutableMap<Community, Integer> commsIndex, int commsWidth);
   public abstract void initSmtVariable(
       Context context, Solver solver, String configVarPrefix,
-      ImmutableMap<Community, Integer> commsIndex);
+      ImmutableMap<Community, Integer> commsIndex, int commsWidth);
 
   public boolean getEnableSmtVariable() {
     return _enableSmtVariable;

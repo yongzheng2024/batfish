@@ -84,7 +84,7 @@ public class EmptyCommunitySetExpr extends CommunitySetExpr {
   @Override
   public void initSmtVariable(
       Context context, Solver solver, String configVarPrefix, boolean isTrue,
-      ImmutableMap<Community, Integer> commsIndex) {
+      ImmutableMap<Community, Integer> commsIndex, int commsWidth) {
     // TODO: implement me when needed
     throw new BatfishException("EmptyCommunitySetExpr.initSmtVariable: not implemented yet.");
   }
@@ -92,7 +92,7 @@ public class EmptyCommunitySetExpr extends CommunitySetExpr {
   @Override
   public void initSmtVariable(
       Context context, Solver solver, String configVarPrefix,
-      ImmutableMap<Community, Integer> commsIndex) {
-    initSmtVariable(context, solver, configVarPrefix, true, commsIndex);
+      ImmutableMap<Community, Integer> commsIndex, int commsWidth) {
+    initSmtVariable(context, solver, configVarPrefix, true, commsIndex, commsWidth);
   }
 }
