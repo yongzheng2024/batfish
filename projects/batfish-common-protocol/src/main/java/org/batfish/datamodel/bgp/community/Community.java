@@ -125,7 +125,7 @@ public abstract class Community implements Serializable, Comparable<Community> {
 
     // add relevant configuration constant constraint
     _configVarCommunity = context.mkBVConst(configVarPrefix + "community", commsWidth);
-    BoolExpr configVarCommConstraint = context.mkEq(commValue, _configVarCommunity);
+    BoolExpr configVarCommConstraint = context.mkEq(_configVarCommunity, commValue);
     solver.add(configVarCommConstraint);
 
     // configure the smt variable enable flag to true
