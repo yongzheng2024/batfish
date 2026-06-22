@@ -338,7 +338,7 @@ public class Encoder {
   PrintWriter _hostnameWriter;
   PrintWriter _interfaceWriter;
   PrintWriter _ebgpneighborWriter;
-  PrintWriter _regexCommWriter;
+  PrintWriter _commsIndexWriter;
   PrintWriter _dstipsWriter;
   PrintWriter _unusedCfwdWriter;
   PrintWriter _historyEnumWriter;
@@ -1250,7 +1250,7 @@ public class Encoder {
     String outputHostnameFileName = _outputDirectoryName + "/0_hostnames.txt";
     String outputInterfaceFileName = _outputDirectoryName + "/0_interfaces.txt";
     String outputEbgpNeighborFileName = _outputDirectoryName + "/0_ebgp_neighbors.txt";
-    String outputRegexCommFileName = _outputDirectoryName + "/0_regex_communities.txt";
+    String outputCommsIndexFileName = _outputDirectoryName + "/0_communities_index.txt";
     String outputDstipsFileName = _outputDirectoryName + "/0_dst_ips.txt";
     String outputUnusedCfwdFileName = _outputDirectoryName + "/0_unused_control_forwarding.txt";
     String outputHistoryEnumFileName = _outputDirectoryName + "/0_overall_history_enum.txt";
@@ -1263,7 +1263,7 @@ public class Encoder {
     File outputHostnameFile = new File(outputHostnameFileName);
     File outputInterfaceFile = new File(outputInterfaceFileName);
     File outputEbgpNeighborFile = new File(outputEbgpNeighborFileName);
-    File outputRegexCommFile = new File(outputRegexCommFileName);
+    File outputCommsIndexFile = new File(outputCommsIndexFileName);
     File outputDstipsFile = new File(outputDstipsFileName);
     File outputUnusedCfwdFile = new File(outputUnusedCfwdFileName);
     File outputHistoryEnumFile = new File(outputHistoryEnumFileName);
@@ -1277,7 +1277,7 @@ public class Encoder {
       _hostnameWriter = new PrintWriter(new FileWriter(outputHostnameFile, true), true);
       _interfaceWriter = new PrintWriter(new FileWriter(outputInterfaceFile, true), true);
       _ebgpneighborWriter = new PrintWriter(new FileWriter(outputEbgpNeighborFile, true), true);
-      _regexCommWriter = new PrintWriter(new FileWriter(outputRegexCommFile, true), true);
+      _commsIndexWriter = new PrintWriter(new FileWriter(outputCommsIndexFile, true), true);
       _dstipsWriter = new PrintWriter(new FileWriter(outputDstipsFile, true), true);
       _unusedCfwdWriter = new PrintWriter(new FileWriter(outputUnusedCfwdFile, true), true);
       _historyEnumWriter = new PrintWriter(new FileWriter(outputHistoryEnumFile, true), true);
@@ -1478,20 +1478,18 @@ public class Encoder {
     _ebgpneighborWriter.flush();
     _ebgpneighborWriter.close();
 
-    // write all regex and other communities
-    Set<CommunityVar> allComms = _graph.getAllCommunities();
-    for (CommunityVar comm : allComms) {
-      if (comm.getType() == CommunityVar.Type.REGEX) {
-        _regexCommWriter.println(comm.getRegex() + "_REGEX");
-      } else if (comm.getType() == CommunityVar.Type.OTHER) {
-        _regexCommWriter.println(comm.getRegex() + "_OTHER");
-      } else {
-        _regexCommWriter.println(comm.getRegex());
-        _regexCommWriter.println(comm.getLiteralValue());
+    // write all communities and related indexes (exclude other community type now)
+    ImmutableMap<CommunityVar, Integer> allCommsIndex = _graph.getAllCommunitiesIndex();
+    _commsIndexWriter.println(allCommsIndex.size());
+    for (Map.Entry<CommunityVar, Integer> entry : allCommsIndex.entrySet()) {
+      CommunityVar comm = entry.getKey();
+      int index = entry.getValue();
+      if (CommunityVar.Type.EXACT == comm.getType()) {
+        _commsIndexWriter.println(comm.getRegex() + ": " + index);
       }
     }
-    _regexCommWriter.flush();
-    _regexCommWriter.close();
+    _commsIndexWriter.flush();
+    _commsIndexWriter.close();
 
     // write all dst-ips
     SortedSet<IpWildcard> dstIps = _question.getDstIps();
