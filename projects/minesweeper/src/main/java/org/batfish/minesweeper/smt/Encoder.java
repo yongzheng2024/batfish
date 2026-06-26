@@ -42,27 +42,17 @@ import org.batfish.minesweeper.utils.Tuple;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 import java.util.regex.Pattern;
-import org.batfish.common.BatfishException;
+
 import org.batfish.datamodel.routing_policy.RoutingPolicy;
-import org.batfish.datamodel.routing_policy.expr.AsPathListExpr;
 import org.batfish.datamodel.routing_policy.expr.BooleanExpr;
 import org.batfish.datamodel.routing_policy.expr.BooleanExprs;
 import org.batfish.datamodel.routing_policy.expr.CallExpr;
 import org.batfish.datamodel.routing_policy.expr.CommunitySetExpr;
 import org.batfish.datamodel.routing_policy.expr.Conjunction;
 import org.batfish.datamodel.routing_policy.expr.ConjunctionChain;
-import org.batfish.datamodel.routing_policy.expr.DecrementLocalPreference;
-import org.batfish.datamodel.routing_policy.expr.DecrementMetric;
 import org.batfish.datamodel.routing_policy.expr.Disjunction;
 import org.batfish.datamodel.routing_policy.expr.ExplicitPrefixSet;
 import org.batfish.datamodel.routing_policy.expr.FirstMatchChain;
-import org.batfish.datamodel.routing_policy.expr.IncrementLocalPreference;
-import org.batfish.datamodel.routing_policy.expr.IncrementMetric;
-import org.batfish.datamodel.routing_policy.expr.IntExpr;
-import org.batfish.datamodel.routing_policy.expr.LiteralAsList;
-import org.batfish.datamodel.routing_policy.expr.LiteralInt;
-import org.batfish.datamodel.routing_policy.expr.LiteralLong;
-import org.batfish.datamodel.routing_policy.expr.LongExpr;
 import org.batfish.datamodel.routing_policy.expr.MatchAsPath;
 import org.batfish.datamodel.routing_policy.expr.MatchCommunitySet;
 import org.batfish.datamodel.routing_policy.expr.MatchIpv4;
@@ -70,7 +60,6 @@ import org.batfish.datamodel.routing_policy.expr.MatchIpv6;
 import org.batfish.datamodel.routing_policy.expr.MatchPrefix6Set;
 import org.batfish.datamodel.routing_policy.expr.MatchPrefixSet;
 import org.batfish.datamodel.routing_policy.expr.MatchProtocol;
-import org.batfish.datamodel.routing_policy.expr.MultipliedAs;
 import org.batfish.datamodel.routing_policy.expr.NamedCommunitySet;
 import org.batfish.datamodel.routing_policy.expr.NamedPrefixSet;
 import org.batfish.datamodel.routing_policy.expr.Not;
@@ -100,9 +89,6 @@ import org.batfish.datamodel.routing_policy.communities.CommunitySetDifference;
 // import org.batfish.datamodel.routing_policy.communities.LiteralCommunitySet;
 
 import org.batfish.datamodel.bgp.community.Community;
-import org.batfish.datamodel.bgp.community.ExtendedCommunity;
-import org.batfish.datamodel.bgp.community.StandardCommunity;
-import org.batfish.datamodel.bgp.community.LargeCommunity;
 
 import org.batfish.common.util.SymbolicUtil;
 
@@ -340,6 +326,7 @@ public class Encoder {
   PrintWriter _ebgpneighborWriter;
   PrintWriter _commsIndexWriter;
   PrintWriter _dstipsWriter;
+  PrintWriter _usedOverallBestWriter;
   PrintWriter _unusedCfwdWriter;
   PrintWriter _historyEnumWriter;
   PrintWriter _propertiesVarWriter;
@@ -1220,21 +1207,32 @@ public class Encoder {
           "Cannot encode a network that has a static route with a dynamic next hop");
     }
 
+
+    SortedSet<String> overallBestAttrs = new TreeSet<>();
+
     addFailedLinkConstraints(_question.getFailures());
     addFailedNodeConstraints(_question.getNodeFailures());
 
     // addEnvironmentVariables
     getMainSlice().computeEncoding();
+    overallBestAttrs.addAll(getMainSlice().getOverallBestAttrs());
 
     for (Entry<String, EncoderSlice> entry : _slices.entrySet()) {
       String name = entry.getKey();
       EncoderSlice slice = entry.getValue();
       if (!name.equals(MAIN_SLICE_NAME)) {
         slice.computeEncoding();
+        overallBestAttrs.addAll(slice.getOverallBestAttrs());
       }
     }
 
+    for (String attr : overallBestAttrs) {
+      _usedOverallBestWriter.println(attr);
+    }
+
     // flush and close file print writer
+    _usedOverallBestWriter.flush();
+    _usedOverallBestWriter.close();
     _unusedCfwdWriter.flush();
     _unusedCfwdWriter.close();
     _historyEnumWriter.flush();
@@ -1252,6 +1250,7 @@ public class Encoder {
     String outputEbgpNeighborFileName = _outputDirectoryName + "/0_ebgp_neighbors.txt";
     String outputCommsIndexFileName = _outputDirectoryName + "/0_communities_index.txt";
     String outputDstipsFileName = _outputDirectoryName + "/0_dst_ips.txt";
+    String outputUsedOverallBestFileName = _outputDirectoryName + "/0_used_overall_best.txt";
     String outputUnusedCfwdFileName = _outputDirectoryName + "/0_unused_control_forwarding.txt";
     String outputHistoryEnumFileName = _outputDirectoryName + "/0_overall_history_enum.txt";
     String outputPropertiesVarFileName = _outputDirectoryName + "/0_properties_variables.txt";
@@ -1265,6 +1264,7 @@ public class Encoder {
     File outputEbgpNeighborFile = new File(outputEbgpNeighborFileName);
     File outputCommsIndexFile = new File(outputCommsIndexFileName);
     File outputDstipsFile = new File(outputDstipsFileName);
+    File outputUsedOverallBestFile = new File(outputUsedOverallBestFileName);
     File outputUnusedCfwdFile = new File(outputUnusedCfwdFileName);
     File outputHistoryEnumFile = new File(outputHistoryEnumFileName);
     File outputPropertiesVarFile = new File(outputPropertiesVarFileName);
@@ -1279,6 +1279,7 @@ public class Encoder {
       _ebgpneighborWriter = new PrintWriter(new FileWriter(outputEbgpNeighborFile, true), true);
       _commsIndexWriter = new PrintWriter(new FileWriter(outputCommsIndexFile, true), true);
       _dstipsWriter = new PrintWriter(new FileWriter(outputDstipsFile, true), true);
+      _usedOverallBestWriter = new PrintWriter(new FileWriter(outputUsedOverallBestFile, true), true);
       _unusedCfwdWriter = new PrintWriter(new FileWriter(outputUnusedCfwdFile, true), true);
       _historyEnumWriter = new PrintWriter(new FileWriter(outputHistoryEnumFile, true), true);
       _propertiesVarWriter = new PrintWriter(new FileWriter(outputPropertiesVarFile, true), true);

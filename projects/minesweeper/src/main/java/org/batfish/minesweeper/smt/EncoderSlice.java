@@ -18,6 +18,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import javax.annotation.Nullable;
 import org.batfish.common.BatfishException;
 import org.batfish.datamodel.BgpActivePeerConfig;
@@ -87,6 +89,7 @@ class EncoderSlice {
   private PrintWriter _unusedCfwdWriter;
   private PrintWriter _historyEnumWriter;
   private String _historyEnumRecords = "";
+  private final SortedSet<String> _overallBestAttrs = new TreeSet<>();
 
   /**
    * Create a new encoding slice
@@ -1405,6 +1408,49 @@ class EncoderSlice {
     equalClientIds = equalClientIds(conf.getHostname(), best, vars);
     equalCommunities = (compareCommunities ? equalCommunities(best, vars) : mkTrue());
 
+    if (best.getName().contains("OVERALL_BEST")) {
+      if (!equalLen.isTrue()) {
+        _overallBestAttrs.add(best.getPrefixLength().toString());
+      }
+      if (!equalAd.isTrue()) {
+        _overallBestAttrs.add(best.getAdminDist().toString());
+      }
+      if (!equalLp.isTrue()) {
+        _overallBestAttrs.add(best.getLocalPref().toString());
+      }
+      if (!equalMet.isTrue()) {
+        _overallBestAttrs.add(best.getMetric().toString());
+      }
+      if (!equalMed.isTrue()) {
+        _overallBestAttrs.add(best.getMed().toString());
+      }
+      if (!equalOspfArea.isTrue()) {
+        _overallBestAttrs.add(best.getOspfArea().toString());
+      }
+      if (!equalOspfType.isTrue()) {
+        _overallBestAttrs.add(best.getOspfType().toString());
+      }
+      if (!equalId.isTrue()) {
+        _overallBestAttrs.add(best.getRouterId().toString());
+      }
+      // if (!equalHistory.isTrue()) {
+      //   _usedOverallBestRecords.add(best.getProtocolHistory().toString());
+      // }
+      if (!equalBgpInternal.isTrue()) {
+        _overallBestAttrs.add(best.getBgpInternal().toString());
+      }
+      if (!equalClientIds.isTrue()) {
+        _overallBestAttrs.add(best.getClientId().toString());
+      }
+      if (!equalIgpMet.isTrue()) {
+        _overallBestAttrs.add(best.getIgpMetric().toString());
+      }
+      if (!equalCommunities.isTrue()) {
+        // _usedOverallBestRecords.add(best.getCommunities().toString());
+        _overallBestAttrs.add(best.getCommunitiesBitVec().toString());
+      }
+    }
+
     return mkAnd(
         equalLen,
         equalAd,
@@ -2707,5 +2753,9 @@ class EncoderSlice {
 
   Table2<String, Protocol, Set<Prefix>> getOriginatedNetworks() {
     return _originatedNetworks;
+  }
+
+  Set<String> getOverallBestAttrs() {
+    return _overallBestAttrs;
   }
 }
