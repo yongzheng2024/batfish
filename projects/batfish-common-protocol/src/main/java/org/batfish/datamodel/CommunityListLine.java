@@ -138,16 +138,16 @@ public class CommunityListLine implements Serializable {
       }
     }
 
-    _configLineEnable = context.mkBoolConst(configVarPrefix + "enable");
+    // _configLineEnable = context.mkBoolConst(configVarPrefix + "enable");
     _configVarAction = context.mkBoolConst(configVarPrefix + "action");
 
     _matchCondition.initSmtVariable(context, solver, configVarPrefix, isTrue, commsIndex, commsWidth);
 
     // add relevant configuration constant constraint
-    BoolExpr configLineEnableConstraint = context.mkEq(_configLineEnable, context.mkTrue());
+    // BoolExpr configLineEnableConstraint = context.mkEq(_configLineEnable, context.mkTrue());
     BoolExpr configVarActionConstraint = context.mkEq(
         _configVarAction, context.mkBool(_action == LineAction.PERMIT));
-    solver.add(configLineEnableConstraint);
+    // solver.add(configLineEnableConstraint);
     solver.add(configVarActionConstraint);
 
     // configure the smt variable enable flag to true
@@ -169,9 +169,9 @@ public class CommunityListLine implements Serializable {
     return _configVarPrefix;
   }
 
-  public BoolExpr getConfigLineEnable() {
-    return _configLineEnable;
-  }
+  // public BoolExpr getConfigLineEnable() {
+  //   return _configLineEnable;
+  // }
 
   public BoolExpr getConfigVarAction() {
     return _configVarAction;

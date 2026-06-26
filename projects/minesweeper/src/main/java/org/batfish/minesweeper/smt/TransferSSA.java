@@ -240,10 +240,11 @@ class TransferSSA {
         Prefix p = line.getIpWildcard().toPrefixWithSymbolicVariables();
         SubRange r = line.getLengthRange();
         PrefixRange range = new PrefixRange(p, r);
-        BoolExpr lineEnable = line.getConfigLineEnable();
+        // BoolExpr lineEnable = line.getConfigLineEnable();
         BoolExpr matches = _enc.isRelevantFor(other.getPrefixLength(), range);
         BoolExpr action = line.getConfigVarAction();
-        acc = _enc.mkIf(_enc.mkAnd(lineEnable, matches), action, acc);
+        acc = _enc.mkIf(matches, action, acc);
+        // acc = _enc.mkIf(_enc.mkAnd(lineEnable, matches), action, acc);
       }
     }
 
@@ -261,7 +262,7 @@ class TransferSSA {
 
     TransferResult<BoolExpr, BoolExpr> result = new TransferResult<>();
 
-    BoolExpr lineEnable = mps.getConfigLineEnable();
+    // BoolExpr lineEnable = mps.getConfigLineEnable();
 
     if (e instanceof ExplicitPrefixSet) {
       ExplicitPrefixSet x = (ExplicitPrefixSet) e;
@@ -316,8 +317,8 @@ class TransferSSA {
                 if (!mps.getEnableSmtVariable()) {
                   return result.setReturnValue(directRoute);
                 } else {
-                  directRoute = _enc.mkIf(lineEnable, directRoute, _enc.mkTrue());
                   return result.setReturnValue(directRoute);
+                  // directRoute = _enc.mkIf(lineEnable, directRoute, _enc.mkTrue());
                 }
               } else {
                 // Also use network statement if OSPF has a route with the correct length
@@ -329,8 +330,8 @@ class TransferSSA {
                   if (!mps.getEnableSmtVariable()) {
                     return result.setReturnValue(ospfRelevant);
                   } else {
-                    ospfRelevant = _enc.mkIf(lineEnable, ospfRelevant, _enc.mkTrue());
                     return result.setReturnValue(ospfRelevant);
+                    // ospfRelevant = _enc.mkIf(lineEnable, ospfRelevant, _enc.mkTrue());
                   }
                 }
               }
@@ -348,7 +349,7 @@ class TransferSSA {
       if (!mps.getEnableSmtVariable()) {
         return result.setReturnValue(acc);
       } else {
-        acc = _enc.mkIf(lineEnable, acc, _enc.mkTrue());
+        // acc = _enc.mkIf(lineEnable, acc, _enc.mkTrue());
         return result.setReturnValue(acc);
       }
 
@@ -360,7 +361,7 @@ class TransferSSA {
         return result.setReturnValue(matchFilterList(fl, other));
       } else {
         BoolExpr bgpRelevant = matchFilterList(fl, other);
-        bgpRelevant = _enc.mkIf(lineEnable, bgpRelevant, _enc.mkTrue());
+        // bgpRelevant = _enc.mkIf(lineEnable, bgpRelevant, _enc.mkTrue());
         return result.setReturnValue(bgpRelevant);
       }
 
@@ -489,11 +490,11 @@ class TransferSSA {
     //     } else {
     //       throw new BatfishException("Unimplemented community condition: " + communitySetExpr);
     //     }
-    //     BoolExpr lineEnable = line.getConfigLineEnable();
+    //     // BoolExpr lineEnable = line.getConfigLineEnable();
     //     BoolExpr matchCommunityLine = _enc.mkEq(community, c);
     //     BoolExpr action = line.getConfigVarAction();
-    //     // acc = _enc.mkIf(matchCommunityLine, action, acc);
-    //     acc = _enc.mkIf(_enc.mkAnd(lineEnable, matchCommunityLine), action, acc);
+    //     acc = _enc.mkIf(matchCommunityLine, action, acc);
+    //     // acc = _enc.mkIf(_enc.mkAnd(lineEnable, matchCommunityLine), action, acc);
     //   }
     // }
     //
@@ -537,11 +538,11 @@ class TransferSSA {
 
         BitVecExpr commsMatch = _enc.getCtx().mkBVAND(other.getCommunitiesBitVec(), commsMask);
 
-        BoolExpr lineEnable = line.getConfigLineEnable();
+        // BoolExpr lineEnable = line.getConfigLineEnable();
         BoolExpr c = SymbolicRouteBV.communitiesMatch(_enc.getCtx(), commsMatch, _commsIndex.size());
         BoolExpr action = line.getConfigVarAction();
-        // acc = _enc.mkIf(c, action, acc);
-        acc = _enc.mkIf(_enc.mkAnd(lineEnable, c), action, acc);
+        acc = _enc.mkIf(c, action, acc);
+        // acc = _enc.mkIf(_enc.mkAnd(lineEnable, c), action, acc);
       }
     }
 
@@ -593,7 +594,8 @@ class TransferSSA {
    */
   private BitVecExpr configCommunities(
       TransferParam<SymbolicRouteBV> curP, TransferResult<BoolExpr, BoolExpr> curResult,
-      boolean enableSmtVariable, BoolExpr lineEnable, Set<CommunityVar> comms, String stmtName) {
+      boolean enableSmtVariable, Set<CommunityVar> comms, String stmtName) {
+      // boolean enableSmtVariable, BoolExpr lineEnable, Set<CommunityVar> comms, String stmtName) {
     for (CommunityVar cvar : comms) {
       if (cvar.getType() == CommunityVar.Type.REGEX) {
         throw new BatfishException("configCommunities: " +
@@ -650,13 +652,14 @@ class TransferSSA {
     if (!enableSmtVariable) {
       x = createBitVecVariableWith(curP, "COMMUNITIES", _commsIndex.size(), commsBvNew);
     } else {
-      if (null == lineEnable) {
-        throw new BatfishException("configCommunities: " +
-            stmtName + " enable SMT variable but line enable flag is null");
-      }
+      // if (null == lineEnable) {
+      //   throw new BatfishException("configCommunities: " +
+      //       stmtName + " enable SMT variable but line enable flag is null");
+      // }
       BitVecExpr newX = createBitVecVariableWith(curP, "COMMUNITIES", _commsIndex.size(), commsBvNew);
       BitVecExpr oldX = curP.getData().getCommunitiesBitVec();
-      x = _enc.mkIf(lineEnable, newX, oldX);
+      x = newX;
+      // x = _enc.mkIf(lineEnable, newX, oldX);
     }
 
     return x;
@@ -857,9 +860,9 @@ class TransferSSA {
       if (!mcs.getEnableSmtVariable()) {
         return fromExpr(matchCommunitySet(_conf, mcs.getExpr(), pCur.getData()));
       } else {
-        BoolExpr lineEnable = mcs.getConfigLineEnable();
+        // BoolExpr lineEnable = mcs.getConfigLineEnable();
         BoolExpr x = matchCommunitySet(_conf, mcs.getExpr(), pCur.getData());
-        x = _enc.mkIf(lineEnable, x, _enc.mkTrue());
+        // x = _enc.mkIf(lineEnable, x, _enc.mkTrue());
         return fromExpr(x);
       }
 
@@ -1602,7 +1605,7 @@ class TransferSSA {
         // AddCommunity ac = (AddCommunity) stmt;
         // Set<CommunityVar> comms = collectCommunityVars(_conf, ac.getExpr());
         //
-        // BoolExpr lineEnable = ac.getConfigLineEnable();
+        // // BoolExpr lineEnable = ac.getConfigLineEnable();
         //
         // if (!ac.getEnableSmtVariable()) {
         //   for (CommunityVar cvar : comms) {
@@ -1630,7 +1633,8 @@ class TransferSSA {
         //             community);
         //     BoolExpr newX = createBoolVariableWith(curP, cvar.getRegex(), newValue);
         //     BoolExpr oldX = curP.getData().getCommunities().get(cvar);
-        //     BoolExpr x = _enc.mkIf(lineEnable, newX, oldX);
+        //     BoolExpr x = newX;
+        //     // BoolExpr x = _enc.mkIf(lineEnable, newX, oldX);
         //     curP.getData().getCommunities().put(cvar, x);
         //     curResult = curResult.addChangedVariable(cvar.getRegex(), x);
         //   }
@@ -1643,7 +1647,8 @@ class TransferSSA {
         Set<CommunityVar> comms = collectCommunityVars(_conf, ac.getExpr());
 
         BitVecExpr x = configCommunities(curP, curResult,
-            ac.getEnableSmtVariable(), ac.getConfigLineEnable(), comms, ac.getClass().getName());
+            ac.getEnableSmtVariable(), comms, ac.getClass().getName());
+            // ac.getEnableSmtVariable(), ac.getConfigLineEnable(), comms, ac.getClass().getName());
         curP.getData().setCommunitiesBitVec(x);
         curResult = curResult.addChangedVariable("COMMUNITIES", x);
 
@@ -1652,7 +1657,7 @@ class TransferSSA {
         // SetCommunity sc = (SetCommunity) stmt;
         // Set<CommunityVar> comms = collectCommunityVars(_conf, sc.getExpr());
         //
-        // BoolExpr lineEnable = sc.getConfigLineEnable();
+        // // BoolExpr lineEnable = sc.getConfigLineEnable();
         //
         // if (!sc.getEnableSmtVariable()) {
         //   for (CommunityVar cvar : comms) {
@@ -1681,7 +1686,8 @@ class TransferSSA {
         //             community);
         //     BoolExpr newX = createBoolVariableWith(curP, cvar.getRegex(), newValue);
         //     BoolExpr oldX = curP.getData().getCommunities().get(cvar);
-        //     BoolExpr x = _enc.mkIf(lineEnable, newX, oldX);
+        //     BoolExpr x = newX;
+        //     // BoolExpr x = _enc.mkIf(lineEnable, newX, oldX);
         //     curP.getData().getCommunities().put(cvar, x);
         //     curResult = curResult.addChangedVariable(cvar.getRegex(), x);
         //   }
@@ -1706,7 +1712,8 @@ class TransferSSA {
         //           _enc.mkFalse());
         //   BoolExpr newX_other = createBoolVariableWith(curP, cvar_other.getRegex(), newValue_other);
         //   BoolExpr oldX_other = curP.getData().getCommunities().get(cvar_other);
-        //   BoolExpr x_other = _enc.mkIf(lineEnable, newX_other, oldX_other);
+        //   BoolExpr x_other = newX_other;
+        //   // BoolExpr x_other = _enc.mkIf(lineEnable, newX_other, oldX_other);
         //   curP.getData().getCommunities().put(cvar_other, x_other);
         //   curResult = curResult.addChangedVariable(cvar_other.getRegex(), x_other);
         // }
@@ -1718,7 +1725,8 @@ class TransferSSA {
         Set<CommunityVar> comms = collectCommunityVars(_conf, sc.getExpr());
 
         BitVecExpr x = configCommunities(curP, curResult,
-            sc.getEnableSmtVariable(), sc.getConfigLineEnable(), comms, sc.getClass().getName());
+            sc.getEnableSmtVariable(), comms, sc.getClass().getName());
+            // sc.getEnableSmtVariable(), sc.getConfigLineEnable(), comms, sc.getClass().getName());
         curP.getData().setCommunitiesBitVec(x);
         curResult = curResult.addChangedVariable("COMMUNITIES", x);
 
@@ -1737,7 +1745,7 @@ class TransferSSA {
         //   }
         // }
         //
-        // BoolExpr lineEnable = dc.getConfigLineEnable();
+        // // BoolExpr lineEnable = dc.getConfigLineEnable();
         //
         // if (!dc.getEnableSmtVariable()) {
         //   for (CommunityVar cvar : toDelete) {
@@ -1765,7 +1773,8 @@ class TransferSSA {
         //             _enc.mkNot(community));
         //     BoolExpr newX = createBoolVariableWith(curP, cvar.getRegex(), newValue);
         //     BoolExpr oldX = curP.getData().getCommunities().get(cvar);
-        //     BoolExpr x = _enc.mkIf(lineEnable, newX, oldX);
+        //     BoolExpr x = newX;
+        //     // BoolExpr x = _enc.mkIf(lineEnable, newX, oldX);
         //     curP.getData().getCommunities().put(cvar, x);
         //     curResult = curResult.addChangedVariable(cvar.getRegex(), x);
         //   }
@@ -1790,7 +1799,8 @@ class TransferSSA {
         }
 
         BitVecExpr x = configCommunities(curP, curResult,
-            dc.getEnableSmtVariable(), dc.getConfigLineEnable(), toDelete, dc.getClass().getName());
+            dc.getEnableSmtVariable(), toDelete, dc.getClass().getName());
+            // dc.getEnableSmtVariable(), dc.getConfigLineEnable(), toDelete, dc.getClass().getName());
         curP.getData().setCommunitiesBitVec(x);
         curResult = curResult.addChangedVariable("COMMUNITIES", x);
 
