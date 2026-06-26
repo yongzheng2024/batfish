@@ -138,7 +138,8 @@ public abstract class CommunitySetExpr implements Serializable {
 
   // Community Index -> Community BitVec
   // TODO: improve long type to support more communities
-  protected long communityBitVec(Integer index) {
-    return 1L << index;
+  protected String communityString(Integer index) {
+    BigInteger comm = BigInteger.ONE.shiftLeft(index);
+    return comm.toString();
   }
 }

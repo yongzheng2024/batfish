@@ -117,29 +117,20 @@ public final class SymbolicRouteBV extends SymbolicRouteBase
 
   public static BitVecExpr communitiesMask(
       Context ctx, ImmutableMap<CommunityVar, Integer> commsIndex, Iterable<CommunityVar> comms) {
-    if (64 < commsIndex.size()) {
-      // FIXME: support more than 64 communities in the future
-      throw new BatfishException("communitiesMask: out of range for long type: " + commsIndex.size());
-    }
-
-    long mask = 0;
+    // TODO: check commsIndex and comms consistency
+    BigInteger mask = BigInteger.ZERO;
     for (CommunityVar comm : comms) {
       Integer index = commsIndex.get(comm);
       if (index == null) {
         throw new BatfishException("communitiesMask: unknown community: " + comm);
       }
-      mask |= 1L << index;
+      mask = BigInteger.ONE.shiftLeft(index);
     }
-    return ctx.mkBV(mask, commsIndex.size());
+    return ctx.mkBV(mask.toString(), commsIndex.size());
   }
 
   public static ImmutableSet<CommunityVar> communitiesVars(
       BitVecNum comm, ImmutableMap<CommunityVar, Integer> commsIndex) {
-    if (64 < commsIndex.size()) {
-      // FIXME: support more than 64 communities in the future
-      throw new BatfishException("communitiesVar: out of range for long type: " + commsIndex.size());
-    }
-
     if (null == comm) {
       return ImmutableSet.of();
     }
@@ -159,11 +150,6 @@ public final class SymbolicRouteBV extends SymbolicRouteBase
       BitVecExpr comms,
       ImmutableMap<CommunityVar, Integer> commsIndex,
       CommunityVar cvar) {
-    if (64 < commsIndex.size()) {
-      // FIXME: support more than 64 communities in the future
-      throw new BatfishException("communityBitSet: out of range for long type: " + commsIndex.size());
-    }
-
     if (null == comms) {
       throw new BatfishException("communities BitVecExpr is null");
     }

@@ -153,7 +153,7 @@ public class LiteralCommunity extends CommunitySetExpr {
         configVarPrefix + SymbolicUtil.format(_community.getCommunityString()) + "_";
     BitVecExpr communityValue = null;
     if (null != commsIndex.get(_community)) {
-      communityValue = context.mkBV(communityBitVec(commsIndex.get(_community)), commsWidth);
+      communityValue = context.mkBV(communityString(commsIndex.get(_community)), commsWidth);
     } else {
       throw new BatfishException("LiteralCommunity.initSmtVariable: " +
           "community not found in commsIndex: " + _community.getCommunityString());
