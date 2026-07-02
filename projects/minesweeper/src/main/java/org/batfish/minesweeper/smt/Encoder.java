@@ -1486,7 +1486,9 @@ public class Encoder {
       CommunityVar comm = entry.getKey();
       int index = entry.getValue();
       if (CommunityVar.Type.EXACT == comm.getType()) {
-        _commsIndexWriter.println(comm.getRegex() + ": " + index);
+        Community literal = comm.getLiteralValue();
+        assert literal != null;
+        _commsIndexWriter.println(literal.toString() + ": " + index);
       }
     }
     _commsIndexWriter.flush();
@@ -1499,6 +1501,22 @@ public class Encoder {
     }
     _dstipsWriter.flush();
     _dstipsWriter.close();
+  }
+
+  static void initConfigurationConstantsComm(
+      Encoder enc, CommunityVar cvar, String configVarPrefix) {
+    Community community = cvar.getLiteralValue();
+    BitVecExpr communityValue = null;
+    Integer commIndex = enc.getGraph().getAllCommunitiesIndex().get(cvar);
+    Integer commsWdith = enc.getGraph().getAllCommunitiesIndex().size();
+    if (null != commIndex) {
+      communityValue = enc.getCtx().mkBV(BigInteger.ONE.shiftLeft(commIndex).toString(), commsWdith);
+    } else {
+      throw new BatfishException("Encoder.initConfigurationConstantsComm: " +
+          "community not found in commsIndex: " + community.getCommunityString());
+    }
+    community.initSmtVariable(
+        enc.getCtx(), enc.getSolver(), configVarPrefix, true, communityValue, commsWdith);
   }
 
   private void initConfigurationConstants() {
@@ -1696,13 +1714,15 @@ public class Encoder {
         if (ac.getEnableSmtVariable()) {
           ac = new AddCommunity(ac.getExpr());
         }
+        // symbolic configuration
+        ac.initSmtVariable(
+            _ctx, _solver, configVarPrefix + "add_community_", true,
+            _graph.getAllExactCommunitiesIndex(), _graph.getAllCommunitiesIndex().size());
+
+        // support static analysis for more exact community subspecs
         CommunitySetExpr communitySetExpr = ac.getExpr();
         configVarPrefix = SymbolicUtil.incrementLineSuffix(configVarPrefix);
         if (communitySetExpr instanceof LiteralCommunitySet) {
-          ac.initSmtVariable(
-              _ctx, _solver, configVarPrefix + "add_community_set_", true,
-              _graph.getAllExactCommunitiesIndex(), _graph.getAllCommunitiesIndex().size());
-          // support static analysis for more exact community subspecs
           LiteralCommunitySet lcs = (LiteralCommunitySet) communitySetExpr;
           Set<Community> communities = lcs.getCommunities();
           for (Community community : communities) {
@@ -1718,17 +1738,15 @@ public class Encoder {
         } else if (communitySetExpr instanceof LiteralCommunity) {
           LiteralCommunity lc = (LiteralCommunity) communitySetExpr;
           String communityString = SymbolicUtil.format(lc.getCommunity().getCommunityString());
-          ac.initSmtVariable(
-              _ctx, _solver, configVarPrefix + "add_community_" + communityString + "_", true,
-              _graph.getAllExactCommunitiesIndex(), _graph.getAllCommunitiesIndex().size());
-          // support static analysis for more exact community subspecs
           String matchString = lc.getCommunity().matchString();
           String configVarName = configVarPrefix + "add_community_" + communityString + "_community";
           _formattedToMatchString.put(communityString, matchString);
           _communityToConfigVars
-                  .computeIfAbsent(communityString, k -> new HashMap<>())
-                  .computeIfAbsent("ADD", k -> new HashSet<>())
-                  .add(configVarName);
+              .computeIfAbsent(communityString, k -> new HashMap<>())
+              .computeIfAbsent("ADD", k -> new HashSet<>())
+              .add(configVarName);
+        } else if (communitySetExpr instanceof NamedCommunitySet) {
+          continue;
         } else {
           throw new BatfishException("Unimplemented feature " + communitySetExpr.getClass());
         }
@@ -1738,16 +1756,17 @@ public class Encoder {
         if (sc.getEnableSmtVariable()) {
           sc = new SetCommunity(sc.getExpr());
         }
+        // symbolic configuration
+        sc.initSmtVariable(
+            _ctx, _solver, configVarPrefix + "set_community_", true,
+            _graph.getAllExactCommunitiesIndex(), _graph.getAllCommunitiesIndex().size());
+        // support static analysis for more exact community subspecs
         CommunitySetExpr communitySetExpr = sc.getExpr();
         configVarPrefix = SymbolicUtil.incrementLineSuffix(configVarPrefix);
         if (communitySetExpr instanceof LiteralCommunitySet) {
-          sc.initSmtVariable(
-              _ctx, _solver, configVarPrefix + "set_community_set_", true,
-              _graph.getAllExactCommunitiesIndex(), _graph.getAllCommunitiesIndex().size());
           LiteralCommunitySet lcs = (LiteralCommunitySet) communitySetExpr;
           Set<Community> communities = lcs.getCommunities();
           for (Community community : communities) {
-            // support static analysis for more exact community subspecs
             String communityString = SymbolicUtil.format(community.getCommunityString());
             String matchString = community.matchString();
             String configVarName = configVarPrefix + "set_community_" + communityString + "_community";
@@ -1761,50 +1780,28 @@ public class Encoder {
           LiteralCommunity lc = (LiteralCommunity) communitySetExpr;
           String communityString = SymbolicUtil.format(lc.getCommunity().getCommunityString());
           configVarPrefix = SymbolicUtil.incrementLineSuffix(configVarPrefix);
-          sc.initSmtVariable(
-              _ctx, _solver, configVarPrefix + "set_community_" + communityString + "_", true,
-              _graph.getAllExactCommunitiesIndex(), _graph.getAllCommunitiesIndex().size());
-          // support static analysis for more exact community subspecs
           String matchString = lc.getCommunity().matchString();
           String configVarName = configVarPrefix + "set_community_" + communityString + "_community";
           _formattedToMatchString.put(communityString, matchString);
           _communityToConfigVars
-                  .computeIfAbsent(communityString, k -> new HashMap<>())
-                  .computeIfAbsent("SET", k -> new HashSet<>())
-                  .add(configVarName);
+              .computeIfAbsent(communityString, k -> new HashMap<>())
+              .computeIfAbsent("SET", k -> new HashSet<>())
+              .add(configVarName);
+        } else if (communitySetExpr instanceof NamedCommunitySet) {
+          continue;
         } else {
           throw new BatfishException("Unimplemented feature " + communitySetExpr.getClass());
         }
 
       } else if (stmt instanceof DeleteCommunity) {
-        // TODO: check here and implement when needed
         DeleteCommunity dc = (DeleteCommunity) stmt;
         if (dc.getEnableSmtVariable()) {
           dc = new DeleteCommunity(dc.getExpr());
         }
-        CommunitySetExpr communitySetExpr = dc.getExpr();
-        configVarPrefix = SymbolicUtil.incrementLineSuffix(configVarPrefix);
-        if (communitySetExpr instanceof LiteralCommunitySet) {
-          dc.initSmtVariable(
-              _ctx, _solver, configVarPrefix + "delete_community_", false,
-              _graph.getAllExactCommunitiesIndex(), _graph.getAllCommunitiesIndex().size());
-          LiteralCommunitySet lcs = (LiteralCommunitySet) communitySetExpr;
-          Set<Community> communities = lcs.getCommunities();
-        } else if (communitySetExpr instanceof LiteralCommunity) {
-          LiteralCommunity lc = (LiteralCommunity) communitySetExpr;
-          String communityString = SymbolicUtil.format(lc.getCommunity().getCommunityString());
-          dc.initSmtVariable(
-              _ctx, _solver, configVarPrefix + "delete_community_" + communityString + "_", false,
-              _graph.getAllExactCommunitiesIndex(), _graph.getAllCommunitiesIndex().size());
-        } else if (communitySetExpr instanceof NamedCommunitySet) {
-            NamedCommunitySet ncs = (NamedCommunitySet) communitySetExpr;
-            String namedCommunityString = SymbolicUtil.format(ncs.getName());
-            ncs.initSmtVariable(
-                _ctx, _solver, configVarPrefix + "delete_community_" + namedCommunityString + "_", false,
-                _graph.getAllExactCommunitiesIndex(), _graph.getAllCommunitiesIndex().size());
-        } else {
-            throw new BatfishException("Unimplemented feature " + communitySetExpr.getClass());
-        }
+        // symbolic configuration
+        dc.initSmtVariable(
+            _ctx, _solver, configVarPrefix + "delete_community_", false,
+            _graph.getAllExactCommunitiesIndex(), _graph.getAllCommunitiesIndex().size());
 
       } else if (stmt instanceof PrependAsPath) {
         PrependAsPath pap = (PrependAsPath) stmt;
