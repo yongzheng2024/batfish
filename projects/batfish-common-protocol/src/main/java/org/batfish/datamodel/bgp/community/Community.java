@@ -124,7 +124,7 @@ public abstract class Community implements Serializable, Comparable<Community> {
     }
 
     // add relevant configuration constant constraint
-    _configVarCommunity = context.mkBVConst(configVarPrefix + "community", commsWidth);
+    _configVarCommunity = context.mkBVConst(configVarPrefix + "_community", commsWidth);
     BoolExpr configVarCommConstraint = context.mkEq(_configVarCommunity, commValue);
     solver.add(configVarCommConstraint);
 
