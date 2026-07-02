@@ -124,7 +124,7 @@ public final class SymbolicRouteBV extends SymbolicRouteBase
       if (index == null) {
         throw new BatfishException("communitiesMask: unknown community: " + comm);
       }
-      mask = BigInteger.ONE.shiftLeft(index);
+      mask = mask.or(BigInteger.ONE.shiftLeft(index));
     }
     return ctx.mkBV(mask.toString(), commsIndex.size());
   }
