@@ -614,25 +614,25 @@ class TransferSSA {
   private Set<CommunityVar> resolveConfigurationCommunityVars(Set<CommunityVar> comms, String configVarPrefix) {
     Set<CommunityVar> resolved = new HashSet<>();
     for (CommunityVar cvar : comms) {
-      if (cvar.getType() == CommunityVar.Type.REGEX) {
-        List<CommunityVar> dependencies = _enc.getGraph().getCommunityDependencies(cvar);
-        for (CommunityVar dep : dependencies) {
+      if (cvar.getType() != CommunityVar.Type.REGEX) {
+        if (CommunityVar.Type.OTHER == cvar.getType()) {
+          continue;   // skip OTHER type community variables
+        }
+        resolved.add(cvar);
+        continue;
+      }
+
+      List<CommunityVar> dependencies = _enc.getGraph().getCommunityDependencies(cvar);
+      for (CommunityVar dep : dependencies) {
         if (dep.getType() == CommunityVar.Type.OTHER) {
           continue;   // skip OTHER type community variables
         }
-          if (!dep.getLiteralValue().getEnableSmtVariable()) {
-            Encoder.initConfigurationConstantsComm(_enc.getEncoder(), dep, configVarPrefix);
-          }
-          resolved.add(dep);
+        if (dep.getLiteralValue().getEnableSmtVariable()) {
+          dep.cloneCommunity();
         }
-      } else {
-        if (cvar.getType() == CommunityVar.Type.OTHER) {
-          continue;   // skip OTHER type community variables
-        }
-        if (!cvar.getLiteralValue().getEnableSmtVariable()) {
-          Encoder.initConfigurationConstantsComm(_enc.getEncoder(), cvar, configVarPrefix);
-        }
-        resolved.add(cvar);
+        // symbolic configuration for community (regex dependencies)
+        Encoder.initConfigurationConstantsComm(_enc.getEncoder(), dep, configVarPrefix);
+        resolved.add(dep);
       }
     }
     return resolved;
