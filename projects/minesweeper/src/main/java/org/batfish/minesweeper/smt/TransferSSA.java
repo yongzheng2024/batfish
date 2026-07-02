@@ -699,7 +699,15 @@ class TransferSSA {
           "stmtName should be AddCommunity, SetCommunity, or DeleteCommunity");
     }
 
-    BitVecExpr commsBvNew = _enc.mkIf(curResult.getReturnAssignedValue(), commsBv, commsBvUpdated);
+    BitVecExpr commsBvNew;
+    if (AddCommunity.class.getName().equals(stmtName)) {
+      // BUGFIX: gate AddCommunity on current If-term guard, not returnAssigned from prior terms
+      BoolExpr applyGuard =
+          curP.getTermGuard() != null ? curP.getTermGuard() : _enc.mkTrue();
+      commsBvNew = _enc.mkIf(applyGuard, commsBvUpdated, commsBv);
+    } else {
+      commsBvNew = _enc.mkIf(curResult.getReturnAssignedValue(), commsBv, commsBvUpdated);
+    }
     BitVecExpr x = null;
     if (!enableSmtVariable) {
       x = createBitVecVariableWith(curP, "COMMUNITIES", _commsIndex.size(), commsBvNew);
@@ -823,15 +831,28 @@ class TransferSSA {
         throw new BatfishException("Default policy is not set");
       }
       TransferResult<BoolExpr, BoolExpr> result = new TransferResult<>();
+      // BUGFIX: thread route state through chain like TransferBDD, not reuse initial pCur
+      TransferParam<SymbolicRouteBV> record = pCur;
       BoolExpr acc = _enc.mkFalse();
       for (int i = chainPolicies.size() - 1; i >= 0; i--) {
         BooleanExpr policyMatcher = chainPolicies.get(i);
         TransferParam<SymbolicRouteBV> param =
-            pCur.setDefaultPolicy(null).setChainContext(TransferParam.ChainContext.CONJUNCTION);
+            record
+                .setDefaultPolicy(null)
+                .setChainContext(TransferParam.ChainContext.CONJUNCTION)
+                .indent();
         TransferResult<BoolExpr, BoolExpr> r = compute(policyMatcher, param);
-        result = result.addChangedVariables(r);
+        record = param;
+        for (MsPair<String, Expr> changed : r.getChangedVariables()) {
+          if (!changed.getFirst().equals("COMMUNITIES")) {
+            result = result.addChangedVariable(changed.getFirst(), changed.getSecond());
+          }
+        }
         acc = _enc.mkIf(r.getFallthroughValue(), acc, r.getReturnValue());
       }
+      // BUGFIX: accumulate community side effects along fallthrough chain, not last step only
+      result =
+          result.addChangedVariable("COMMUNITIES", record.getData().getCommunitiesBitVec());
       pCur.debug("FirstMatchChain Result: " + acc);
       return result.setReturnValue(acc);
     }
@@ -1525,9 +1546,9 @@ class TransferSSA {
         curResult = curResult.addChangedVariables(r);
         // NOTE: simplify guard, and lose branches constraints that are impossible
         //       annotated by yongzheng2024 on 20251021
-        // temporarily disable simplification
-        // BoolExpr guard = (BoolExpr) r.getReturnValue();
-        BoolExpr guard = (BoolExpr) r.getReturnValue().simplify();
+        // BoolExpr guard = (BoolExpr) r.getReturnValue();  // temporarily disable simplification
+        BoolExpr guard = (BoolExpr) r.getReturnValue();
+        guard = (BoolExpr) guard.simplify();
         String str = guard.toString();
 
         // If there are updates in the guard, add them to the parameter p before entering branches
@@ -1541,17 +1562,23 @@ class TransferSSA {
         switch (str) {
           case "true":
             curP.debug("True Branch");
-            curResult = compute(i.getTrueStatements(), curP.indent(), curResult);
+            // BUGFIX: propagate If guard to AddCommunity in this term
+            curResult =
+                compute(
+                    i.getTrueStatements(), curP.indent().setTermGuard(_enc.mkTrue()), curResult);
             break;
           case "false":
             curP.debug("False Branch");
-            compute(i.getFalseStatements(), curP.indent(), curResult);
+            compute(
+                i.getFalseStatements(), curP.indent().setTermGuard(_enc.mkFalse()), curResult);
             break;
           default:
             curP.debug("True Branch");
             // clear changed variables before proceeding
-            TransferParam<SymbolicRouteBV> p1 = curP.indent().setData(curP.getData().copy());
-            TransferParam<SymbolicRouteBV> p2 = curP.indent().setData(curP.getData().copy());
+            TransferParam<SymbolicRouteBV> p1 =
+                curP.indent().setData(curP.getData().copy()).setTermGuard(guard);
+            TransferParam<SymbolicRouteBV> p2 =
+                curP.indent().setData(curP.getData().copy()).setTermGuard(_enc.mkNot(guard));
 
             TransferResult<BoolExpr, BoolExpr> trueBranch =
                 compute(i.getTrueStatements(), p1, initialResult());
