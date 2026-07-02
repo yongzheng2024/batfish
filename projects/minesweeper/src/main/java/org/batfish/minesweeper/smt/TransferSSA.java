@@ -586,7 +586,56 @@ class TransferSSA {
       return matchCommunityList(cl, other);
     }
 
+    if (e instanceof LiteralCommunity) {
+      LiteralCommunity x = (LiteralCommunity) e;
+      CommunityVar cvar = toCommunityVar(x);
+      List<CommunityVar> comms = new ArrayList<>();
+      if (Type.REGEX == cvar.getType()) {
+        comms = _enc.getGraph().getCommunityDependencies(cvar);
+      } else {
+        comms.add(cvar);
+      }
+      if (!e.getEnableSmtVariable()) {
+        // FIXME: unimplemented
+        return _enc.mkTrue();
+      } else {
+        BitVecExpr commsMask = SymbolicRouteBV.communitiesMask(_enc.getCtx(), _commsIndex, comms);
+        BitVecExpr commsMatch = _enc.getCtx().mkBVAND(other.getCommunitiesBitVec(), commsMask);
+        return SymbolicRouteBV.communitiesMatch(_enc.getCtx(), commsMatch, _commsIndex.size());
+      }
+    }
+
     throw new BatfishException("TODO: match community set");
+  }
+
+  /**
+   * Expand community variables for add/set/delete community statements.
+   */
+  private Set<CommunityVar> resolveConfigurationCommunityVars(Set<CommunityVar> comms, String configVarPrefix) {
+    Set<CommunityVar> resolved = new HashSet<>();
+    for (CommunityVar cvar : comms) {
+      if (cvar.getType() == CommunityVar.Type.REGEX) {
+        List<CommunityVar> dependencies = _enc.getGraph().getCommunityDependencies(cvar);
+        for (CommunityVar dep : dependencies) {
+        if (dep.getType() == CommunityVar.Type.OTHER) {
+          continue;   // skip OTHER type community variables
+        }
+          if (!dep.getLiteralValue().getEnableSmtVariable()) {
+            Encoder.initConfigurationConstantsComm(_enc.getEncoder(), dep, configVarPrefix);
+          }
+          resolved.add(dep);
+        }
+      } else {
+        if (cvar.getType() == CommunityVar.Type.OTHER) {
+          continue;   // skip OTHER type community variables
+        }
+        if (!cvar.getLiteralValue().getEnableSmtVariable()) {
+          Encoder.initConfigurationConstantsComm(_enc.getEncoder(), cvar, configVarPrefix);
+        }
+        resolved.add(cvar);
+      }
+    }
+    return resolved;
   }
 
   /**
@@ -594,8 +643,11 @@ class TransferSSA {
    */
   private BitVecExpr configCommunities(
       TransferParam<SymbolicRouteBV> curP, TransferResult<BoolExpr, BoolExpr> curResult,
-      boolean enableSmtVariable, Set<CommunityVar> comms, String stmtName) {
-      // boolean enableSmtVariable, BoolExpr lineEnable, Set<CommunityVar> comms, String stmtName) {
+      boolean enableSmtVariable, Set<CommunityVar> comms, String configVarPrefix, String stmtName) {
+    // resolve configuration and initConfigurationConstants
+    comms = resolveConfigurationCommunityVars(comms, configVarPrefix);
+
+    // boolean enableSmtVariable, BoolExpr lineEnable, Set<CommunityVar> comms, String stmtName) {
     for (CommunityVar cvar : comms) {
       if (cvar.getType() == CommunityVar.Type.REGEX) {
         throw new BatfishException("configCommunities: " +
@@ -614,7 +666,7 @@ class TransferSSA {
         if (!cvar.getLiteralValue().getEnableSmtVariable() ||
             null == cvar.getLiteralValue().getConfigVarCommunity()) {
           throw new BatfishException("configCommunities: " +
-              stmtName + "does not have a config variable for communities");
+              stmtName + " does not have a config variable for communities");
         }
         // TODO: modify constraint (or X1 (or X2 (or X3 X4))) to (or X1 X2 X3 X4)
         BitVecExpr commMask = cvar.getLiteralValue().getConfigVarCommunity();
@@ -1473,7 +1525,8 @@ class TransferSSA {
         curResult = curResult.addChangedVariables(r);
         // NOTE: simplify guard, and lose branches constraints that are impossible
         //       annotated by yongzheng2024 on 20251021
-        // BoolExpr guard = (BoolExpr) r.getReturnValue();  // temporarily disable simplification
+        // temporarily disable simplification
+        // BoolExpr guard = (BoolExpr) r.getReturnValue();
         BoolExpr guard = (BoolExpr) r.getReturnValue().simplify();
         String str = guard.toString();
 
@@ -1646,8 +1699,9 @@ class TransferSSA {
         AddCommunity ac = (AddCommunity) stmt;
         Set<CommunityVar> comms = collectCommunityVars(_conf, ac.getExpr());
 
-        BitVecExpr x = configCommunities(curP, curResult,
-            ac.getEnableSmtVariable(), comms, ac.getClass().getName());
+        BitVecExpr x = configCommunities(
+            curP, curResult, ac.getEnableSmtVariable(), comms,
+            ac.getConfigVarPrefix(), ac.getClass().getName());
             // ac.getEnableSmtVariable(), ac.getConfigLineEnable(), comms, ac.getClass().getName());
         curP.getData().setCommunitiesBitVec(x);
         curResult = curResult.addChangedVariable("COMMUNITIES", x);
@@ -1724,8 +1778,9 @@ class TransferSSA {
         SetCommunity sc = (SetCommunity) stmt;
         Set<CommunityVar> comms = collectCommunityVars(_conf, sc.getExpr());
 
-        BitVecExpr x = configCommunities(curP, curResult,
-            sc.getEnableSmtVariable(), comms, sc.getClass().getName());
+        BitVecExpr x = configCommunities(
+            curP, curResult, sc.getEnableSmtVariable(), comms,
+            sc.getConfigVarPrefix(), sc.getClass().getName());
             // sc.getEnableSmtVariable(), sc.getConfigLineEnable(), comms, sc.getClass().getName());
         curP.getData().setCommunitiesBitVec(x);
         curResult = curResult.addChangedVariable("COMMUNITIES", x);
@@ -1798,8 +1853,9 @@ class TransferSSA {
           }
         }
 
-        BitVecExpr x = configCommunities(curP, curResult,
-            dc.getEnableSmtVariable(), toDelete, dc.getClass().getName());
+        BitVecExpr x = configCommunities(
+            curP, curResult, dc.getEnableSmtVariable(), toDelete,
+            dc.getConfigVarPrefix(), dc.getClass().getName());
             // dc.getEnableSmtVariable(), dc.getConfigLineEnable(), toDelete, dc.getClass().getName());
         curP.getData().setCommunitiesBitVec(x);
         curResult = curResult.addChangedVariable("COMMUNITIES", x);

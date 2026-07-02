@@ -33,6 +33,7 @@ import org.batfish.datamodel.BgpActivePeerConfig;
 import org.batfish.datamodel.BgpPeerConfig;
 import org.batfish.datamodel.BgpProcess;
 import org.batfish.datamodel.CommunityList;
+import org.batfish.datamodel.CommunityListLine;
 import org.batfish.datamodel.ConcreteInterfaceAddress;
 import org.batfish.datamodel.Configuration;
 import org.batfish.datamodel.Interface;
@@ -55,6 +56,8 @@ import org.batfish.datamodel.routing_policy.expr.BooleanExpr;
 import org.batfish.datamodel.routing_policy.expr.CommunitySetExpr;
 import org.batfish.datamodel.routing_policy.expr.Conjunction;
 import org.batfish.datamodel.routing_policy.expr.ExplicitPrefixSet;
+import org.batfish.datamodel.routing_policy.expr.LiteralCommunity;
+import org.batfish.datamodel.routing_policy.expr.LiteralCommunitySet;
 import org.batfish.datamodel.routing_policy.expr.MatchPrefixSet;
 import org.batfish.datamodel.routing_policy.expr.MatchProtocol;
 import org.batfish.datamodel.routing_policy.expr.Not;
@@ -62,6 +65,7 @@ import org.batfish.datamodel.routing_policy.expr.PrefixSetExpr;
 import org.batfish.datamodel.routing_policy.statement.Statement;
 import org.batfish.minesweeper.CommunityVar.Type;
 import org.batfish.minesweeper.bdd.CommunityVarConverter;
+import org.batfish.minesweeper.smt.Encoder;
 import org.batfish.minesweeper.collections.Table2;
 import org.batfish.minesweeper.communities.RoutePolicyStatementVarCollector;
 
@@ -1127,7 +1131,37 @@ public class Graph {
         comms.addAll(stmt.accept(new RoutePolicyStatementVarCollector(), conf));
       }
     }
+    // Also collect communities from community list definitions.
+    comms.addAll(findAllCommunitiesFromCommunityLists(conf));
     return comms;
+  }
+
+  /**
+   * Collect community literals and regexes from all CommunityList definitions on a router.
+   */
+  private static Set<CommunityVar> findAllCommunitiesFromCommunityLists(Configuration conf) {
+    ImmutableSet.Builder<CommunityVar> builder = ImmutableSet.builder();
+    for (CommunityList cl : conf.getCommunityLists().values()) {
+      for (CommunityListLine line : cl.getLines()) {
+        collectCommunityVarsFromExpr(line.getMatchCondition(), builder);
+      }
+    }
+    return builder.build();
+  }
+
+  private static void collectCommunityVarsFromExpr(
+      CommunitySetExpr expr, ImmutableSet.Builder<CommunityVar> builder) {
+    if (expr instanceof LiteralCommunity) {
+      builder.add(
+          CommunityVarConverter.toCommunityVar(((LiteralCommunity) expr).getCommunity()));
+    } else if (expr instanceof RegexCommunitySet) {
+      builder.add(CommunityVarConverter.toCommunityVar((RegexCommunitySet) expr));
+    } else if (expr instanceof LiteralCommunitySet) {
+      ((LiteralCommunitySet) expr)
+          .getCommunities().stream()
+              .map(CommunityVarConverter::toCommunityVar)
+              .forEach(builder::add);
+    }
   }
 
   /**
