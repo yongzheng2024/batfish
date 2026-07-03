@@ -1128,8 +1128,8 @@ public class Encoder {
 
     long start = System.currentTimeMillis();
     // NOTE: Temporarily set status to UNSATISFIABLE for generating SMT file only
-    // Status status = Status.UNSATISFIABLE;
-    Status status = _solver.check();
+    Status status = Status.UNSATISFIABLE;
+    // Status status = _solver.check();
     long time = System.currentTimeMillis() - start;
 
     VerificationStats stats = null;
@@ -1589,9 +1589,8 @@ public class Encoder {
 
           long prefixIp = line.getIpWildcard().getIp().asLong();
           String prefixIpStr = SymbolicUtil.longToIpString(prefixIp);
-          String currConfigVarPrefix =
-                  "Config_" + hostName + "_RouteFilterList_" + SymbolicUtil.format(routeFilterListName) +
-                          "__Line" + lineIndex + "__" + SymbolicUtil.format(prefixIpStr) + "__";
+          String currConfigVarPrefix = "Config_" + hostName + "_RouteFilterList_" +
+              SymbolicUtil.format(routeFilterListName) + "__Line" + lineIndex;
 
           // Add rule info to trie (with configVarPrefix)
           RouteFilterRuleInfo ruleInfo = new RouteFilterRuleInfo(
@@ -1715,13 +1714,13 @@ public class Encoder {
           ac = new AddCommunity(ac.getExpr());
         }
         // symbolic configuration
+        CommunitySetExpr communitySetExpr = ac.getExpr();
+        configVarPrefix = SymbolicUtil.incrementLineSuffix(configVarPrefix);
         ac.initSmtVariable(
             _ctx, _solver, configVarPrefix + "add_community_", true,
             _graph.getAllExactCommunitiesIndex(), _graph.getAllCommunitiesIndex().size());
 
         // support static analysis for more exact community subspecs
-        CommunitySetExpr communitySetExpr = ac.getExpr();
-        configVarPrefix = SymbolicUtil.incrementLineSuffix(configVarPrefix);
         if (communitySetExpr instanceof LiteralCommunitySet) {
           LiteralCommunitySet lcs = (LiteralCommunitySet) communitySetExpr;
           Set<Community> communities = lcs.getCommunities();
@@ -1757,12 +1756,12 @@ public class Encoder {
           sc = new SetCommunity(sc.getExpr());
         }
         // symbolic configuration
+        CommunitySetExpr communitySetExpr = sc.getExpr();
+        configVarPrefix = SymbolicUtil.incrementLineSuffix(configVarPrefix);
         sc.initSmtVariable(
             _ctx, _solver, configVarPrefix + "set_community_", true,
             _graph.getAllExactCommunitiesIndex(), _graph.getAllCommunitiesIndex().size());
         // support static analysis for more exact community subspecs
-        CommunitySetExpr communitySetExpr = sc.getExpr();
-        configVarPrefix = SymbolicUtil.incrementLineSuffix(configVarPrefix);
         if (communitySetExpr instanceof LiteralCommunitySet) {
           LiteralCommunitySet lcs = (LiteralCommunitySet) communitySetExpr;
           Set<Community> communities = lcs.getCommunities();
