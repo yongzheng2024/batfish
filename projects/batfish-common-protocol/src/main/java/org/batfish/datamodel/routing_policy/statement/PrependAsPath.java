@@ -14,6 +14,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import com.microsoft.z3.ArithExpr;
 import com.microsoft.z3.Context;
 import com.microsoft.z3.Solver;
+import com.microsoft.z3.BoolExpr;
 import org.batfish.common.BatfishException;
 import org.batfish.datamodel.AsPath;
 import org.batfish.datamodel.AsSet;
@@ -104,8 +105,10 @@ public final class PrependAsPath extends Statement {
   }
 
   /** Add configuration constant - SMT symbolic variable */
-  protected boolean _enableSmtVariable;
-  protected String _configVarPrefix;
+  private boolean _enableSmtVariable;
+  private String _configVarPrefix;
+
+  private transient BoolExpr _configLineEnable;
 
   public void initSmtVariable(Context context, Solver solver, String configVarPrefix) {
     // assert that the prefix is not shared
@@ -115,7 +118,13 @@ public final class PrependAsPath extends Statement {
           "Current  configVarPrefix: " + configVarPrefix);
     }
 
+    // init smt variable for prepending as-path
     _expr.initSmtVariable(context, solver, configVarPrefix);
+
+    // add the line enable flag, and default configure to true
+    _configLineEnable = context.mkBoolConst(configVarPrefix + "enable");
+    BoolExpr configLineEnableConstraint = context.mkEq(_configLineEnable, context.mkTrue());
+    solver.add(configLineEnableConstraint);
 
     // config the smt variable enable flag to true
     _enableSmtVariable = true;
@@ -128,5 +137,9 @@ public final class PrependAsPath extends Statement {
 
   public String getConfigVarPrefix() {
     return _configVarPrefix;
+  }
+
+  public BoolExpr getConfigLineEnable() {
+    return _configLineEnable;
   }
 }

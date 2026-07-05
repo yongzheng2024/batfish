@@ -122,9 +122,9 @@ public final class DeleteCommunity extends Statement {
     _expr.initSmtVariable(context, solver, configVarPrefix, isTrue, commsIndex, commsWidth);
 
     // add the line enable flag, and default configure to true
-    // _configLineEnable = context.mkBoolConst(configVarPrefix + "enable");
-    // BoolExpr configLineEnableConstraint = context.mkEq(_configLineEnable, context.mkTrue());
-    // solver.add(configLineEnableConstraint);
+    _configLineEnable = context.mkBoolConst(configVarPrefix + "enable");
+    BoolExpr configLineEnableConstraint = context.mkEq(_configLineEnable, context.mkTrue());
+    solver.add(configLineEnableConstraint);
 
     // configure the smt variable enable flag to true
     _enableSmtVariable = true;
@@ -139,7 +139,7 @@ public final class DeleteCommunity extends Statement {
     return _configVarPrefix;
   }
 
-  // public BoolExpr getConfigLineEnable() {
-  //   return _configLineEnable;
-  // }
+  public BoolExpr getConfigLineEnable() {
+    return _configLineEnable;
+  }
 }
