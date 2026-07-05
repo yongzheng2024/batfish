@@ -16,13 +16,8 @@ filegroup(
 )
 
 filegroup(
-    name = "userstudy_network",
-    srcs = glob(["userstudy_network/**"]),
-)
-
-filegroup(
-    name = "userstudy_network_accessment",
-    srcs = glob(["userstudy_network_accessment/**"]),
+    name = "userstudy_networks",
+    srcs = glob(["userstudy_networks/**"]),
 )
 
 filegroup(
